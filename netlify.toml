@@ -1,0 +1,23 @@
+[build]
+  publish = "."
+
+# Custom headers for performance and security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Cache static HTML simulations for 1 hour
+[[headers]]
+  for = "/simulations/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+# Redirect custom domain
+[[redirects]]
+  from = "https://scisim.netlify.app/*"
+  to = "https://scisim.co.uk/:splat"
+  status = 301
+  force = true

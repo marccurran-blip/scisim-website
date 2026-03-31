@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IGCSE Physics - Electrical Circuits Simulation</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0f1729;
+            color: #e0e7ff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 20px; color: #7db4ff; font-size: 28px; }
+        .main-layout { display: grid; grid-template-columns: 1fr 320px; gap: 20px; margin-bottom: 20px; }
+        .canvas-panel {
+            background: #1a2744; border: 2px solid #2d4a7a; border-radius: 8px;
+            padding: 15px; display: flex; flex-direction: column; align-items: center;
+        }
+        canvas { border: 1px solid #2d4a7a; background: #0a0f1e; border-radius: 4px; }
+        .controls-panel {
+            background: #1a2744; border: 2px solid #2d4a7a; border-radius: 8px; padding: 20px;
+            max-height: 620px; overflow-y: auto;
+        }
+        .control-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 6px; color: #7db4ff; font-weight: 600; font-size: 13px; }
+        select, input[type="range"], button {
+            width: 100%; padding: 8px 10px; background: #0f1729; border: 1px solid #2d4a7a;
+            color: #e0e7ff; border-radius: 4px; font-family: 'Segoe UI', sans-serif;
+            font-size: 13px; cursor: pointer;
+        }
+        select:hover, button:hover { border-color: #7db4ff; background: #152233; }
+        button { background: #2d4a7a; font-weight: 600; margin-top: 6px; }
+        button:active { background: #1a2744; }
+        input[type="range"] { padding: 4px 0; -webkit-appearance: none; height: 6px; border-radius: 3px; background: #2d4a7a; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #7db4ff; cursor: pointer; }
+        .slider-value { text-align: center; color: #e0e7ff; font-size: 14px; font-weight: 600; margin-top: 4px; }
+        .data-panel {
+            background: #1a2744; border: 2px solid #2d4a7a; border-radius: 8px;
+            padding: 20px; margin-bottom: 20px;
+        }
+        .data-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 15px; }
+        .data-card {
+            background: #0f1729; border: 1px solid #2d4a7a; border-radius: 6px; padding: 12px; text-align: center;
+        }
+        .data-card .label { color: #7db4ff; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .data-card .value { color: #e0e7ff; font-size: 22px; font-weight: 700; margin-top: 4px; }
+        .data-card .unit { color: #7db4ff; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #2d4a7a; color: #7db4ff; padding: 10px; text-align: left; font-weight: 600; font-size: 12px; border: 1px solid #2d4a7a; }
+        td { padding: 8px 10px; border: 1px solid #2d4a7a; color: #e0e7ff; font-size: 13px; }
+        tr:nth-child(even) { background: #152233; }
+        .export-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .export-buttons button { margin-top: 0; font-size: 12px; }
+        .switch-btn { padding: 10px; font-size: 14px; font-weight: 700; letter-spacing: 1px; transition: all 0.3s; }
+        .switch-on { background: #2e7d32 !important; border-color: #4caf50 !important; }
+        .switch-off { background: #7d4a4a !important; border-color: #c0392b !important; }
+        .info-box {
+            background: #0f1729; border: 1px solid #2d4a7a; border-radius: 4px; padding: 10px;
+            font-size: 12px; line-height: 1.5; color: #8fa8cc;
+        }
+        .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+        .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #8fa8cc; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .footer { text-align: center; padding: 15px; color: #7db4ff; font-size: 13px; border-top: 1px solid #2d4a7a; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Electrical Circuits Simulation</h1>
+        <div class="main-layout">
+            <div class="canvas-panel">
+                <canvas id="circuitCanvas" width="820" height="560"></canvas>
+                <div class="legend">
+                    <div class="legend-item"><div class="legend-dot" style="background:#ff6b6b"></div>Battery</div>
+                    <div class="legend-item"><div class="legend-dot" style="background:#ffd700"></div>Bulb</div>
+                    <div class="legend-item"><div class="legend-dot" style="background:#64b5f6"></div>Resistor</div>
+                    <div class="legend-item"><div class="legend-dot" style="background:#81c784"></div>Ammeter</div>
+                    <div class="legend-item"><div class="legend-dot" style="background:#ff9800"></div>Switch</div>
+                    <div class="legend-item"><div class="legend-dot" style="background:#4fc3f7; width:20px; height:3px; border-radius:1px;"></div>Current flow</div>
+                </div>
+            </div>
+            <div class="controls-panel">
+                <div class="control-group">
+                    <label>Circuit Template:</label>
+                    <select id="templateSelect" onchange="loadTemplate()">
+                        <option value="">-- Select Template --</option>
+                        <option value="simple">Simple Series (Battery + Bulb)</option>
+                        <option value="seriesResistors">Series: 2 Resistors</option>
+                        <option value="seriesBulbs">Series: 3 Bulbs</option>
+                        <option value="parallel2">Parallel: 2 Bulbs</option>
+                        <option value="parallel3">Parallel: 3 Resistors</option>
+                        <option value="mixed">Mixed Series-Parallel</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Power Switch:</label>
+                    <button id="switchBtn" class="switch-btn switch-off" onclick="toggleSwitch()">⏻ OFF</button>
+                </div>
+                <hr style="border: 1px solid #2d4a7a; margin: 12px 0;">
+                <div class="control-group" id="sliderControls"></div>
+                <hr style="border: 1px solid #2d4a7a; margin: 12px 0;">
+                <div class="control-group">
+                    <div class="info-box" id="infoBox">
+                        Select a circuit template to begin. Use the switch to turn the circuit on/off. Adjust component values with the sliders.
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="data-panel">
+            <h2 style="color: #7db4ff; margin-bottom: 15px; font-size: 18px;">📊 Circuit Analysis</h2>
+            <div class="data-grid">
+                <div class="data-card">
+                    <div class="label">Total EMF</div>
+                    <div class="value" id="dVoltage">0.00 <span class="unit">V</span></div>
+                </div>
+                <div class="data-card">
+                    <div class="label">Total Resistance</div>
+                    <div class="value" id="dResistance">0.00 <span class="unit">Ω</span></div>
+                </div>
+                <div class="data-card">
+                    <div class="label">Total Current</div>
+                    <div class="value" id="dCurrent">0.000 <span class="unit">A</span></div>
+                </div>
+                <div class="data-card">
+                    <div class="label">Total Power</div>
+                    <div class="value" id="dPower">0.000 <span class="unit">W</span></div>
+                </div>
+            </div>
+            <h3 style="color: #7db4ff; margin-bottom: 8px; font-size: 14px;">Component Details</h3>
+            <table>
+                <thead><tr><th>Component</th><th>Resistance (Ω)</th><th>Voltage (V)</th><th>Current (A)</th><th>Power (W)</th></tr></thead>
+                <tbody id="componentTable"><tr><td colspan="5" style="text-align:center;color:#7db4ff;">No circuit loaded</td></tr></tbody>
+            </table>
+            <div class="export-buttons">
+                <button onclick="exportCSV()">📥 Export CSV</button>
+                <button onclick="exportPNG()">🖼️ Export PNG</button>
+            </div>
+        </div>
+    </div>
+    <div class="footer">IGCSE Science Simulations</div>
+
+<script>
+const canvas = document.getElementById('circuitCanvas');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+let switchOn = false;
+let animTime = 0;
+let currentTemplate = null;
+let components = [];
+let circuitData = { voltage: 0, resistance: 0, current: 0, power: 0 };
+
+// Wire paths: arrays of {x,y} waypoints for drawing connected wire segments
+// Each path is drawn as a polyline. Components sit at specific waypoints.
+let wirePaths = [];
+
+// ──────────────────────────────────────────
+// Component class
+// ──────────────────────────────────────────
+class Component {
+    constructor(type, label, x, y, opts = {}) {
+        this.type = type;
+        this.label = label;
+        this.x = x;
+        this.y = y;
+        this.resistance = opts.resistance || 0;
+        this.emf = opts.emf || 0;
+        this.voltage = 0;
+        this.current = 0;
+        this.power = 0;
+        this.branch = opts.branch || 'main';
+        this.adjustable = opts.adjustable !== undefined ? opts.adjustable : (type === 'resistor' || type === 'bulb' || type === 'battery');
+        this.min = opts.min || (type === 'battery' ? 1 : 1);
+        this.max = opts.max || (type === 'battery' ? 24 : 100);
+        this.step = opts.step || (type === 'battery' ? 0.5 : 1);
+    }
+}
+
+// ──────────────────────────────────────────
+// Rectangle bounds for circuit layouts
+// ──────────────────────────────────────────
+const L = 140, R = 680, T = 90, B = 470;
+const MX = (L + R) / 2, MY = (T + B) / 2;
+
+// ──────────────────────────────────────────
+// Templates — components on rectangle edges
+// ──────────────────────────────────────────
+const templates = {
+    simple: {
+        name: 'Simple Series Circuit',
+        description: 'A single battery connected to a bulb through a switch. The simplest complete circuit.',
+        type: 'series',
+        build() {
+            // Battery on top edge, switch on right edge, bulb on bottom edge, ammeter on left edge
+            components = [
+                new Component('battery', 'Battery', MX, T, { emf: 6 }),
+                new Component('switch', 'Switch', R, MY, {}),
+                new Component('bulb', 'Bulb', MX, B, { resistance: 12 }),
+                new Component('ammeter', 'Ammeter', L, MY, {})
+            ];
+            // Rectangular loop: Battery → top-right corner → Switch → bottom-right → Bulb → bottom-left → Ammeter → top-left → Battery
+            wirePaths = [{
+                current: () => components[0].current,
+                points: [
+                    {x: MX, y: T},     // Battery
+                    {x: R, y: T},      // top-right corner
+                    {x: R, y: MY},     // Switch
+                    {x: R, y: B},      // bottom-right corner
+                    {x: MX, y: B},     // Bulb
+                    {x: L, y: B},      // bottom-left corner
+                    {x: L, y: MY},     // Ammeter
+                    {x: L, y: T},      // top-left corner
+                    {x: MX, y: T}      // back to Battery
+                ]
+            }];
+        }
+    },
+    seriesResistors: {
+        name: 'Series Resistors',
+        description: 'Two resistors in series. Total resistance = R₁ + R₂. Same current flows through both.',
+        type: 'series',
+        build() {
+            const r1x = MX + 80, r2x = MX - 80;
+            components = [
+                new Component('battery', 'Battery', MX, T, { emf: 9 }),
+                new Component('switch', 'Switch', R, MY, {}),
+                new Component('resistor', 'R₁', r1x, B, { resistance: 10 }),
+                new Component('resistor', 'R₂', r2x, B, { resistance: 22 }),
+                new Component('ammeter', 'Ammeter', L, MY, {})
+            ];
+            wirePaths = [{
+                current: () => components[0].current,
+                points: [
+                    {x: MX, y: T}, {x: R, y: T}, {x: R, y: MY}, {x: R, y: B},
+                    {x: r1x, y: B}, {x: r2x, y: B},
+                    {x: L, y: B}, {x: L, y: MY}, {x: L, y: T}, {x: MX, y: T}
+                ]
+            }];
+        }
+    },
+    seriesBulbs: {
+        name: 'Series: 3 Bulbs',
+        description: 'Three bulbs in series share the total voltage. Each gets V/3 if equal resistance.',
+        type: 'series',
+        build() {
+            const b1x = MX + 100, b2x = MX - 100;
+            components = [
+                new Component('battery', 'Battery', MX, T, { emf: 12 }),
+                new Component('switch', 'Switch', R, MY - 60, {}),
+                new Component('bulb', 'Bulb 1', b1x, B, { resistance: 8 }),
+                new Component('bulb', 'Bulb 2', b2x, B, { resistance: 8 }),
+                new Component('bulb', 'Bulb 3', L, MY + 60, { resistance: 8 }),
+                new Component('ammeter', 'Ammeter', L, MY - 60, {})
+            ];
+            wirePaths = [{
+                current: () => components[0].current,
+                points: [
+                    {x: MX, y: T}, {x: R, y: T}, {x: R, y: MY - 60}, {x: R, y: B},
+                    {x: b1x, y: B}, {x: b2x, y: B},
+                    {x: L, y: B}, {x: L, y: MY + 60}, {x: L, y: MY - 60}, {x: L, y: T}, {x: MX, y: T}
+                ]
+            }];
+        }
+    },
+    parallel2: {
+        name: 'Parallel: 2 Bulbs',
+        description: 'Two bulbs in parallel. Each gets full battery voltage. 1/R_total = 1/R₁ + 1/R₂.',
+        type: 'parallel',
+        build() {
+            const splitX = 340, joinX = 540;
+            const topY = 160, botY = 400;
+            components = [
+                new Component('battery', 'Battery', L, MY, { emf: 6 }),
+                new Component('switch', 'Switch', MX - 60, T, {}),
+                new Component('bulb', 'Bulb 1', MX + 60, topY, { resistance: 10, branch: 'b1' }),
+                new Component('bulb', 'Bulb 2', MX + 60, botY, { resistance: 10, branch: 'b2' }),
+                new Component('ammeter', 'A (total)', R, MY, {})
+            ];
+            // Main path: Battery up → across top → Switch → split node → (branches) → join node → across to Ammeter → down → across bottom → back to Battery
+            wirePaths = [
+                // Top wire: battery to split (through switch)
+                { current: () => components[0].current, points: [
+                    {x: L, y: MY}, {x: L, y: T}, {x: MX - 60, y: T}, {x: splitX, y: T}
+                ]},
+                // Branch 1: split down to Bulb 1 across to join
+                { current: () => components[2].current, points: [
+                    {x: splitX, y: T}, {x: splitX, y: topY}, {x: MX + 60, y: topY}, {x: joinX, y: topY}, {x: joinX, y: T}
+                ]},
+                // Branch 2: split down to Bulb 2 across to join
+                { current: () => components[3].current, points: [
+                    {x: splitX, y: T}, {x: splitX, y: botY}, {x: MX + 60, y: botY}, {x: joinX, y: botY}, {x: joinX, y: T}
+                ]},
+                // Join to ammeter and back
+                { current: () => components[0].current, points: [
+                    {x: joinX, y: T}, {x: R, y: T}, {x: R, y: MY}
+                ]},
+                // Return path: ammeter down and back to battery
+                { current: () => components[0].current, points: [
+                    {x: R, y: MY}, {x: R, y: B}, {x: L, y: B}, {x: L, y: MY}
+                ]}
+            ];
+        }
+    },
+    parallel3: {
+        name: 'Parallel: 3 Resistors',
+        description: 'Three resistors in parallel. 1/R_total = 1/R₁ + 1/R₂ + 1/R₃.',
+        type: 'parallel',
+        build() {
+            const splitX = 310, joinX = 560;
+            const topY = 140, midY = MY, botY = 420;
+            const compX = (splitX + joinX) / 2;
+            components = [
+                new Component('battery', 'Battery', L, MY, { emf: 12 }),
+                new Component('switch', 'Switch', (L + splitX) / 2, T, {}),
+                new Component('resistor', 'R₁', compX, topY, { resistance: 10, branch: 'b1' }),
+                new Component('resistor', 'R₂', compX, midY, { resistance: 20, branch: 'b2' }),
+                new Component('resistor', 'R₃', compX, botY, { resistance: 30, branch: 'b3' }),
+                new Component('ammeter', 'A (total)', R, MY, {})
+            ];
+            wirePaths = [
+                // Top wire: battery to switch to split
+                { current: () => components[0].current, points: [
+                    {x: L, y: MY}, {x: L, y: T}, {x: (L + splitX) / 2, y: T}, {x: splitX, y: T}
+                ]},
+                // Split vertical
+                { current: () => components[0].current, points: [
+                    {x: splitX, y: topY}, {x: splitX, y: botY}
+                ]},
+                // Branch 1
+                { current: () => components[2].current, points: [
+                    {x: splitX, y: topY}, {x: compX, y: topY}, {x: joinX, y: topY}
+                ]},
+                // Branch 2
+                { current: () => components[3].current, points: [
+                    {x: splitX, y: midY}, {x: compX, y: midY}, {x: joinX, y: midY}
+                ]},
+                // Branch 3
+                { current: () => components[4].current, points: [
+                    {x: splitX, y: botY}, {x: compX, y: botY}, {x: joinX, y: botY}
+                ]},
+                // Join vertical
+                { current: () => components[0].current, points: [
+                    {x: joinX, y: topY}, {x: joinX, y: botY}
+                ]},
+                // Join to ammeter
+                { current: () => components[0].current, points: [
+                    {x: joinX, y: MY}, {x: R, y: MY}
+                ]},
+                // Split up to top wire
+                { current: () => components[0].current, points: [
+                    {x: splitX, y: T}, {x: splitX, y: topY}
+                ]},
+                // Join up to top then to ammeter return
+                { current: () => components[0].current, points: [
+                    {x: joinX, y: topY}, {x: joinX, y: T}, {x: R, y: T}, {x: R, y: MY}
+                ]},
+                // Return: ammeter down and back
+                { current: () => components[0].current, points: [
+                    {x: R, y: MY}, {x: R, y: B}, {x: L, y: B}, {x: L, y: MY}
+                ]}
+            ];
+        }
+    },
+    mixed: {
+        name: 'Mixed Series-Parallel',
+        description: 'R₁ in series with (R₂ ∥ R₃). Total R = R₁ + (R₂×R₃)/(R₂+R₃).',
+        type: 'mixed',
+        build() {
+            const splitX = 420, joinX = 600;
+            const topY = 180, botY = 380;
+            const compX = (splitX + joinX) / 2;
+            components = [
+                new Component('battery', 'Battery', L, MY, { emf: 12 }),
+                new Component('switch', 'Switch', (L + 280) / 2, T, {}),
+                new Component('resistor', 'R₁ (series)', 280, T, { resistance: 10, branch: 'main' }),
+                new Component('resistor', 'R₂', compX, topY, { resistance: 20, branch: 'b1' }),
+                new Component('resistor', 'R₃', compX, botY, { resistance: 20, branch: 'b2' }),
+                new Component('ammeter', 'A (total)', R, MY, {})
+            ];
+            wirePaths = [
+                // Battery up → switch → R1 → split
+                { current: () => components[0].current, points: [
+                    {x: L, y: MY}, {x: L, y: T}, {x: (L + 280) / 2, y: T}, {x: 280, y: T}, {x: splitX, y: T}
+                ]},
+                // Split down to branches
+                { current: () => components[0].current, points: [
+                    {x: splitX, y: topY}, {x: splitX, y: botY}
+                ]},
+                // Connect split to top
+                { current: () => components[0].current, points: [
+                    {x: splitX, y: T}, {x: splitX, y: topY}
+                ]},
+                // Branch 1 (R2)
+                { current: () => components[3].current, points: [
+                    {x: splitX, y: topY}, {x: compX, y: topY}, {x: joinX, y: topY}
+                ]},
+                // Branch 2 (R3)
+                { current: () => components[4].current, points: [
+                    {x: splitX, y: botY}, {x: compX, y: botY}, {x: joinX, y: botY}
+                ]},
+                // Join vertical
+                { current: () => components[0].current, points: [
+                    {x: joinX, y: topY}, {x: joinX, y: botY}
+                ]},
+                // Join → ammeter
+                { current: () => components[0].current, points: [
+                    {x: joinX, y: MY}, {x: R, y: MY}
+                ]},
+                // Return: ammeter → bottom → battery
+                { current: () => components[0].current, points: [
+                    {x: R, y: MY}, {x: R, y: B}, {x: L, y: B}, {x: L, y: MY}
+                ]}
+            ];
+        }
+    }
+};
+
+// ──────────────────────────────────────────
+// Load template
+// ──────────────────────────────────────────
+function loadTemplate() {
+    const key = document.getElementById('templateSelect').value;
+    if (!key) return;
+    currentTemplate = key;
+    templates[key].build();
+    switchOn = false;
+    updateSwitchUI();
+    buildSliders();
+    calculate();
+    document.getElementById('infoBox').innerHTML = `<strong>${templates[key].name}</strong><br>${templates[key].description}`;
+}
+
+function updateSwitchUI() {
+    const btn = document.getElementById('switchBtn');
+    btn.textContent = switchOn ? '⏻ ON' : '⏻ OFF';
+    btn.className = 'switch-btn ' + (switchOn ? 'switch-on' : 'switch-off');
+}
+
+function toggleSwitch() {
+    if (!currentTemplate) return;
+    switchOn = !switchOn;
+    updateSwitchUI();
+    calculate();
+}
+
+// ──────────────────────────────────────────
+// Build sliders
+// ──────────────────────────────────────────
+function buildSliders() {
+    const container = document.getElementById('sliderControls');
+    container.innerHTML = '';
+    components.forEach((c, i) => {
+        if (!c.adjustable) return;
+        if (c.type === 'battery') {
+            container.innerHTML += `
+                <label>${c.label} EMF:</label>
+                <input type="range" id="slider_${i}" min="${c.min}" max="${c.max}" step="${c.step}" value="${c.emf}"
+                    oninput="updateSlider(${i}, this.value)">
+                <div class="slider-value" id="sv_${i}">${c.emf} V</div>`;
+        } else {
+            container.innerHTML += `
+                <label>${c.label} Resistance:</label>
+                <input type="range" id="slider_${i}" min="${c.min}" max="${c.max}" step="${c.step}" value="${c.resistance}"
+                    oninput="updateSlider(${i}, this.value)">
+                <div class="slider-value" id="sv_${i}">${c.resistance} Ω</div>`;
+        }
+    });
+}
+
+function updateSlider(index, value) {
+    const c = components[index];
+    value = parseFloat(value);
+    if (c.type === 'battery') {
+        c.emf = value;
+        document.getElementById('sv_' + index).textContent = value + ' V';
+    } else {
+        c.resistance = value;
+        document.getElementById('sv_' + index).textContent = value + ' Ω';
+    }
+    calculate();
+}
+
+// ──────────────────────────────────────────
+// Physics calculations
+// ──────────────────────────────────────────
+function calculate() {
+    components.forEach(c => { c.voltage = 0; c.current = 0; c.power = 0; });
+    circuitData = { voltage: 0, resistance: 0, current: 0, power: 0 };
+
+    if (!switchOn || !currentTemplate) { updateDataPanel(); return; }
+
+    const tmpl = templates[currentTemplate];
+    const batteries = components.filter(c => c.type === 'battery');
+    const totalEMF = batteries.reduce((s, b) => s + b.emf, 0);
+
+    if (tmpl.type === 'series') {
+        const loads = components.filter(c => c.type === 'resistor' || c.type === 'bulb');
+        const totalR = loads.reduce((s, r) => s + r.resistance, 0) || 0.01;
+        const I = totalEMF / totalR;
+        components.forEach(c => {
+            c.current = I;
+            if (c.type === 'resistor' || c.type === 'bulb') {
+                c.voltage = I * c.resistance;
+                c.power = I * I * c.resistance;
+            } else if (c.type === 'battery') {
+                c.voltage = c.emf;
+                c.power = c.emf * I;
+            }
+        });
+        circuitData = { voltage: totalEMF, resistance: totalR, current: I, power: totalEMF * I };
+
+    } else if (tmpl.type === 'parallel') {
+        const branchComponents = {};
+        components.forEach(c => {
+            if (c.branch && c.branch !== 'main') {
+                if (!branchComponents[c.branch]) branchComponents[c.branch] = [];
+                branchComponents[c.branch].push(c);
+            }
+        });
+        let invRTotal = 0;
+        const branchR = {};
+        for (const [bName, bComps] of Object.entries(branchComponents)) {
+            const bR = bComps.reduce((s, c) => s + c.resistance, 0) || 0.01;
+            branchR[bName] = bR;
+            invRTotal += 1 / bR;
+        }
+        const parallelR = 1 / invRTotal;
+        const totalI = totalEMF / parallelR;
+        for (const [bName, bComps] of Object.entries(branchComponents)) {
+            const branchI = totalEMF / branchR[bName];
+            bComps.forEach(c => {
+                c.current = branchI;
+                c.voltage = totalEMF;
+                c.power = branchI * branchI * c.resistance;
+            });
+        }
+        batteries.forEach(b => { b.voltage = b.emf; b.current = totalI; b.power = b.emf * totalI; });
+        components.filter(c => c.type === 'ammeter').forEach(a => { a.current = totalI; });
+        components.filter(c => c.type === 'switch').forEach(s => { s.current = totalI; });
+        circuitData = { voltage: totalEMF, resistance: parallelR, current: totalI, power: totalEMF * totalI };
+
+    } else if (tmpl.type === 'mixed') {
+        const seriesR = components.filter(c => c.branch === 'main' && (c.type === 'resistor' || c.type === 'bulb'));
+        const branchComponents = {};
+        components.forEach(c => {
+            if (c.branch && c.branch !== 'main' && (c.type === 'resistor' || c.type === 'bulb')) {
+                if (!branchComponents[c.branch]) branchComponents[c.branch] = [];
+                branchComponents[c.branch].push(c);
+            }
+        });
+        const seriesTotal = seriesR.reduce((s, c) => s + c.resistance, 0);
+        let invRParallel = 0;
+        const branchR = {};
+        for (const [bName, bComps] of Object.entries(branchComponents)) {
+            const bR = bComps.reduce((s, c) => s + c.resistance, 0) || 0.01;
+            branchR[bName] = bR;
+            invRParallel += 1 / bR;
+        }
+        const parallelR = invRParallel > 0 ? 1 / invRParallel : 0.01;
+        const totalR = seriesTotal + parallelR;
+        const totalI = totalEMF / totalR;
+        seriesR.forEach(c => {
+            c.current = totalI;
+            c.voltage = totalI * c.resistance;
+            c.power = totalI * totalI * c.resistance;
+        });
+        const vParallel = totalI * parallelR;
+        for (const [bName, bComps] of Object.entries(branchComponents)) {
+            const branchI = vParallel / branchR[bName];
+            bComps.forEach(c => {
+                c.current = branchI;
+                c.voltage = vParallel;
+                c.power = branchI * branchI * c.resistance;
+            });
+        }
+        batteries.forEach(b => { b.voltage = b.emf; b.current = totalI; b.power = b.emf * totalI; });
+        components.filter(c => c.type === 'ammeter').forEach(a => { a.current = totalI; });
+        components.filter(c => c.type === 'switch').forEach(s => { s.current = totalI; });
+        circuitData = { voltage: totalEMF, resistance: totalR, current: totalI, power: totalEMF * totalI };
+    }
+    updateDataPanel();
+}
+
+// ──────────────────────────────────────────
+// Data panel
+// ──────────────────────────────────────────
+function updateDataPanel() {
+    document.getElementById('dVoltage').innerHTML = circuitData.voltage.toFixed(2) + ' <span class="unit">V</span>';
+    document.getElementById('dResistance').innerHTML = circuitData.resistance.toFixed(2) + ' <span class="unit">Ω</span>';
+    document.getElementById('dCurrent').innerHTML = circuitData.current.toFixed(3) + ' <span class="unit">A</span>';
+    document.getElementById('dPower').innerHTML = circuitData.power.toFixed(3) + ' <span class="unit">W</span>';
+
+    const tbody = document.getElementById('componentTable');
+    const loads = components.filter(c => c.type === 'resistor' || c.type === 'bulb' || c.type === 'ammeter');
+    if (loads.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#7db4ff;">No circuit loaded</td></tr>';
+    } else {
+        tbody.innerHTML = loads.map(c => `<tr>
+            <td>${c.label}</td>
+            <td>${c.type === 'ammeter' ? '-' : c.resistance.toFixed(1)}</td>
+            <td>${c.voltage.toFixed(2)}</td>
+            <td>${c.current.toFixed(3)}</td>
+            <td>${c.power.toFixed(3)}</td>
+        </tr>`).join('');
+    }
+}
+
+// ──────────────────────────────────────────
+// Drawing — wire paths with current flow
+// ──────────────────────────────────────────
+function drawWirePath(path) {
+    const pts = path.points;
+    if (pts.length < 2) return;
+    const current = path.current();
+
+    // Draw wire
+    ctx.strokeStyle = '#2a4a6a';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) {
+        ctx.lineTo(pts[i].x, pts[i].y);
+    }
+    ctx.stroke();
+
+    // Draw animated current dots
+    if (!switchOn || current < 0.001) return;
+
+    // Calculate total path length and segment lengths
+    let totalLen = 0;
+    const segLens = [];
+    for (let i = 0; i < pts.length - 1; i++) {
+        const len = Math.hypot(pts[i+1].x - pts[i].x, pts[i+1].y - pts[i].y);
+        segLens.push(len);
+        totalLen += len;
+    }
+    if (totalLen < 5) return;
+
+    const dotSpacing = 28;
+    const numDots = Math.max(2, Math.floor(totalLen / dotSpacing));
+    const speed = Math.min(current * 0.25, 1.5);
+
+    for (let d = 0; d < numDots; d++) {
+        let t = ((d / numDots) + animTime * speed * 0.01) % 1;
+        let dist = t * totalLen;
+
+        // Find which segment this distance falls on
+        let accumulated = 0;
+        for (let i = 0; i < segLens.length; i++) {
+            if (accumulated + segLens[i] >= dist) {
+                const frac = (dist - accumulated) / segLens[i];
+                const px = pts[i].x + (pts[i+1].x - pts[i].x) * frac;
+                const py = pts[i].y + (pts[i+1].y - pts[i].y) * frac;
+                ctx.fillStyle = '#4fc3f7';
+                ctx.beginPath();
+                ctx.arc(px, py, 3, 0, Math.PI * 2);
+                ctx.fill();
+                break;
+            }
+            accumulated += segLens[i];
+        }
+    }
+}
+
+function drawJunctionNode(x, y) {
+    ctx.fillStyle = '#7db4ff';
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+// ──────────────────────────────────────────
+// Drawing — components
+// ──────────────────────────────────────────
+function drawComponent(c) {
+    ctx.save();
+    ctx.translate(c.x, c.y);
+
+    if (c.type === 'battery') {
+        // Battery: long thin plate (positive) + short thick plate (negative)
+        ctx.strokeStyle = '#ff6b6b';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(-3, -18); ctx.lineTo(-3, 18); ctx.stroke();
+        ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.moveTo(5, -11); ctx.lineTo(5, 11); ctx.stroke();
+        ctx.fillStyle = '#ff6b6b';
+        ctx.font = 'bold 12px Segoe UI';
+        ctx.textAlign = 'center';
+        ctx.fillText('+', -12, 4);
+        ctx.fillText('−', 14, 4);
+        ctx.fillStyle = '#e0e7ff';
+        ctx.font = 'bold 13px Segoe UI';
+        ctx.fillText(c.emf + 'V', 0, -28);
+
+    } else if (c.type === 'bulb') {
+        const brightness = switchOn ? Math.min(1, c.current * 0.4) : 0;
+        if (brightness > 0.05) {
+            const grad = ctx.createRadialGradient(0, 0, 5, 0, 0, 35);
+            grad.addColorStop(0, `rgba(255, 215, 0, ${brightness * 0.6})`);
+            grad.addColorStop(1, 'rgba(255, 215, 0, 0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath(); ctx.arc(0, 0, 35, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 2;
+        ctx.fillStyle = `rgba(255, 215, 0, ${0.1 + brightness * 0.5})`;
+        ctx.beginPath(); ctx.arc(0, 0, 16, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-11, -11); ctx.lineTo(11, 11);
+        ctx.moveTo(-11, 11); ctx.lineTo(11, -11);
+        ctx.stroke();
+        ctx.fillStyle = '#e0e7ff';
+        ctx.font = '11px Segoe UI';
+        ctx.textAlign = 'center';
+        ctx.fillText(c.label, 0, 32);
+
+    } else if (c.type === 'resistor') {
+        ctx.strokeStyle = '#64b5f6';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        const zw = 6, zh = 12, segs = 4;
+        ctx.moveTo(-segs * zw, 0);
+        for (let i = 0; i < segs; i++) {
+            const sx = -segs * zw + i * 2 * zw;
+            ctx.lineTo(sx + zw/2, -zh);
+            ctx.lineTo(sx + zw, 0);
+            ctx.lineTo(sx + zw + zw/2, zh);
+            ctx.lineTo(sx + 2 * zw, 0);
+        }
+        ctx.stroke();
+        ctx.fillStyle = '#e0e7ff';
+        ctx.font = 'bold 12px Segoe UI';
+        ctx.textAlign = 'center';
+        ctx.fillText(c.resistance + 'Ω', 0, -22);
+        ctx.font = '11px Segoe UI';
+        ctx.fillText(c.label, 0, 28);
+
+    } else if (c.type === 'ammeter') {
+        ctx.strokeStyle = '#81c784';
+        ctx.lineWidth = 2;
+        ctx.fillStyle = 'rgba(129, 199, 132, 0.1)';
+        ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#81c784';
+        ctx.font = 'bold 14px Segoe UI';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('A', 0, 0);
+        ctx.fillStyle = '#e0e7ff';
+        ctx.font = 'bold 11px Segoe UI';
+        ctx.textBaseline = 'top';
+        ctx.fillText(c.current.toFixed(2) + 'A', 0, 24);
+        ctx.font = '10px Segoe UI';
+        ctx.fillText(c.label, 0, 38);
+
+    } else if (c.type === 'switch') {
+        ctx.strokeStyle = '#ff9800';
+        ctx.lineWidth = 3;
+        ctx.fillStyle = '#ff9800';
+        ctx.beginPath(); ctx.arc(-12, 0, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(12, 0, 4, 0, Math.PI * 2); ctx.fill();
+        if (switchOn) {
+            ctx.beginPath(); ctx.moveTo(-12, 0); ctx.lineTo(12, 0); ctx.stroke();
+        } else {
+            ctx.beginPath(); ctx.moveTo(-12, 0); ctx.lineTo(8, -14); ctx.stroke();
+        }
+        ctx.fillStyle = '#e0e7ff';
+        ctx.font = '11px Segoe UI';
+        ctx.textAlign = 'center';
+        ctx.fillText(switchOn ? 'Closed' : 'Open', 0, 22);
+    }
+
+    ctx.restore();
+}
+
+// ──────────────────────────────────────────
+// Main draw
+// ──────────────────────────────────────────
+function drawCircuit() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0a0f1e';
+    ctx.fillRect(0, 0, W, H);
+
+    if (!currentTemplate || components.length === 0) {
+        ctx.fillStyle = '#3a5f8a';
+        ctx.font = '18px Segoe UI';
+        ctx.textAlign = 'center';
+        ctx.fillText('Select a circuit template to begin', W/2, H/2);
+        return;
+    }
+
+    // Draw all wire paths
+    wirePaths.forEach(p => drawWirePath(p));
+
+    // Draw junction nodes for parallel/mixed circuits
+    const tmpl = templates[currentTemplate];
+    if (currentTemplate === 'parallel2') {
+        drawJunctionNode(340, T);  // splitX
+        drawJunctionNode(540, T);  // joinX
+    } else if (currentTemplate === 'parallel3') {
+        drawJunctionNode(310, 140);
+        drawJunctionNode(310, MY);
+        drawJunctionNode(310, 420);
+        drawJunctionNode(560, 140);
+        drawJunctionNode(560, MY);
+        drawJunctionNode(560, 420);
+    } else if (currentTemplate === 'mixed') {
+        drawJunctionNode(420, 180);
+        drawJunctionNode(420, 380);
+        drawJunctionNode(600, 180);
+        drawJunctionNode(600, 380);
+    }
+
+    // Draw components on top of wires
+    components.forEach(c => drawComponent(c));
+}
+
+// ──────────────────────────────────────────
+// Export
+// ──────────────────────────────────────────
+function exportCSV() {
+    if (components.length === 0) return;
+    let csv = 'Component,Type,Resistance (Ohm),Voltage (V),Current (A),Power (W)\n';
+    components.forEach(c => {
+        if (c.type === 'switch') return;
+        csv += `"${c.label}","${c.type}",${c.resistance.toFixed(2)},${c.voltage.toFixed(3)},${c.current.toFixed(4)},${c.power.toFixed(4)}\n`;
+    });
+    csv += `\n"TOTAL","",${circuitData.resistance.toFixed(2)},${circuitData.voltage.toFixed(3)},${circuitData.current.toFixed(4)},${circuitData.power.toFixed(4)}\n`;
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'circuit-data.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function exportPNG() {
+    const link = document.createElement('a');
+    link.href = canvas.toDataURL('image/png');
+    link.download = 'circuit-diagram.png';
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+}
+
+// ──────────────────────────────────────────
+// Animation loop
+// ──────────────────────────────────────────
+function animate() {
+    animTime += 0.08;
+    drawCircuit();
+    requestAnimationFrame(animate);
+}
+animate();
+</script>
+</body>
+</html>

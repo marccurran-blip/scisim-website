@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Refraction of Light — IGCSE Physics Simulation</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f1729;
+            color: #e0e7ff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        header {
+            text-align: center;
+            padding: 20px;
+            width: 100%;
+            background: linear-gradient(135deg, #1a2744, #0f1729);
+            border-bottom: 2px solid #2d4a7a;
+        }
+        header h1 {
+            font-size: 1.6em;
+            color: #7db4ff;
+            margin-bottom: 4px;
+        }
+        header p {
+            font-size: 0.9em;
+            color: #8899bb;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+            max-width: 1100px;
+            width: 100%;
+        }
+        .sim-panel {
+            background: #1a2744;
+            border-radius: 12px;
+            border: 1px solid #2d4a7a;
+            padding: 20px;
+            flex: 1;
+            min-width: 320px;
+        }
+        .sim-panel h2 {
+            font-size: 1.1em;
+            color: #7db4ff;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #2d4a7a;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #0d1220;
+        }
+        .controls {
+            margin-top: 15px;
+        }
+        .control-group {
+            margin-bottom: 14px;
+        }
+        .control-group label {
+            display: block;
+            font-size: 0.85em;
+            color: #8899bb;
+            margin-bottom: 5px;
+        }
+        .control-group .value {
+            color: #7db4ff;
+            font-weight: bold;
+        }
+        input[type="range"] {
+            width: 100%;
+            accent-color: #5b9aff;
+            cursor: pointer;
+        }
+        select {
+            width: 100%;
+            padding: 8px 10px;
+            background: #0f1729;
+            color: #e0e7ff;
+            border: 1px solid #2d4a7a;
+            border-radius: 6px;
+            font-size: 0.9em;
+            cursor: pointer;
+        }
+        select:focus { outline: 1px solid #5b9aff; }
+        .data-box {
+            background: #0f1729;
+            border: 1px solid #2d4a7a;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+        }
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            font-size: 0.88em;
+            border-bottom: 1px solid #1a2744;
+        }
+        .data-row:last-child { border-bottom: none; }
+        .data-row .label { color: #8899bb; }
+        .data-row .val { color: #7db4ff; font-weight: bold; font-family: 'Courier New', monospace; }
+        .total-internal {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: #3b1a1a;
+            border: 1px solid #7a3030;
+            border-radius: 6px;
+            color: #ff7b7b;
+            font-size: 0.85em;
+            text-align: center;
+            display: none;
+        }
+        .total-internal.active {
+            display: block;
+        }
+        .info-box {
+            background: #1a2744;
+            border-radius: 12px;
+            border: 1px solid #2d4a7a;
+            padding: 20px;
+            max-width: 1060px;
+            width: calc(100% - 40px);
+            margin-bottom: 20px;
+        }
+        .info-box h2 {
+            font-size: 1.1em;
+            color: #7db4ff;
+            margin-bottom: 10px;
+        }
+        .info-box p {
+            font-size: 0.88em;
+            color: #8899bb;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        .info-box code {
+            background: #0f1729;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #5bffb0;
+            font-size: 0.95em;
+        }
+        .drag-hint {
+            text-align: center;
+            font-size: 0.8em;
+            color: #5b7a9a;
+            margin-top: 8px;
+            font-style: italic;
+        }
+        footer {
+            text-align: center;
+            padding: 15px;
+            color: #3d5070;
+            font-size: 0.8em;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Refraction of Light</h1>
+        <p>IGCSE Physics — Investigate how light bends when passing between materials</p>
+    </header>
+
+    <div class="container">
+        <div class="sim-panel" style="min-width: 460px;">
+            <h2>Simulation</h2>
+            <canvas id="simCanvas" width="440" height="440"></canvas>
+            <div class="drag-hint">Click or drag on the top half to change the angle of incidence</div>
+        </div>
+
+        <div class="sim-panel" style="max-width: 340px;">
+            <h2>Controls</h2>
+            <div class="controls">
+                <div class="control-group">
+                    <label>Angle of Incidence: <span class="value" id="angleDisplay">30°</span></label>
+                    <input type="range" id="angleSlider" min="0" max="89" value="30" step="1">
+                </div>
+                <div class="control-group">
+                    <label>Top Medium</label>
+                    <select id="medium1">
+                        <option value="1.00" selected>Air (n = 1.00)</option>
+                        <option value="1.33">Water (n = 1.33)</option>
+                        <option value="1.52">Glass (n = 1.52)</option>
+                        <option value="1.36">Ethanol (n = 1.36)</option>
+                        <option value="2.42">Diamond (n = 2.42)</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Bottom Medium</label>
+                    <select id="medium2">
+                        <option value="1.00">Air (n = 1.00)</option>
+                        <option value="1.33">Water (n = 1.33)</option>
+                        <option value="1.52" selected>Glass (n = 1.52)</option>
+                        <option value="1.36">Ethanol (n = 1.36)</option>
+                        <option value="2.42">Diamond (n = 2.42)</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Light Colour / Wavelength</label>
+                    <select id="lightColour">
+                        <option value="red">Red (700 nm)</option>
+                        <option value="orange">Orange (620 nm)</option>
+                        <option value="yellow" selected>Yellow (580 nm)</option>
+                        <option value="green">Green (530 nm)</option>
+                        <option value="blue">Blue (470 nm)</option>
+                        <option value="violet">Violet (420 nm)</option>
+                        <option value="white">White (all colours)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="data-box">
+                <div class="data-row">
+                    <span class="label">Angle of Incidence (θ₁)</span>
+                    <span class="val" id="dataAngle1">30.0°</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">Angle of Refraction (θ₂)</span>
+                    <span class="val" id="dataAngle2">19.2°</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">n₁</span>
+                    <span class="val" id="dataN1">1.00</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">n₂</span>
+                    <span class="val" id="dataN2">1.52</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">n₁ sin θ₁</span>
+                    <span class="val" id="dataSnell1">0.500</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">n₂ sin θ₂</span>
+                    <span class="val" id="dataSnell2">0.500</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">Wavelength</span>
+                    <span class="val" id="dataWavelength">580 nm</span>
+                </div>
+                <div class="data-row" id="criticalRow" style="display:none;">
+                    <span class="label">Critical Angle</span>
+                    <span class="val" id="dataCritical">—</span>
+                </div>
+            </div>
+            <div class="total-internal" id="tirAlert">
+                ⚠ Total Internal Reflection! The angle of incidence exceeds the critical angle.
+            </div>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <h2>Key Concepts</h2>
+        <p><strong>Snell's Law:</strong> <code>n₁ sin θ₁ = n₂ sin θ₂</code> — When light passes from one medium to another, the relationship between the angles and refractive indices is constant.</p>
+        <p><strong>Refraction:</strong> Light bends towards the normal when entering a denser medium (higher n) and away from the normal when entering a less dense medium (lower n).</p>
+        <p><strong>Total Internal Reflection:</strong> When light travels from a denser to a less dense medium, there is a critical angle above which all light is reflected back. This only occurs when <code>n₁ > n₂</code>.</p>
+        <p><strong>Dispersion:</strong> The refractive index of a material depends on the wavelength (colour) of light. Violet light (short wavelength) is refracted more than red light (long wavelength). This is why a prism splits white light into a spectrum — each colour bends by a different amount.</p>
+    </div>
+
+    <footer>IGCSE Science Simulations</footer>
+
+    <script>
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width;
+        const H = canvas.height;
+        const CX = W / 2;
+        const CY = H / 2;
+
+        const angleSlider = document.getElementById('angleSlider');
+        const angleDisplay = document.getElementById('angleDisplay');
+        const medium1Select = document.getElementById('medium1');
+        const medium2Select = document.getElementById('medium2');
+
+        const lightColourSelect = document.getElementById('lightColour');
+
+        let angleIncidence = 30;
+        let n1 = 1.00;
+        let n2 = 1.52;
+        let selectedColour = 'yellow';
+        let isDragging = false;
+
+        // Light colour data: display colour, glow colour, wavelength, and dispersion offset
+        // Dispersion offset adjusts the refractive index — violet bends more, red bends less
+        const lightData = {
+            red:    { hex: '#ff3333', glow: '#ff3333', wavelength: 700, dispersion: -0.012 },
+            orange: { hex: '#ff8800', glow: '#ff8800', wavelength: 620, dispersion: -0.007 },
+            yellow: { hex: '#ffdd44', glow: '#ffdd44', wavelength: 580, dispersion:  0.000 },
+            green:  { hex: '#33dd55', glow: '#33dd55', wavelength: 530, dispersion: +0.005 },
+            blue:   { hex: '#3388ff', glow: '#3388ff', wavelength: 470, dispersion: +0.012 },
+            violet: { hex: '#8833ff', glow: '#8833ff', wavelength: 420, dispersion: +0.020 }
+        };
+
+        // For white light, we draw all colours as a spectrum
+        const spectrumOrder = ['red', 'orange', 'yellow', 'green', 'blue', 'violet'];
+
+        // Colors for mediums
+        function getMediumColor(n) {
+            if (n <= 1.01) return { bg: '#0d1a2e', label: 'Air' };
+            if (n <= 1.34) return { bg: '#0d2a3e', label: 'Water' };
+            if (n <= 1.37) return { bg: '#1a2a2e', label: 'Ethanol' };
+            if (n <= 1.53) return { bg: '#1a1a2e', label: 'Glass' };
+            return { bg: '#1e1a2e', label: 'Diamond' };
+        }
+
+        function toRad(deg) { return deg * Math.PI / 180; }
+        function toDeg(rad) { return rad * 180 / Math.PI; }
+
+        // Calculate refraction for a specific refractive index adjustment (dispersion)
+        function calculateRefraction(dispersionOffset = 0) {
+            // Dispersion only affects non-air mediums
+            const adj1 = n1 > 1.01 ? dispersionOffset : 0;
+            const adj2 = n2 > 1.01 ? dispersionOffset : 0;
+            const effectiveN1 = n1 + adj1;
+            const effectiveN2 = n2 + adj2;
+
+            const sinTheta1 = Math.sin(toRad(angleIncidence));
+            const sinTheta2 = (effectiveN1 * sinTheta1) / effectiveN2;
+
+            let totalInternalReflection = false;
+            let angleRefraction = 0;
+            let criticalAngle = null;
+
+            if (effectiveN1 > effectiveN2) {
+                criticalAngle = toDeg(Math.asin(effectiveN2 / effectiveN1));
+                if (sinTheta2 > 1) {
+                    totalInternalReflection = true;
+                } else {
+                    angleRefraction = toDeg(Math.asin(sinTheta2));
+                }
+            } else {
+                angleRefraction = toDeg(Math.asin(Math.min(sinTheta2, 1)));
+            }
+
+            return { angleRefraction, totalInternalReflection, criticalAngle, sinTheta1, sinTheta2, effectiveN1, effectiveN2 };
+        }
+
+        // Draw a single ray (incident + refracted/reflected) for a given colour
+        function drawRay(colour, hexColour, glowColour, dispersionOffset, lineWidth, showArcs) {
+            const result = calculateRefraction(dispersionOffset);
+            const rayLength = CY - 20;
+
+            // Incident ray
+            const incidentEndX = CX - rayLength * Math.sin(toRad(angleIncidence));
+            const incidentEndY = CY - rayLength * Math.cos(toRad(angleIncidence));
+
+            ctx.shadowColor = glowColour;
+            ctx.shadowBlur = 6;
+            ctx.strokeStyle = hexColour;
+            ctx.lineWidth = lineWidth;
+            ctx.beginPath();
+            ctx.moveTo(incidentEndX, incidentEndY);
+            ctx.lineTo(CX, CY);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            if (showArcs) drawArrow(incidentEndX, incidentEndY, CX, CY, hexColour);
+
+            // Angle arc for incidence (only show on main/single colour)
+            if (showArcs && angleIncidence > 2) {
+                ctx.strokeStyle = hexColour;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                const arcR = 50;
+                const startAngle = -Math.PI / 2;
+                const endAngle = -Math.PI / 2 - toRad(angleIncidence);
+                ctx.arc(CX, CY, arcR, Math.min(startAngle, endAngle), Math.max(startAngle, endAngle));
+                ctx.stroke();
+
+                const labelAngle = -Math.PI / 2 - toRad(angleIncidence / 2);
+                const labelR = arcR + 16;
+                ctx.fillStyle = hexColour;
+                ctx.font = '12px Courier New';
+                ctx.textAlign = 'center';
+                ctx.fillText('θ₁', CX + labelR * Math.cos(labelAngle), CY + labelR * Math.sin(labelAngle) + 4);
+            }
+
+            if (result.totalInternalReflection) {
+                const reflectEndX = CX + rayLength * Math.sin(toRad(angleIncidence));
+                const reflectEndY = CY - rayLength * Math.cos(toRad(angleIncidence));
+
+                ctx.shadowColor = '#ff5555';
+                ctx.shadowBlur = 6;
+                ctx.strokeStyle = hexColour;
+                ctx.lineWidth = lineWidth;
+                ctx.beginPath();
+                ctx.moveTo(CX, CY);
+                ctx.lineTo(reflectEndX, reflectEndY);
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+
+                if (showArcs) drawArrow(CX, CY, reflectEndX, reflectEndY, hexColour);
+            } else {
+                const refractEndX = CX + rayLength * Math.sin(toRad(result.angleRefraction));
+                const refractEndY = CY + rayLength * Math.cos(toRad(result.angleRefraction));
+
+                ctx.shadowColor = glowColour;
+                ctx.shadowBlur = 6;
+                ctx.strokeStyle = hexColour;
+                ctx.lineWidth = lineWidth;
+                ctx.beginPath();
+                ctx.moveTo(CX, CY);
+                ctx.lineTo(refractEndX, refractEndY);
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+
+                if (showArcs) drawArrow(CX, CY, refractEndX, refractEndY, hexColour);
+
+                // Angle arc for refraction
+                if (showArcs && result.angleRefraction > 2) {
+                    ctx.strokeStyle = hexColour;
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    const arcR = 50;
+                    const startAngle = Math.PI / 2;
+                    const endAngle = Math.PI / 2 - toRad(result.angleRefraction);
+                    ctx.arc(CX, CY, arcR, Math.min(startAngle, endAngle), Math.max(startAngle, endAngle));
+                    ctx.stroke();
+
+                    const labelAngle2 = Math.PI / 2 - toRad(result.angleRefraction / 2);
+                    const labelR2 = arcR + 16;
+                    ctx.fillStyle = hexColour;
+                    ctx.font = '12px Courier New';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('θ₂', CX + labelR2 * Math.cos(labelAngle2), CY + labelR2 * Math.sin(labelAngle2) + 4);
+                }
+
+                // Partial reflection (faint)
+                if (showArcs && n1 !== n2) {
+                    const reflectEndX = CX + rayLength * Math.sin(toRad(angleIncidence));
+                    const reflectEndY = CY - rayLength * Math.cos(toRad(angleIncidence));
+                    ctx.strokeStyle = hexColour.slice(0, 7) + '28';
+                    ctx.lineWidth = 1.5;
+                    ctx.shadowBlur = 0;
+                    ctx.beginPath();
+                    ctx.moveTo(CX, CY);
+                    ctx.lineTo(reflectEndX, reflectEndY);
+                    ctx.stroke();
+                }
+            }
+
+            return result;
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+
+            const m1 = getMediumColor(n1);
+            const m2 = getMediumColor(n2);
+
+            // Draw mediums
+            ctx.fillStyle = m1.bg;
+            ctx.fillRect(0, 0, W, CY);
+            ctx.fillStyle = m2.bg;
+            ctx.fillRect(0, CY, W, CY);
+
+            // Boundary line
+            ctx.strokeStyle = '#2d4a7a';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, CY);
+            ctx.lineTo(W, CY);
+            ctx.stroke();
+
+            // Medium labels
+            ctx.font = '13px Segoe UI';
+            ctx.fillStyle = '#4a6a8a';
+            ctx.textAlign = 'left';
+            ctx.fillText(m1.label + ' (n₁ = ' + n1.toFixed(2) + ')', 10, 25);
+            ctx.fillText(m2.label + ' (n₂ = ' + n2.toFixed(2) + ')', 10, CY + 22);
+
+            // Normal (dashed line)
+            ctx.strokeStyle = '#3d5a7a';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([6, 4]);
+            ctx.beginPath();
+            ctx.moveTo(CX, 20);
+            ctx.lineTo(CX, H - 20);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Normal label
+            ctx.fillStyle = '#3d5a7a';
+            ctx.textAlign = 'center';
+            ctx.font = '11px Segoe UI';
+            ctx.fillText('Normal', CX + 28, 35);
+
+            // Draw rays
+            let mainResult;
+
+            if (selectedColour === 'white') {
+                // White light — draw incident as white, then split into spectrum
+                // Draw a white incident ray
+                const rayLength = CY - 20;
+                const incidentEndX = CX - rayLength * Math.sin(toRad(angleIncidence));
+                const incidentEndY = CY - rayLength * Math.cos(toRad(angleIncidence));
+
+                ctx.shadowColor = '#ffffff';
+                ctx.shadowBlur = 10;
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(incidentEndX, incidentEndY);
+                ctx.lineTo(CX, CY);
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+                drawArrow(incidentEndX, incidentEndY, CX, CY, '#ffffff');
+
+                // Angle arc for incidence
+                if (angleIncidence > 2) {
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    const arcR = 50;
+                    const startAngle = -Math.PI / 2;
+                    const endAngle = -Math.PI / 2 - toRad(angleIncidence);
+                    ctx.arc(CX, CY, arcR, Math.min(startAngle, endAngle), Math.max(startAngle, endAngle));
+                    ctx.stroke();
+                    const labelAngle = -Math.PI / 2 - toRad(angleIncidence / 2);
+                    const labelR = arcR + 16;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = '12px Courier New';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('θ₁', CX + labelR * Math.cos(labelAngle), CY + labelR * Math.sin(labelAngle) + 4);
+                }
+
+                // Draw each colour's refracted ray separately — they split!
+                spectrumOrder.forEach(colour => {
+                    const data = lightData[colour];
+                    const result = calculateRefraction(data.dispersion);
+
+                    if (result.totalInternalReflection) {
+                        const reflectEndX = CX + rayLength * Math.sin(toRad(angleIncidence));
+                        const reflectEndY = CY - rayLength * Math.cos(toRad(angleIncidence));
+                        ctx.shadowColor = data.hex;
+                        ctx.shadowBlur = 4;
+                        ctx.strokeStyle = data.hex;
+                        ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.moveTo(CX, CY);
+                        ctx.lineTo(reflectEndX, reflectEndY);
+                        ctx.stroke();
+                        ctx.shadowBlur = 0;
+                    } else {
+                        const refractEndX = CX + rayLength * Math.sin(toRad(result.angleRefraction));
+                        const refractEndY = CY + rayLength * Math.cos(toRad(result.angleRefraction));
+                        ctx.shadowColor = data.hex;
+                        ctx.shadowBlur = 4;
+                        ctx.strokeStyle = data.hex;
+                        ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.moveTo(CX, CY);
+                        ctx.lineTo(refractEndX, refractEndY);
+                        ctx.stroke();
+                        ctx.shadowBlur = 0;
+                    }
+                });
+
+                // Use yellow as the "main" result for the data panel
+                mainResult = calculateRefraction(0);
+            } else {
+                // Single colour
+                const data = lightData[selectedColour];
+                mainResult = drawRay(selectedColour, data.hex, data.glow, data.dispersion, 2.5, true);
+            }
+
+            // Update data display
+            document.getElementById('dataAngle1').textContent = angleIncidence.toFixed(1) + '°';
+
+            if (selectedColour === 'white') {
+                const redResult = calculateRefraction(lightData.red.dispersion);
+                const violetResult = calculateRefraction(lightData.violet.dispersion);
+                document.getElementById('dataN1').textContent = n1.toFixed(2);
+                document.getElementById('dataN2').textContent = n2.toFixed(2);
+                document.getElementById('dataWavelength').textContent = 'White (all)';
+
+                if (mainResult.totalInternalReflection) {
+                    document.getElementById('dataAngle2').textContent = 'TIR';
+                    document.getElementById('dataSnell1').textContent = '—';
+                    document.getElementById('dataSnell2').textContent = '—';
+                    document.getElementById('tirAlert').classList.add('active');
+                } else {
+                    const rAngle = redResult.totalInternalReflection ? 'TIR' : redResult.angleRefraction.toFixed(1) + '°';
+                    const vAngle = violetResult.totalInternalReflection ? 'TIR' : violetResult.angleRefraction.toFixed(1) + '°';
+                    document.getElementById('dataAngle2').textContent = rAngle + ' → ' + vAngle;
+                    document.getElementById('dataSnell1').textContent = (n1 * mainResult.sinTheta1).toFixed(3);
+                    document.getElementById('dataSnell2').textContent = 'varies';
+                    document.getElementById('tirAlert').classList.remove('active');
+                }
+            } else {
+                const data = lightData[selectedColour];
+                document.getElementById('dataN1').textContent = mainResult.effectiveN1.toFixed(3);
+                document.getElementById('dataN2').textContent = mainResult.effectiveN2.toFixed(3);
+                document.getElementById('dataWavelength').textContent = data.wavelength + ' nm';
+                document.getElementById('dataSnell1').textContent = (mainResult.effectiveN1 * mainResult.sinTheta1).toFixed(3);
+
+                if (mainResult.totalInternalReflection) {
+                    document.getElementById('dataAngle2').textContent = 'TIR';
+                    document.getElementById('dataSnell2').textContent = '—';
+                    document.getElementById('tirAlert').classList.add('active');
+                } else {
+                    document.getElementById('dataAngle2').textContent = mainResult.angleRefraction.toFixed(1) + '°';
+                    document.getElementById('dataSnell2').textContent = (mainResult.effectiveN2 * Math.sin(toRad(mainResult.angleRefraction))).toFixed(3);
+                    document.getElementById('tirAlert').classList.remove('active');
+                }
+            }
+
+            const criticalRow = document.getElementById('criticalRow');
+            if (mainResult.criticalAngle !== null) {
+                criticalRow.style.display = 'flex';
+                document.getElementById('dataCritical').textContent = mainResult.criticalAngle.toFixed(1) + '°';
+            } else {
+                criticalRow.style.display = 'none';
+            }
+        }
+
+        function drawArrow(fromX, fromY, toX, toY, color) {
+            const headLen = 10;
+            const dx = toX - fromX;
+            const dy = toY - fromY;
+            const angle = Math.atan2(dy, dx);
+            // Place arrow at midpoint
+            const midX = (fromX + toX) / 2;
+            const midY = (fromY + toY) / 2;
+
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(midX, midY);
+            ctx.lineTo(midX - headLen * Math.cos(angle - 0.4), midY - headLen * Math.sin(angle - 0.4));
+            ctx.lineTo(midX - headLen * Math.cos(angle + 0.4), midY - headLen * Math.sin(angle + 0.4));
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // Event handlers
+        angleSlider.addEventListener('input', (e) => {
+            angleIncidence = parseFloat(e.target.value);
+            angleDisplay.textContent = angleIncidence + '°';
+            draw();
+        });
+
+        medium1Select.addEventListener('change', (e) => {
+            n1 = parseFloat(e.target.value);
+            draw();
+        });
+
+        medium2Select.addEventListener('change', (e) => {
+            n2 = parseFloat(e.target.value);
+            draw();
+        });
+
+        lightColourSelect.addEventListener('change', (e) => {
+            selectedColour = e.target.value;
+            draw();
+        });
+
+        // Canvas drag interaction
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const y = e.clientY - rect.top;
+            if (y < CY) isDragging = true;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            if (y >= CY) return;
+
+            const dx = x - CX;
+            const dy = CY - y;
+            let angle = toDeg(Math.atan2(Math.abs(dx), dy));
+            angle = Math.max(0, Math.min(89, Math.round(angle)));
+            angleIncidence = angle;
+            angleSlider.value = angle;
+            angleDisplay.textContent = angle + '°';
+            draw();
+        });
+
+        canvas.addEventListener('mouseup', () => { isDragging = false; });
+        canvas.addEventListener('mouseleave', () => { isDragging = false; });
+
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            if (y >= CY) return;
+
+            const dx = x - CX;
+            const dy = CY - y;
+            let angle = toDeg(Math.atan2(Math.abs(dx), dy));
+            angle = Math.max(0, Math.min(89, Math.round(angle)));
+            angleIncidence = angle;
+            angleSlider.value = angle;
+            angleDisplay.textContent = angle + '°';
+            draw();
+        });
+
+        // Touch support
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            const y = touch.clientY - rect.top;
+            if (y < CY) isDragging = true;
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (!isDragging) return;
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            if (y >= CY) return;
+
+            const dx = x - CX;
+            const dy = CY - y;
+            let angle = toDeg(Math.atan2(Math.abs(dx), dy));
+            angle = Math.max(0, Math.min(89, Math.round(angle)));
+            angleIncidence = angle;
+            angleSlider.value = angle;
+            angleDisplay.textContent = angle + '°';
+            draw();
+        });
+
+        canvas.addEventListener('touchend', () => { isDragging = false; });
+
+        // Initial draw
+        draw();
+    </script>
+</body>
+</html>

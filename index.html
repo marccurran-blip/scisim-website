@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="SciSim — Free interactive IGCSE Science simulations for Physics, Chemistry and Biology revision.">
+<title>SciSim.co.uk — Interactive IGCSE Science Simulations</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
+<style>
+/* ===== CSS VARIABLES ===== */
+:root {
+    --bg: #0f1729;
+    --bg2: #1a2744;
+    --bg3: #0a0f1f;
+    --border: #2d4a7a;
+    --accent: #7db4ff;
+    --accent2: #5a9aee;
+    --text: #e0e7ff;
+    --text2: #8899bb;
+    --text3: #aabbdd;
+    --card-hover: #223358;
+    --physics: #5eead4;
+    --chemistry: #f0a050;
+    --biology: #80e080;
+    --shadow: rgba(0,0,0,0.4);
+    --font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+[data-theme="light"] {
+    --bg: #f0f4f8;
+    --bg2: #ffffff;
+    --bg3: #e8ecf2;
+    --border: #c0cee0;
+    --accent: #2070c0;
+    --accent2: #1858a0;
+    --text: #1a2744;
+    --text2: #5a6a80;
+    --text3: #3a4a60;
+    --card-hover: #e0eaf4;
+    --physics: #0d9488;
+    --chemistry: #c07020;
+    --biology: #2a8a2a;
+    --shadow: rgba(0,0,0,0.1);
+}
+
+/* ===== RESET & BASE ===== */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;transition:background .3s,color .3s}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ===== NAVBAR ===== */
+.navbar{background:var(--bg2);border-bottom:2px solid var(--border);padding:0 30px;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;transition:background .3s,border .3s}
+.nav-brand{display:flex;align-items:center;gap:10px;font-size:1.4em;font-weight:800;color:var(--accent);letter-spacing:-0.5px}
+.nav-brand span.logo-icon{font-size:1.3em}
+.nav-brand .dot-uk{color:var(--text2);font-weight:400;font-size:0.7em}
+.nav-links{display:flex;align-items:center;gap:16px}
+.nav-link{color:var(--text3);font-size:.9em;font-weight:600;padding:6px 12px;border-radius:6px;transition:all .2s;cursor:pointer;border:none;background:none;font-family:var(--font)}
+.nav-link:hover,.nav-link.active{color:var(--accent);background:var(--bg3)}
+.nav-controls{display:flex;align-items:center;gap:10px}
+.theme-toggle{width:38px;height:38px;border-radius:8px;border:2px solid var(--border);background:var(--bg3);color:var(--text);cursor:pointer;font-size:1.1em;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.theme-toggle:hover{border-color:var(--accent);color:var(--accent)}
+.lang-select{padding:6px 10px;background:var(--bg3);color:var(--text);border:2px solid var(--border);border-radius:6px;font-family:var(--font);font-size:.85em;cursor:pointer;transition:all .2s}
+.lang-select:hover{border-color:var(--accent)}
+
+/* ===== HERO ===== */
+.hero{text-align:center;padding:50px 20px 30px;max-width:800px;margin:0 auto}
+.hero h1{font-size:2.4em;color:var(--accent);margin-bottom:8px;letter-spacing:-1px}
+.hero h1 .brand-accent{color:var(--text)}
+.hero p{color:var(--text2);font-size:1.1em;line-height:1.5}
+.hero-stats{display:flex;justify-content:center;gap:30px;margin-top:20px}
+.hero-stat{text-align:center}
+.hero-stat-num{font-size:1.8em;font-weight:800;color:var(--accent)}
+.hero-stat-label{font-size:.8em;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+
+/* ===== FILTER BAR ===== */
+.filter-bar{max-width:1200px;margin:0 auto 24px;padding:0 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.search-box{flex:1;min-width:200px;padding:12px 16px 12px 42px;background:var(--bg2);border:2px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:1em;transition:border .2s;outline:none}
+.search-box:focus{border-color:var(--accent)}
+.search-wrap{position:relative;flex:1;min-width:200px}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text2);font-size:1.1em;pointer-events:none}
+.filter-btn{padding:10px 18px;border-radius:8px;border:2px solid var(--border);background:var(--bg2);color:var(--text2);font-family:var(--font);font-weight:600;font-size:.9em;cursor:pointer;transition:all .2s}
+.filter-btn:hover{border-color:var(--accent);color:var(--accent)}
+.filter-btn.active{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.filter-btn[data-subject="physics"].active{background:var(--physics);border-color:var(--physics);color:#0f1729}
+.filter-btn[data-subject="chemistry"].active{background:var(--chemistry);border-color:var(--chemistry);color:#0f1729}
+.filter-btn[data-subject="biology"].active{background:var(--biology);border-color:var(--biology);color:#0f1729}
+
+/* ===== CARD GRID ===== */
+.grid-container{max-width:1200px;margin:0 auto;padding:0 20px 40px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
+.card{background:var(--bg2);border:2px solid var(--border);border-radius:12px;padding:20px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+.card:hover{border-color:var(--accent);transform:translateY(-4px);box-shadow:0 8px 30px var(--shadow);background:var(--card-hover)}
+.card-icon{font-size:2.2em;margin-bottom:10px;display:block}
+.card-subject{display:inline-block;font-size:.7em;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:3px 10px;border-radius:20px;margin-bottom:10px}
+.card-subject.physics{background:rgba(94,234,212,0.15);color:var(--physics)}
+.card-subject.chemistry{background:rgba(240,160,80,0.15);color:var(--chemistry)}
+.card-subject.biology{background:rgba(128,224,128,0.15);color:var(--biology)}
+.card-title{font-size:1.15em;font-weight:700;color:var(--text);margin-bottom:6px;line-height:1.3}
+.card-desc{font-size:.85em;color:var(--text2);line-height:1.4;margin-bottom:12px}
+.card-tags{display:flex;flex-wrap:wrap;gap:4px}
+.card-tag{font-size:.7em;padding:2px 8px;border-radius:4px;background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.card-arrow{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:1.3em;color:var(--border);transition:all .25s}
+.card:hover .card-arrow{color:var(--accent);right:12px}
+.no-results{text-align:center;padding:60px 20px;color:var(--text2);font-size:1.1em;grid-column:1/-1}
+
+/* ===== SIM VIEWER (iframe overlay) ===== */
+.sim-viewer{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1000;background:var(--bg);display:none;flex-direction:column}
+.sim-viewer.open{display:flex}
+.sim-topbar{height:48px;background:var(--bg2);border-bottom:2px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0}
+.sim-back-btn{padding:6px 16px;border-radius:6px;border:2px solid var(--accent);background:transparent;color:var(--accent);font-family:var(--font);font-weight:700;font-size:.9em;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+.sim-back-btn:hover{background:var(--accent);color:var(--bg)}
+.sim-title{color:var(--text);font-size:.95em;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sim-iframe{flex:1;border:none;width:100%;background:#0f1729}
+
+/* ===== FOOTER ===== */
+.footer{max-width:1200px;margin:0 auto;padding:30px 20px;border-top:2px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.footer-brand{color:var(--accent);font-weight:700;font-size:1em}
+.footer-links{display:flex;gap:20px}
+.footer-link{color:var(--text2);font-size:.85em;transition:color .2s}
+.footer-link:hover{color:var(--accent)}
+.footer-copy{color:var(--text2);font-size:.8em;width:100%;text-align:center;margin-top:10px}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:768px){
+    .navbar{padding:0 16px;height:56px}
+    .nav-brand{font-size:1.15em}
+    .hero h1{font-size:1.7em}
+    .hero p{font-size:.95em}
+    .hero-stats{gap:16px}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+    .filter-bar{gap:8px}
+    .filter-btn{padding:8px 12px;font-size:.8em}
+}
+@media(max-width:480px){
+    .nav-links{display:none}
+    .grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <div class="nav-brand">
+        <span class="logo-icon">🧪</span>
+        SciSim<span class="dot-uk">.co.uk</span>
+    </div>
+    <div class="nav-links">
+        <button class="nav-link active" data-i18n="nav_home" onclick="showHome()">Home</button>
+        <a class="nav-link" href="about.html" data-i18n="nav_about">About</a>
+    </div>
+    <div class="nav-controls">
+        <select class="lang-select" id="langSelect" title="Language">
+            <option value="en">English</option>
+            <option value="zh">中文</option>
+            <option value="hi">हिन्दी</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="ar">العربية</option>
+            <option value="bn">বাংলা</option>
+            <option value="pt">Português</option>
+            <option value="ru">Русский</option>
+            <option value="ja">日本語</option>
+        </select>
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+    <h1><span class="brand-accent">Sci</span>Sim<span class="dot-uk" style="font-size:.5em;color:var(--text2)">.co.uk</span></h1>
+    <p data-i18n="hero_desc">Free interactive simulations for IGCSE Science revision. Explore Physics, Chemistry and Biology concepts through hands-on experiments.</p>
+    <div class="hero-stats">
+        <div class="hero-stat">
+            <div class="hero-stat-num" id="simCount">18</div>
+            <div class="hero-stat-label" data-i18n="stat_sims">Simulations</div>
+        </div>
+        <div class="hero-stat">
+            <div class="hero-stat-num">3</div>
+            <div class="hero-stat-label" data-i18n="stat_subjects">Subjects</div>
+        </div>
+        <div class="hero-stat">
+            <div class="hero-stat-num">100%</div>
+            <div class="hero-stat-label" data-i18n="stat_free">Free</div>
+        </div>
+    </div>
+</section>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+    <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-box" id="searchBox" data-i18n-placeholder="search_placeholder" placeholder="Search simulations...">
+    </div>
+    <button class="filter-btn active" data-subject="all" data-i18n="filter_all">All</button>
+    <button class="filter-btn" data-subject="physics" data-i18n="filter_physics">Physics</button>
+    <button class="filter-btn" data-subject="chemistry" data-i18n="filter_chemistry">Chemistry</button>
+    <button class="filter-btn" data-subject="biology" data-i18n="filter_biology">Biology</button>
+</div>
+
+<!-- CARD GRID -->
+<div class="grid-container">
+    <div class="grid" id="simGrid"></div>
+</div>
+
+<!-- SIM VIEWER -->
+<div class="sim-viewer" id="simViewer">
+    <div class="sim-topbar">
+        <button class="sim-back-btn" onclick="closeSim()">← <span data-i18n="back_btn">Back to SciSim</span></button>
+        <span class="sim-title" id="simTitle"></span>
+    </div>
+    <iframe class="sim-iframe" id="simFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+    <div class="footer-brand">🧪 SciSim.co.uk</div>
+    <div class="footer-links">
+        <a class="footer-link" href="about.html" data-i18n="nav_about">About</a>
+        <a class="footer-link" href="mailto:contact@scisim.co.uk" data-i18n="footer_contact">Contact</a>
+    </div>
+    <div class="footer-copy" data-i18n="footer_copy">© 2026 SciSim.co.uk — Interactive IGCSE Science Simulations</div>
+</footer>
+
+<script>
+// ===== SIMULATION DATA =====
+const SIMS = [
+    { id: 'atomic-structure', file: 'simulations/atomic-structure-simulation.html', icon: '⚛️', subject: 'chemistry', title_key: 'sim_atomic', title: 'Atomic Structure', desc_key: 'sim_atomic_desc', desc: 'Explore electron shells, subatomic particles and isotopes. Build atoms and see how the periodic table relates to electron configuration.', tags: ['Atoms','Electrons','Periodic Table'] },
+    { id: 'chromatography', file: 'simulations/chromatography-simulation.html', icon: '🎨', subject: 'chemistry', title_key: 'sim_chrom', title: 'Chromatography', desc_key: 'sim_chrom_desc', desc: 'Separate mixtures using paper chromatography. Watch pigments travel at different rates and calculate Rf values.', tags: ['Mixtures','Rf Value','Separation'] },
+    { id: 'diffusion', file: 'simulations/diffusion-simulation.html', icon: '🫧', subject: 'biology', title_key: 'sim_diff', title: 'Diffusion', desc_key: 'sim_diff_desc', desc: 'Visualise how particles move from high to low concentration. Explore factors affecting the rate of diffusion.', tags: ['Particles','Concentration','Movement'] },
+    { id: 'electrical-circuits', file: 'simulations/electrical-circuits-simulation.html', icon: '🔋', subject: 'physics', title_key: 'sim_circuits', title: 'Electrical Circuits', desc_key: 'sim_circuits_desc', desc: 'Build series and parallel circuits. Measure voltage, current and resistance with interactive ammeters and voltmeters.', tags: ['Voltage','Current','Resistance'] },
+    { id: 'electrolysis', file: 'simulations/electrolysis-simulation.html', icon: '⚡', subject: 'chemistry', title_key: 'sim_electrolysis', title: 'Electrolysis', desc_key: 'sim_electrolysis_desc', desc: 'Pass electricity through ionic solutions and molten compounds. See ions migrate and products form at each electrode.', tags: ['Ions','Electrodes','Redox'] },
+    { id: 'energy-profiles', file: 'simulations/energy-profiles-simulation.html', icon: '📈', subject: 'chemistry', title_key: 'sim_energy', title: 'Energy Profiles', desc_key: 'sim_energy_desc', desc: 'Compare exothermic and endothermic reaction profiles. Visualise activation energy and the effect of catalysts.', tags: ['Exothermic','Endothermic','Catalyst'] },
+    { id: 'enzyme-kinetics', file: 'simulations/enzyme-kinetics-simulation.html', icon: '🔬', subject: 'biology', title_key: 'sim_enzyme', title: 'Enzyme Kinetics', desc_key: 'sim_enzyme_desc', desc: 'Investigate how temperature, pH and substrate concentration affect enzyme activity. See the lock-and-key model in action.', tags: ['Enzymes','pH','Temperature'] },
+    { id: 'gas-laws', file: 'simulations/gas-laws-simulation.html', icon: '🎈', subject: 'physics', title_key: 'sim_gas', title: 'Gas Laws', desc_key: 'sim_gas_desc', desc: "Explore Boyle's, Charles's and the Pressure Law. Change temperature, volume and pressure and see particle behaviour.", tags: ["Boyle's Law","Charles's Law",'Pressure'] },
+    { id: 'heart-circulation', file: 'simulations/heart-circulation-simulation.html', icon: '❤️', subject: 'biology', title_key: 'sim_heart', title: 'Heart & Circulation', desc_key: 'sim_heart_desc', desc: 'See the heart pumping blood through the double circulatory system. Explore chambers, valves and the cardiac cycle.', tags: ['Heart','Blood','Valves'] },
+    { id: 'mendel-genetics', file: 'simulations/mendel-genetics-simulation.html', icon: '🧬', subject: 'biology', title_key: 'sim_mendel', title: "Mendel's Genetics", desc_key: 'sim_mendel_desc', desc: 'Perform monohybrid crosses with Punnett squares. Explore dominant and recessive alleles across Mendel\'s pea plant traits.', tags: ['Alleles','Punnett Square','Inheritance'] },
+    { id: 'momentum-collisions', file: 'simulations/momentum-collisions-simulation.html', icon: '💥', subject: 'physics', title_key: 'sim_momentum', title: 'Momentum & Collisions', desc_key: 'sim_momentum_desc', desc: 'Crash trolleys together in elastic and inelastic collisions. See conservation of momentum and kinetic energy changes.', tags: ['Momentum','Elastic','Inelastic'] },
+    { id: 'osmosis', file: 'simulations/osmosis-simulation.html', icon: '💧', subject: 'biology', title_key: 'sim_osmosis', title: 'Osmosis', desc_key: 'sim_osmosis_desc', desc: 'Watch water move across semi-permeable membranes. See plant cells plasmolyse and animal cells undergo lysis or crenation.', tags: ['Water Potential','Membrane','Cells'] },
+    { id: 'photosynthesis', file: 'simulations/photosynthesis-simulation.html', icon: '🌱', subject: 'biology', title_key: 'sim_photo', title: 'Photosynthesis', desc_key: 'sim_photo_desc', desc: 'Run the classic pondweed experiment. Adjust light, temperature and CO₂ to see how they affect the rate of photosynthesis.', tags: ['Light','CO₂','Pondweed'] },
+    { id: 'radioactive-decay', file: 'simulations/radioactive-decay-simulation.html', icon: '☢️', subject: 'physics', title_key: 'sim_radioactive', title: 'Radioactive Decay', desc_key: 'sim_radioactive_desc', desc: 'Watch atoms decay randomly with correct half-life probability. Compare actual decay curves with theoretical predictions.', tags: ['Half-life','Alpha','Beta'] },
+    { id: 'reaction-rates', file: 'simulations/reaction-rates-simulation.html', icon: '⏱️', subject: 'chemistry', title_key: 'sim_rates', title: 'Reaction Rates', desc_key: 'sim_rates_desc', desc: 'Explore how concentration, temperature, surface area and catalysts affect the speed of chemical reactions.', tags: ['Collision Theory','Catalyst','Temperature'] },
+    { id: 'refraction', file: 'simulations/refraction-simulation.html', icon: '🌈', subject: 'physics', title_key: 'sim_refraction', title: 'Refraction of Light', desc_key: 'sim_refraction_desc', desc: "Bend light rays through glass blocks and prisms. Measure angles and verify Snell's Law with interactive protractors.", tags: ["Snell's Law",'Angles','Prism'] },
+    { id: 'titration', file: 'simulations/titration-simulation.html', icon: '🧫', subject: 'chemistry', title_key: 'sim_titration', title: 'Titration', desc_key: 'sim_titration_desc', desc: 'Perform acid-base titrations with a burette and indicator. Find the end point and calculate unknown concentrations.', tags: ['Acid','Base','Indicator'] },
+    { id: 'wave-properties', file: 'simulations/wave-properties-simulation.html', icon: '🌊', subject: 'physics', title_key: 'sim_waves', title: 'Wave Properties', desc_key: 'sim_waves_desc', desc: 'Explore transverse and longitudinal waves. Adjust frequency, amplitude and wavelength and see the wave equation in action.', tags: ['Frequency','Wavelength','Amplitude'] }
+];
+
+// ===== TRANSLATIONS =====
+const TRANSLATIONS = {
+en: { nav_home:'Home', nav_about:'About', hero_desc:'Free interactive simulations for IGCSE Science revision. Explore Physics, Chemistry and Biology concepts through hands-on experiments.', stat_sims:'Simulations', stat_subjects:'Subjects', stat_free:'Free', search_placeholder:'Search simulations...', filter_all:'All', filter_physics:'Physics', filter_chemistry:'Chemistry', filter_biology:'Biology', back_btn:'Back to SciSim', footer_contact:'Contact', footer_copy:'© 2026 SciSim.co.uk — Interactive IGCSE Science Simulations', no_results:'No simulations found. Try a different search term.' },
+zh: { nav_home:'首页', nav_about:'关于', hero_desc:'免费的IGCSE科学互动模拟。通过动手实验探索物理、化学和生物概念。', stat_sims:'模拟实验', stat_subjects:'学科', stat_free:'免费', search_placeholder:'搜索模拟实验...', filter_all:'全部', filter_physics:'物理', filter_chemistry:'化学', filter_biology:'生物', back_btn:'返回SciSim', footer_contact:'联系我们', footer_copy:'© 2026 SciSim.co.uk — IGCSE科学互动模拟', no_results:'未找到模拟实验。请尝试不同的搜索词。' },
+hi: { nav_home:'होम', nav_about:'के बारे में', hero_desc:'IGCSE विज्ञान संशोधन के लिए मुफ्त इंटरैक्टिव सिमुलेशन। भौतिकी, रसायन और जीव विज्ञान की अवधारणाओं का अन्वेषण करें।', stat_sims:'सिमुलेशन', stat_subjects:'विषय', stat_free:'मुफ्त', search_placeholder:'सिमुलेशन खोजें...', filter_all:'सभी', filter_physics:'भौतिकी', filter_chemistry:'रसायन', filter_biology:'जीव विज्ञान', back_btn:'SciSim पर वापस', footer_contact:'संपर्क', footer_copy:'© 2026 SciSim.co.uk — इंटरैक्टिव IGCSE विज्ञान सिमुलेशन', no_results:'कोई सिमुलेशन नहीं मिला। कोई अन्य खोज शब्द आज़माएँ।' },
+es: { nav_home:'Inicio', nav_about:'Acerca de', hero_desc:'Simulaciones interactivas gratuitas para la revisión de Ciencias IGCSE. Explora conceptos de Física, Química y Biología con experimentos prácticos.', stat_sims:'Simulaciones', stat_subjects:'Asignaturas', stat_free:'Gratis', search_placeholder:'Buscar simulaciones...', filter_all:'Todas', filter_physics:'Física', filter_chemistry:'Química', filter_biology:'Biología', back_btn:'Volver a SciSim', footer_contact:'Contacto', footer_copy:'© 2026 SciSim.co.uk — Simulaciones Interactivas de Ciencias IGCSE', no_results:'No se encontraron simulaciones. Prueba con otro término.' },
+fr: { nav_home:'Accueil', nav_about:'À propos', hero_desc:'Simulations interactives gratuites pour la révision des Sciences IGCSE. Explorez la Physique, la Chimie et la Biologie par des expériences pratiques.', stat_sims:'Simulations', stat_subjects:'Matières', stat_free:'Gratuit', search_placeholder:'Rechercher des simulations...', filter_all:'Toutes', filter_physics:'Physique', filter_chemistry:'Chimie', filter_biology:'Biologie', back_btn:'Retour à SciSim', footer_contact:'Contact', footer_copy:'© 2026 SciSim.co.uk — Simulations Interactives de Sciences IGCSE', no_results:'Aucune simulation trouvée. Essayez un autre terme.' },
+ar: { nav_home:'الرئيسية', nav_about:'حول', hero_desc:'محاكاة تفاعلية مجانية لمراجعة العلوم IGCSE. استكشف مفاهيم الفيزياء والكيمياء والأحياء من خلال التجارب العملية.', stat_sims:'محاكاة', stat_subjects:'مواد', stat_free:'مجاني', search_placeholder:'البحث في المحاكاة...', filter_all:'الكل', filter_physics:'فيزياء', filter_chemistry:'كيمياء', filter_biology:'أحياء', back_btn:'العودة إلى SciSim', footer_contact:'اتصل بنا', footer_copy:'© 2026 SciSim.co.uk — محاكاة تفاعلية لعلوم IGCSE', no_results:'لم يتم العثور على محاكاة. جرّب مصطلح بحث مختلف.' },
+bn: { nav_home:'হোম', nav_about:'সম্পর্কে', hero_desc:'IGCSE বিজ্ঞান পুনর্বিবেচনার জন্য বিনামূল্যে ইন্টারেক্টিভ সিমুলেশন। হাতে-কলমে পরীক্ষার মাধ্যমে পদার্থবিদ্যা, রসায়ন এবং জীববিদ্যার ধারণাগুলি অন্বেষণ করুন।', stat_sims:'সিমুলেশন', stat_subjects:'বিষয়', stat_free:'বিনামূল্যে', search_placeholder:'সিমুলেশন খুঁজুন...', filter_all:'সব', filter_physics:'পদার্থবিদ্যা', filter_chemistry:'রসায়ন', filter_biology:'জীববিদ্যা', back_btn:'SciSim-এ ফিরে যান', footer_contact:'যোগাযোগ', footer_copy:'© 2026 SciSim.co.uk — ইন্টারেক্টিভ IGCSE বিজ্ঞান সিমুলেশন', no_results:'কোনো সিমুলেশন পাওয়া যায়নি।' },
+pt: { nav_home:'Início', nav_about:'Sobre', hero_desc:'Simulações interativas gratuitas para revisão de Ciências IGCSE. Explore conceitos de Física, Química e Biologia através de experimentos práticos.', stat_sims:'Simulações', stat_subjects:'Disciplinas', stat_free:'Grátis', search_placeholder:'Pesquisar simulações...', filter_all:'Todas', filter_physics:'Física', filter_chemistry:'Química', filter_biology:'Biologia', back_btn:'Voltar ao SciSim', footer_contact:'Contacto', footer_copy:'© 2026 SciSim.co.uk — Simulações Interativas de Ciências IGCSE', no_results:'Nenhuma simulação encontrada. Tente outro termo.' },
+ru: { nav_home:'Главная', nav_about:'О нас', hero_desc:'Бесплатные интерактивные симуляции для подготовки к IGCSE по естественным наукам. Изучайте физику, химию и биологию через практические эксперименты.', stat_sims:'Симуляции', stat_subjects:'Предметы', stat_free:'Бесплатно', search_placeholder:'Поиск симуляций...', filter_all:'Все', filter_physics:'Физика', filter_chemistry:'Химия', filter_biology:'Биология', back_btn:'Вернуться к SciSim', footer_contact:'Контакты', footer_copy:'© 2026 SciSim.co.uk — Интерактивные симуляции IGCSE', no_results:'Симуляции не найдены. Попробуйте другой запрос.' },
+ja: { nav_home:'ホーム', nav_about:'概要', hero_desc:'IGCSE理科の復習のための無料インタラクティブシミュレーション。実験を通して物理・化学・生物の概念を探究しましょう。', stat_sims:'シミュレーション', stat_subjects:'教科', stat_free:'無料', search_placeholder:'シミュレーションを検索...', filter_all:'すべて', filter_physics:'物理', filter_chemistry:'化学', filter_biology:'生物', back_btn:'SciSimに戻る', footer_contact:'お問い合わせ', footer_copy:'© 2026 SciSim.co.uk — IGCSEインタラクティブ理科シミュレーション', no_results:'シミュレーションが見つかりません。別の検索語をお試しください。' }
+};
+
+// ===== STATE =====
+let currentLang = localStorage.getItem('scisim-lang') || 'en';
+let currentFilter = 'all';
+let currentSearch = '';
+
+// ===== RENDER GRID =====
+function renderGrid() {
+    const grid = document.getElementById('simGrid');
+    const filtered = SIMS.filter(s => {
+        const matchSubject = currentFilter === 'all' || s.subject === currentFilter;
+        const q = currentSearch.toLowerCase();
+        const matchSearch = !q || s.title.toLowerCase().includes(q) || s.desc.toLowerCase().includes(q) || s.tags.some(t => t.toLowerCase().includes(q)) || s.subject.toLowerCase().includes(q);
+        return matchSubject && matchSearch;
+    });
+
+    if (filtered.length === 0) {
+        const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+        grid.innerHTML = '<div class="no-results">' + (t.no_results || 'No simulations found.') + '</div>';
+        return;
+    }
+
+    grid.innerHTML = filtered.map(s => `
+        <div class="card" onclick="openSim('${s.file}','${s.title.replace(/'/g,"\\'")}')">
+            <span class="card-icon">${s.icon}</span>
+            <span class="card-subject ${s.subject}">${s.subject.charAt(0).toUpperCase() + s.subject.slice(1)}</span>
+            <div class="card-title">${s.title}</div>
+            <div class="card-desc">${s.desc}</div>
+            <div class="card-tags">${s.tags.map(t => '<span class="card-tag">'+t+'</span>').join('')}</div>
+            <span class="card-arrow">→</span>
+        </div>
+    `).join('');
+}
+
+// ===== SIM VIEWER =====
+function openSim(file, title) {
+    document.getElementById('simFrame').src = file;
+    document.getElementById('simTitle').textContent = title;
+    document.getElementById('simViewer').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    history.pushState({ sim: file }, '', '#' + file.replace('simulations/','').replace('-simulation.html',''));
+}
+
+function closeSim() {
+    document.getElementById('simViewer').classList.remove('open');
+    document.getElementById('simFrame').src = '';
+    document.body.style.overflow = '';
+    history.pushState({}, '', window.location.pathname);
+}
+
+function showHome() {
+    closeSim();
+}
+
+// Handle browser back button
+window.onpopstate = function(e) {
+    if (document.getElementById('simViewer').classList.contains('open')) {
+        closeSim();
+    }
+};
+
+// ===== FILTERS =====
+document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        currentFilter = this.dataset.subject;
+        renderGrid();
+    });
+});
+
+document.getElementById('searchBox').addEventListener('input', function() {
+    currentSearch = this.value;
+    renderGrid();
+});
+
+// ===== THEME TOGGLE =====
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('themeToggle').textContent = theme === 'dark' ? '🌙' : '☀️';
+    localStorage.setItem('scisim-theme', theme);
+}
+
+document.getElementById('themeToggle').addEventListener('click', function() {
+    const current = document.documentElement.getAttribute('data-theme');
+    setTheme(current === 'dark' ? 'light' : 'dark');
+});
+
+// Load saved theme
+const savedTheme = localStorage.getItem('scisim-theme') || 'dark';
+setTheme(savedTheme);
+
+// ===== LANGUAGE =====
+function applyLanguage(lang) {
+    currentLang = lang;
+    localStorage.setItem('scisim-lang', lang);
+    const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
+
+    // Set text direction for Arabic
+    document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+
+    // Update all data-i18n elements
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if (t[key]) el.textContent = t[key];
+    });
+
+    // Update placeholders
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.dataset.i18nPlaceholder;
+        if (t[key]) el.placeholder = t[key];
+    });
+
+    document.getElementById('langSelect').value = lang;
+}
+
+document.getElementById('langSelect').addEventListener('change', function() {
+    applyLanguage(this.value);
+});
+
+// Load saved language
+applyLanguage(currentLang);
+
+// ===== KEYBOARD SHORTCUT =====
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeSim();
+});
+
+// ===== INIT =====
+document.getElementById('simCount').textContent = SIMS.length;
+renderGrid();
+</script>
+</body>
+</html>

@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IGCSE Chemistry - Reaction Rates Simulation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f1729;
+            color: #e0e7ff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1a2744 0%, #2d4a7a 100%);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid #2d4a7a;
+            text-align: center;
+        }
+
+        header h1 {
+            color: #7db4ff;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: #b0c4ff;
+            font-size: 1.1em;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            grid-auto-flow: dense;
+        }
+
+        .panel {
+            background-color: #1a2744;
+            border: 1px solid #2d4a7a;
+            border-radius: 12px;
+            padding: 25px;
+        }
+
+        .panel h2 {
+            color: #7db4ff;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #2d4a7a;
+            padding-bottom: 10px;
+        }
+
+        .panel h3 {
+            color: #9dbdff;
+            margin-top: 20px;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        canvas {
+            background-color: #0a0f1a;
+            border: 2px solid #2d4a7a;
+            border-radius: 8px;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        .controls-section {
+            grid-column: span 2;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            color: #b0c4ff;
+            font-weight: 500;
+        }
+
+        .control-label .value {
+            color: #7db4ff;
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #2d4a7a;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #7db4ff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #9dbdff;
+            transform: scale(1.2);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #7db4ff;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        input[type="range"]::-moz-range-thumb:hover {
+            background: #9dbdff;
+            transform: scale(1.2);
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .toggle-btn {
+            padding: 10px 20px;
+            border: 2px solid #2d4a7a;
+            background-color: transparent;
+            color: #b0c4ff;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .toggle-btn:hover {
+            border-color: #7db4ff;
+            color: #7db4ff;
+        }
+
+        .toggle-btn.active {
+            background-color: #7db4ff;
+            color: #0f1729;
+            border-color: #7db4ff;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #7db4ff;
+        }
+
+        .checkbox-group label {
+            cursor: pointer;
+            color: #b0c4ff;
+            font-weight: 500;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-start {
+            background-color: #7db4ff;
+            color: #0f1729;
+        }
+
+        .btn-start:hover:not(:disabled) {
+            background-color: #9dbdff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(125, 180, 255, 0.3);
+        }
+
+        .btn-start:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-reset {
+            background-color: #2d4a7a;
+            color: #7db4ff;
+            border: 2px solid #7db4ff;
+        }
+
+        .btn-reset:hover {
+            background-color: #3d5a8a;
+            transform: translateY(-2px);
+        }
+
+        .simulation-section {
+            grid-column: 1;
+        }
+
+        .graph-section {
+            grid-column: 2;
+        }
+
+        .data-section {
+            grid-column: span 2;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .data-item {
+            background-color: #0a0f1a;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #2d4a7a;
+        }
+
+        .data-label {
+            color: #9dbdff;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .data-value {
+            color: #7db4ff;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .concepts-section {
+            grid-column: span 2;
+        }
+
+        .concept-box {
+            background-color: #0a0f1a;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #7db4ff;
+            margin-bottom: 15px;
+        }
+
+        .concept-box h4 {
+            color: #7db4ff;
+            margin-bottom: 10px;
+        }
+
+        .concept-box p {
+            color: #b0c4ff;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #2d4a7a;
+            color: #7db4ff;
+            font-size: 0.9em;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+            background-color: #666;
+        }
+
+        .status-indicator.running {
+            background-color: #4ade80;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .experiment-status {
+            color: #b0c4ff;
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #0a0f1a;
+            border-radius: 8px;
+            border: 1px solid #2d4a7a;
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .simulation-section, .graph-section, .controls-section, .data-section, .concepts-section {
+                grid-column: span 1 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>⚗️ Reaction Rates Simulation</h1>
+        <p>IGCSE Chemistry - Investigating Factors Affecting Reaction Rate</p>
+    </header>
+
+    <div class="container">
+        <!-- Controls Section -->
+        <div class="panel controls-section">
+            <h2>Experiment Controls</h2>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Temperature</span>
+                    <span class="value"><span id="tempValue">25</span>°C</span>
+                </div>
+                <input type="range" id="tempSlider" min="20" max="80" value="25" step="1">
+                <p style="color: #9dbdff; font-size: 0.85em; margin-top: 8px;">Higher temperature increases particle kinetic energy and collision frequency</p>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Concentration (Acid)</span>
+                    <span class="value"><span id="concValue">1.0</span>M</span>
+                </div>
+                <input type="range" id="concSlider" min="0.5" max="2.0" value="1.0" step="0.1">
+                <p style="color: #9dbdff; font-size: 0.85em; margin-top: 8px;">Higher concentration increases number of acid particles available</p>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">Surface Area</div>
+                <div class="toggle-group">
+                    <button class="toggle-btn active" data-surface="large">Large Chunks</button>
+                    <button class="toggle-btn" data-surface="chips">Small Chips</button>
+                    <button class="toggle-btn" data-surface="powder">Powder</button>
+                </div>
+                <p style="color: #9dbdff; font-size: 0.85em; margin-top: 8px;">Smaller particles expose more surface area for reactions</p>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="catalystCheck">
+                <label for="catalystCheck">Use Catalyst (lowers activation energy)</label>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-start" id="startBtn">START EXPERIMENT</button>
+                <button class="btn-reset" id="resetBtn">RESET</button>
+            </div>
+
+            <h3>Export Results</h3>
+            <div class="button-group">
+                <button class="btn-reset" id="exportCsvBtn">EXPORT DATA (CSV)</button>
+                <button class="btn-reset" id="exportGraphBtn">EXPORT GRAPH (PNG)</button>
+            </div>
+
+            <div class="experiment-status">
+                <span class="status-indicator" id="statusIndicator"></span>
+                <span id="statusText">Ready to start experiment</span>
+            </div>
+        </div>
+
+        <!-- Simulation Canvas -->
+        <div class="panel simulation-section">
+            <h2>Particle Collision Simulation</h2>
+            <canvas id="simulationCanvas" width="550" height="450"></canvas>
+            <div style="color: #9dbdff; font-size: 0.85em; margin-top: 10px;">
+                <p>🔴 Red = Marble (limiting reagent) | 🔵 Blue = Acid (excess) | 💨 White = CO₂ gas</p>
+                <p style="margin-top: 4px;">🟢 Green flash = successful reaction | 🟠 Orange flash = insufficient activation energy</p>
+            </div>
+        </div>
+
+        <!-- Graph Canvas -->
+        <div class="panel graph-section">
+            <h2>Gas Volume vs Time</h2>
+            <canvas id="graphCanvas" width="550" height="450"></canvas>
+            <div style="color: #9dbdff; font-size: 0.85em; margin-top: 10px;">
+                <p>Real-time plot of reaction progress</p>
+            </div>
+        </div>
+
+        <!-- Data Panel -->
+        <div class="panel data-section">
+            <h2>Live Data</h2>
+            <div class="data-grid">
+                <div class="data-item">
+                    <div class="data-label">Reaction Rate</div>
+                    <div class="data-value"><span id="reactionRate">0.0</span> cm³/s</div>
+                </div>
+                <div class="data-item">
+                    <div class="data-label">Total Collisions</div>
+                    <div class="data-value"><span id="collisions">0</span></div>
+                </div>
+                <div class="data-item">
+                    <div class="data-label">Successful Reactions</div>
+                    <div class="data-value" style="color: #4dff88;"><span id="successCount">0</span></div>
+                </div>
+                <div class="data-item">
+                    <div class="data-label">Total Gas Volume</div>
+                    <div class="data-value"><span id="gasVolume">0</span> cm³</div>
+                </div>
+                <div class="data-item">
+                    <div class="data-label">Temperature</div>
+                    <div class="data-value"><span id="displayTemp">25</span>°C</div>
+                </div>
+                <div class="data-item">
+                    <div class="data-label">Concentration</div>
+                    <div class="data-value"><span id="displayConc">1.0</span>M</div>
+                </div>
+                <div class="data-item">
+                    <div class="data-label">Elapsed Time</div>
+                    <div class="data-value"><span id="elapsedTime">0</span>s</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Concepts Section -->
+        <div class="panel concepts-section">
+            <h2>Key Concepts: Collision Theory & Reaction Rates</h2>
+
+            <div class="concept-box">
+                <h4>Collision Theory</h4>
+                <p>Reactions occur when reactant particles collide with sufficient energy (greater than activation energy). Not every collision leads to a reaction — watch for the colour flashes: <span style="color:#4dff88;">green = successful reaction</span>, <span style="color:#ff8844;">orange = unsuccessful (not enough energy)</span>.</p>
+            </div>
+
+            <div class="concept-box">
+                <h4>Activation Energy</h4>
+                <p>The minimum energy particles need to react on collision. At low temperatures, most collisions are unsuccessful because particles move slowly. At higher temperatures, a greater proportion of particles have energy exceeding the activation energy, so more collisions are successful.</p>
+            </div>
+
+            <div class="concept-box">
+                <h4>Effect of Temperature</h4>
+                <p>Increasing temperature gives particles more kinetic energy, causing them to move faster. This increases both collision frequency AND the proportion of collisions with energy ≥ activation energy, significantly speeding up the reaction.</p>
+            </div>
+
+            <div class="concept-box">
+                <h4>Effect of Concentration</h4>
+                <p>Higher concentration means more reactant particles per unit volume. This increases the likelihood of collisions occurring, resulting in a faster reaction rate. The particles have higher average kinetic energy.</p>
+            </div>
+
+            <div class="concept-box">
+                <h4>Effect of Surface Area</h4>
+                <p>For solid reactants like marble chips, smaller particle size increases total surface area. More surface is exposed for collisions, allowing more of the solid to react simultaneously with the acid, increasing reaction rate.</p>
+            </div>
+
+            <div class="concept-box">
+                <h4>Effect of Catalyst</h4>
+                <p>A catalyst lowers the activation energy required for a reaction without being consumed. This means more collisions have sufficient energy to cause a reaction, increasing the reaction rate without changing the temperature.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>IGCSE Science Simulations</p>
+    </footer>
+
+    <script>
+        // Global variables
+        let simulationRunning = false;
+        let particles = [];
+        let bubbles = [];
+        let graphData = [];
+        let startTime = 0;
+        let totalGasProduced = 0;
+        let totalCollisions = 0;
+        let frameCollisions = 0;
+        let lastGraphTime = -10;
+        let simElapsed = 0;
+        let reactionCompleteTime = null;
+        let successfulCollisions = 0;
+        let totalSolidMass = 0; // Total "mass" of all solid particles combined
+        let gasPerMassUnit = 0; // How much gas each unit of solid mass produces
+        const TARGET_GAS_VOLUME = 200; // Always collect exactly 200 cm³
+
+        // Configuration
+        let config = {
+            temperature: 25,
+            concentration: 1.0,
+            surfaceArea: 'large',
+            useCatalyst: false,
+            canvasWidth: 550,
+            canvasHeight: 450,
+            graphWidth: 550,
+            graphHeight: 450
+        };
+
+        const canvas = document.getElementById('simulationCanvas');
+        const ctx = canvas.getContext('2d');
+        const graphCanvas = document.getElementById('graphCanvas');
+        const graphCtx = graphCanvas.getContext('2d');
+
+        // Particle class
+        class Particle {
+            constructor(x, y, type, vx = 0, vy = 0, radius = null) {
+                this.x = x;
+                this.y = y;
+                this.type = type; // 'acid' or 'solid'
+                this.vx = vx;
+                this.vy = vy;
+                this.radius = radius !== null ? radius : (type === 'acid' ? 3 : 8);
+                this.originalRadius = this.radius;
+                // Mass proportional to area (2D sim) — this determines how much gas it produces
+                this.mass = type === 'solid' ? Math.PI * this.radius * this.radius : 0;
+                this.baseColor = type === 'acid' ? '#4ba3ff' : '#ff4d4d';
+                this.color = this.baseColor;
+                this.flashTimer = 0; // Counts down frames for colour flash
+                this.reacted = false;
+            }
+
+            update(tempFactor) {
+                // Flash timer countdown
+                if (this.flashTimer > 0) {
+                    this.flashTimer--;
+                    if (this.flashTimer === 0) this.color = this.baseColor;
+                }
+
+                this.x += this.vx * tempFactor;
+                this.y += this.vy * tempFactor;
+
+                // Bounce off walls
+                if (this.x - this.radius < 0 || this.x + this.radius > config.canvasWidth) {
+                    this.vx *= -1;
+                    this.x = Math.max(this.radius, Math.min(config.canvasWidth - this.radius, this.x));
+                }
+                if (this.y - this.radius < 0 || this.y + this.radius > config.canvasHeight) {
+                    this.vy *= -1;
+                    this.y = Math.max(this.radius, Math.min(config.canvasHeight - this.radius, this.y));
+                }
+            }
+
+            draw(context) {
+                context.fillStyle = this.color;
+                context.beginPath();
+                context.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                context.fill();
+
+                // Draw border
+                context.strokeStyle = this.reacted ? '#666' : this.color;
+                context.lineWidth = 2;
+                context.stroke();
+            }
+
+            collidesWith(other) {
+                const dx = this.x - other.x;
+                const dy = this.y - other.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                return distance < this.radius + other.radius;
+            }
+        }
+
+        // Bubble class for gas visualization
+        class Bubble {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vy = -2 - Math.random() * 1.5; // Rising velocity
+                this.radius = 3 + Math.random() * 2;
+                this.life = 1.0; // 0 to 1, where 0 is dead
+            }
+
+            update() {
+                this.y += this.vy;
+                this.life -= 0.02;
+            }
+
+            draw(context) {
+                context.fillStyle = `rgba(255, 255, 255, ${this.life * 0.6})`;
+                context.beginPath();
+                context.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                context.fill();
+
+                context.strokeStyle = `rgba(255, 255, 255, ${this.life * 0.3})`;
+                context.lineWidth = 1;
+                context.stroke();
+            }
+
+            isAlive() {
+                return this.life > 0;
+            }
+        }
+
+        // Initialize particles based on current settings
+        function initializeParticles() {
+            particles = [];
+            bubbles = [];
+            graphData = [{time: 0, volume: 0}];
+            totalGasProduced = 0;
+            totalCollisions = 0;
+            frameCollisions = 0;
+            lastGraphTime = 0;
+            simElapsed = 0;
+            reactionCompleteTime = null;
+            successfulCollisions = 0;
+            totalSolidMass = 0;
+            startTime = Date.now();
+
+            // Number of visible acid particles scales with concentration
+            const numAcidParticles = Math.floor(20 + config.concentration * 40);
+
+            // Create acid particles (visual representation)
+            for (let i = 0; i < numAcidParticles; i++) {
+                const x = Math.random() * (config.canvasWidth - 20) + 10;
+                const y = Math.random() * (config.canvasHeight - 20) + 10;
+                const speed = 1 + Math.random() * 2;
+                const angle = Math.random() * Math.PI * 2;
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed;
+                particles.push(new Particle(x, y, 'acid', vx, vy));
+            }
+
+            // Create solid particles based on surface area setting
+            // Same total mass each time, but different surface area
+            // Key: total collision cross-section (num × radius) must be:
+            //   powder > chips > large — so powder gets hit more often
+            let numSolidParticles = 0;
+            let solidRadius = 8;
+
+            if (config.surfaceArea === 'large') {
+                numSolidParticles = 2;
+                solidRadius = 25;  // 2 big chunks — total cross-section: 50
+            } else if (config.surfaceArea === 'chips') {
+                numSolidParticles = 8;
+                solidRadius = 12;  // Medium chips — total cross-section: 96
+            } else if (config.surfaceArea === 'powder') {
+                numSolidParticles = 50;
+                solidRadius = 4;   // Lots of tiny grains — total cross-section: 200
+            }
+
+            // Position solid particles scattered around the container with random velocities
+            for (let i = 0; i < numSolidParticles; i++) {
+                const margin = solidRadius + 10;
+                const x = margin + Math.random() * (config.canvasWidth - margin * 2);
+                const y = margin + Math.random() * (config.canvasHeight - margin * 2);
+                const speed = 0.5 + Math.random() * 1;
+                const angle = Math.random() * Math.PI * 2;
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed;
+                particles.push(new Particle(x, y, 'solid', vx, vy, solidRadius));
+            }
+
+            // Calculate total solid mass and gas per mass unit
+            // This ensures 200 cm³ total regardless of surface area setting
+            totalSolidMass = particles
+                .filter(p => p.type === 'solid')
+                .reduce((sum, p) => sum + p.mass, 0);
+            gasPerMassUnit = TARGET_GAS_VOLUME / totalSolidMass;
+        }
+
+        // Update simulation
+        function updateSimulation() {
+            if (!simulationRunning) return;
+
+            frameCollisions = 0;
+            simElapsed = (Date.now() - startTime) / 1000;
+
+            const tempFactor = 0.5 + (config.temperature - 20) / 40;
+            const catalystFactor = config.useCatalyst ? 1.3 : 1.0;
+
+            // Update all particle positions
+            particles.forEach(p => {
+                if (!p.reacted) {
+                    p.update(tempFactor * catalystFactor);
+                }
+            });
+
+            // Update bubbles
+            bubbles = bubbles.filter(b => {
+                b.update();
+                return b.isAlive();
+            });
+
+            // --- COLLISION-BASED REACTIONS: marble is limiting reagent ---
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p1 = particles[i];
+                    const p2 = particles[j];
+
+                    // Find acid-solid pairs
+                    let acid = null, solid = null;
+                    if (p1.type === 'acid' && p2.type === 'solid' && !p1.reacted && !p2.reacted) {
+                        acid = p1; solid = p2;
+                    } else if (p2.type === 'acid' && p1.type === 'solid' && !p2.reacted && !p1.reacted) {
+                        acid = p2; solid = p1;
+                    }
+
+                    if (acid && solid && acid.collidesWith(solid)) {
+                        frameCollisions++;
+                        totalCollisions++;
+
+                        // Push acid away from solid so it doesn't get stuck
+                        const dx = acid.x - solid.x;
+                        const dy = acid.y - solid.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                        const overlap = acid.radius + solid.radius - dist;
+                        // Move acid out of the solid
+                        acid.x += (dx / dist) * (overlap + 2);
+                        acid.y += (dy / dist) * (overlap + 2);
+                        // Bounce velocity away from solid
+                        const speed = Math.sqrt(acid.vx * acid.vx + acid.vy * acid.vy);
+                        acid.vx = (dx / dist) * speed;
+                        acid.vy = (dy / dist) * speed;
+
+                        // Probability of successful reaction:
+                        // - Higher temperature = more particles exceed activation energy
+                        // - Catalyst lowers activation energy so more collisions succeed
+                        // - Surface area: large chunks have most mass hidden inside,
+                        //   so a collision on the surface is less likely to react.
+                        //   Powder is almost all surface, so most collisions are effective.
+                        const baseProbability = 0.45;
+                        const tempBoost = (config.temperature - 20) * 0.006;
+                        const catalystBoost = config.useCatalyst ? 0.15 : 0;
+
+                        // Surface area efficiency — smaller particles = higher proportion of surface exposed
+                        let surfaceFactor = 1.0;
+                        if (config.surfaceArea === 'large') surfaceFactor = 0.4;
+                        else if (config.surfaceArea === 'chips') surfaceFactor = 0.7;
+                        else if (config.surfaceArea === 'powder') surfaceFactor = 1.8;
+
+                        const reactionProbability = Math.min((baseProbability + tempBoost + catalystBoost) * surfaceFactor, 0.85);
+
+                        if (Math.random() < reactionProbability) {
+                            // SUCCESSFUL — enough activation energy
+                            successfulCollisions++;
+                            const shrinkAmount = 0.4;
+                            const oldRadius = solid.radius;
+                            const newRadius = Math.max(solid.radius - shrinkAmount, 0);
+
+                            const massLost = Math.PI * (oldRadius * oldRadius - newRadius * newRadius);
+                            const gasProduced = massLost * gasPerMassUnit;
+                            totalGasProduced = Math.min(totalGasProduced + gasProduced, TARGET_GAS_VOLUME);
+
+                            solid.radius = newRadius;
+
+                            // Create gas bubbles
+                            for (let b = 0; b < 4; b++) {
+                                bubbles.push(new Bubble(
+                                    solid.x + (Math.random() - 0.5) * oldRadius * 2,
+                                    solid.y
+                                ));
+                            }
+
+                            // Green flash — successful reaction
+                            acid.color = '#4dff88';
+                            acid.flashTimer = 6;
+
+                            if (solid.radius <= 0.5) {
+                                solid.reacted = true;
+                            }
+                        } else {
+                            // UNSUCCESSFUL — insufficient activation energy
+                            // Orange flash
+                            acid.color = '#ff8844';
+                            acid.flashTimer = 6;
+                        }
+                    }
+                }
+            }
+
+            // Remove fully reacted solid particles
+            particles = particles.filter(p => !(p.type === 'solid' && p.reacted));
+
+            // Check if all marble is used up
+            const remainingSolids = particles.filter(p => p.type === 'solid' && !p.reacted);
+            if (remainingSolids.length === 0 && reactionCompleteTime === null) {
+                totalGasProduced = TARGET_GAS_VOLUME; // Ensure exactly 200
+                reactionCompleteTime = simElapsed;
+                document.getElementById('statusText').textContent = 'All marble used up — recording for 60 more seconds...';
+            }
+
+            // Stop simulation 60 seconds after reaction completes
+            if (reactionCompleteTime !== null && simElapsed - reactionCompleteTime >= 60) {
+                graphData.push({
+                    time: Math.floor(simElapsed / 10) * 10,
+                    volume: parseFloat(totalGasProduced.toFixed(1))
+                });
+                simulationRunning = false;
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('startBtn').textContent = 'START EXPERIMENT';
+                document.getElementById('statusIndicator').classList.remove('running');
+                document.getElementById('statusText').textContent = 'Experiment complete — 200 cm³ collected';
+            }
+
+            // Record graph point every 10 seconds
+            if (simElapsed - lastGraphTime >= 10) {
+                lastGraphTime = Math.floor(simElapsed / 10) * 10;
+                graphData.push({
+                    time: lastGraphTime,
+                    volume: parseFloat(totalGasProduced.toFixed(1))
+                });
+            }
+
+            // Update UI
+            updateDataDisplay();
+        }
+
+        // Draw simulation
+        function drawSimulation() {
+            ctx.fillStyle = '#0a0f1a';
+            ctx.fillRect(0, 0, config.canvasWidth, config.canvasHeight);
+
+            // Draw border
+            ctx.strokeStyle = '#2d4a7a';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(0, 0, config.canvasWidth, config.canvasHeight);
+
+            // Draw particles
+            particles.forEach(p => p.draw(ctx));
+
+            // Draw bubbles
+            bubbles.forEach(b => b.draw(ctx));
+
+            // Draw info overlay
+            ctx.fillStyle = '#7db4ff';
+            ctx.font = 'bold 12px Segoe UI';
+            ctx.fillText(`Temp: ${config.temperature}°C | Conc: ${config.concentration.toFixed(1)}M`, 10, 25);
+        }
+
+        // Draw graph
+        function drawGraph() {
+            graphCtx.fillStyle = '#0a0f1a';
+            graphCtx.fillRect(0, 0, config.graphWidth, config.graphHeight);
+
+            // Draw border
+            graphCtx.strokeStyle = '#2d4a7a';
+            graphCtx.lineWidth = 2;
+            graphCtx.strokeRect(0, 0, config.graphWidth, config.graphHeight);
+
+            // Fixed scales — 120s on x-axis (extends if needed), volume up to 200+ cm³
+            const lastTime = graphData.length > 0 ? graphData[graphData.length - 1].time : 0;
+            const maxTime = Math.max(120, Math.ceil(lastTime / 20) * 20);
+            const maxVolume = Math.max(
+                graphData.length > 0 ? Math.max(...graphData.map(d => d.volume)) : 0,
+                TARGET_GAS_VOLUME
+            );
+            // Round up to nearest 20 for neat axis
+            const volumeScale = Math.ceil(maxVolume / 20) * 20;
+
+            const padding = 55;
+            const rightPad = 20;
+            const topPad = 30;
+            const graphW = config.graphWidth - padding - rightPad;
+            const graphH = config.graphHeight - topPad - padding;
+
+            // Draw axes
+            graphCtx.strokeStyle = '#4a6a8a';
+            graphCtx.lineWidth = 2;
+            graphCtx.beginPath();
+            graphCtx.moveTo(padding, topPad);
+            graphCtx.lineTo(padding, topPad + graphH);
+            graphCtx.lineTo(padding + graphW, topPad + graphH);
+            graphCtx.stroke();
+
+            // Draw grid lines and labels — time axis every 10s
+            graphCtx.font = '11px Segoe UI';
+            graphCtx.textAlign = 'center';
+            const timeSteps = maxTime / 10;
+            for (let i = 0; i <= timeSteps; i++) {
+                const x = padding + (graphW * i / timeSteps);
+
+                // Grid line
+                graphCtx.strokeStyle = '#1a2a4a';
+                graphCtx.lineWidth = 1;
+                graphCtx.beginPath();
+                graphCtx.moveTo(x, topPad);
+                graphCtx.lineTo(x, topPad + graphH);
+                graphCtx.stroke();
+
+                // Tick
+                graphCtx.strokeStyle = '#4a6a8a';
+                graphCtx.beginPath();
+                graphCtx.moveTo(x, topPad + graphH);
+                graphCtx.lineTo(x, topPad + graphH + 5);
+                graphCtx.stroke();
+
+                // Label every 20s to avoid clutter
+                if (i % 2 === 0) {
+                    graphCtx.fillStyle = '#8899bb';
+                    graphCtx.fillText(i * 10, x, topPad + graphH + 18);
+                }
+            }
+
+            // Volume axis — 5 divisions
+            const volSteps = 5;
+            graphCtx.textAlign = 'right';
+            for (let i = 0; i <= volSteps; i++) {
+                const y = topPad + graphH - (graphH * i / volSteps);
+                const vol = (volumeScale * i / volSteps).toFixed(0);
+
+                // Grid line
+                graphCtx.strokeStyle = '#1a2a4a';
+                graphCtx.lineWidth = 1;
+                graphCtx.beginPath();
+                graphCtx.moveTo(padding, y);
+                graphCtx.lineTo(padding + graphW, y);
+                graphCtx.stroke();
+
+                // Label
+                graphCtx.fillStyle = '#8899bb';
+                graphCtx.fillText(vol, padding - 8, y + 4);
+            }
+
+            // Axis titles
+            graphCtx.fillStyle = '#7db4ff';
+            graphCtx.font = 'bold 12px Segoe UI';
+            graphCtx.textAlign = 'center';
+            graphCtx.fillText('Time (s)', padding + graphW / 2, config.graphHeight - 5);
+
+            graphCtx.save();
+            graphCtx.translate(14, topPad + graphH / 2);
+            graphCtx.rotate(-Math.PI / 2);
+            graphCtx.fillText('Gas Volume (cm³)', 0, 0);
+            graphCtx.restore();
+
+            // Plot data — line of best fit style
+            if (graphData.length > 1) {
+                // Draw connecting line
+                graphCtx.strokeStyle = '#5b9aff';
+                graphCtx.lineWidth = 2;
+                graphCtx.beginPath();
+                for (let i = 0; i < graphData.length; i++) {
+                    const x = padding + (graphData[i].time / maxTime) * graphW;
+                    const y = topPad + graphH - (graphData[i].volume / volumeScale) * graphH;
+                    if (i === 0) graphCtx.moveTo(x, y);
+                    else graphCtx.lineTo(x, y);
+                }
+                graphCtx.stroke();
+            }
+
+            // Draw each data point as a clear cross/circle marker
+            graphData.forEach((point, i) => {
+                const x = padding + (point.time / maxTime) * graphW;
+                const y = topPad + graphH - (point.volume / volumeScale) * graphH;
+
+                // Outer circle
+                graphCtx.strokeStyle = '#7db4ff';
+                graphCtx.lineWidth = 2;
+                graphCtx.beginPath();
+                graphCtx.arc(x, y, 5, 0, Math.PI * 2);
+                graphCtx.stroke();
+
+                // Inner filled circle
+                graphCtx.fillStyle = '#7db4ff';
+                graphCtx.beginPath();
+                graphCtx.arc(x, y, 3, 0, Math.PI * 2);
+                graphCtx.fill();
+
+                // Draw cross marker
+                graphCtx.strokeStyle = '#7db4ff';
+                graphCtx.lineWidth = 1.5;
+                graphCtx.beginPath();
+                graphCtx.moveTo(x - 6, y - 6);
+                graphCtx.lineTo(x + 6, y + 6);
+                graphCtx.moveTo(x + 6, y - 6);
+                graphCtx.lineTo(x - 6, y + 6);
+                graphCtx.stroke();
+            });
+
+            // Show "next reading at" indicator if running
+            if (simulationRunning && graphData.length > 0) {
+                const nextTime = lastGraphTime + 10;
+                if (nextTime <= maxTime) {
+                    const nx = padding + (nextTime / maxTime) * graphW;
+                    graphCtx.strokeStyle = 'rgba(125, 180, 255, 0.3)';
+                    graphCtx.lineWidth = 1;
+                    graphCtx.setLineDash([4, 4]);
+                    graphCtx.beginPath();
+                    graphCtx.moveTo(nx, topPad);
+                    graphCtx.lineTo(nx, topPad + graphH);
+                    graphCtx.stroke();
+                    graphCtx.setLineDash([]);
+
+                    graphCtx.fillStyle = 'rgba(125, 180, 255, 0.5)';
+                    graphCtx.font = '10px Segoe UI';
+                    graphCtx.textAlign = 'center';
+                    graphCtx.fillText('next reading', nx, topPad - 5);
+                }
+            }
+        }
+
+        // Update data display
+        function updateDataDisplay() {
+            const avgRate = simElapsed > 0 ? totalGasProduced / simElapsed : 0;
+
+            document.getElementById('reactionRate').textContent = avgRate.toFixed(2);
+            document.getElementById('collisions').textContent = totalCollisions;
+            document.getElementById('successCount').textContent = successfulCollisions;
+            document.getElementById('gasVolume').textContent = totalGasProduced.toFixed(1);
+            document.getElementById('elapsedTime').textContent = Math.floor(simElapsed);
+            document.getElementById('displayTemp').textContent = config.temperature;
+            document.getElementById('displayConc').textContent = config.concentration.toFixed(1);
+        }
+
+        // Animation loop
+        function animate() {
+            updateSimulation();
+            drawSimulation();
+            drawGraph();
+            requestAnimationFrame(animate);
+        }
+
+        // Event listeners
+        document.getElementById('tempSlider').addEventListener('input', (e) => {
+            config.temperature = parseInt(e.target.value);
+            document.getElementById('tempValue').textContent = config.temperature;
+        });
+
+        document.getElementById('concSlider').addEventListener('input', (e) => {
+            config.concentration = parseFloat(e.target.value);
+            document.getElementById('concValue').textContent = config.concentration.toFixed(1);
+        });
+
+        document.querySelectorAll('[data-surface]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('[data-surface]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                config.surfaceArea = btn.dataset.surface;
+            });
+        });
+
+        document.getElementById('catalystCheck').addEventListener('change', (e) => {
+            config.useCatalyst = e.target.checked;
+        });
+
+        document.getElementById('startBtn').addEventListener('click', () => {
+            if (!simulationRunning) {
+                simulationRunning = true;
+                initializeParticles();
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('statusIndicator').classList.add('running');
+                document.getElementById('statusText').textContent = 'Experiment running...';
+                document.getElementById('startBtn').textContent = 'RUNNING...';
+            }
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            simulationRunning = false;
+            particles = [];
+            bubbles = [];
+            graphData = [];
+            totalGasProduced = 0;
+            totalCollisions = 0;
+            frameCollisions = 0;
+            lastGraphTime = -10;
+            simElapsed = 0;
+            reactionCompleteTime = null;
+            successfulCollisions = 0;
+            totalSolidMass = 0;
+
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('statusIndicator').classList.remove('running');
+            document.getElementById('statusText').textContent = 'Ready to start experiment';
+            document.getElementById('startBtn').textContent = 'START EXPERIMENT';
+
+            document.getElementById('reactionRate').textContent = '0.0';
+            document.getElementById('collisions').textContent = '0';
+            document.getElementById('gasVolume').textContent = '0';
+            document.getElementById('elapsedTime').textContent = '0';
+
+            ctx.fillStyle = '#0a0f1a';
+            ctx.fillRect(0, 0, config.canvasWidth, config.canvasHeight);
+            ctx.strokeStyle = '#2d4a7a';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(0, 0, config.canvasWidth, config.canvasHeight);
+
+            graphCtx.fillStyle = '#0a0f1a';
+            graphCtx.fillRect(0, 0, config.graphWidth, config.graphHeight);
+            graphCtx.strokeStyle = '#2d4a7a';
+            graphCtx.lineWidth = 2;
+            graphCtx.strokeRect(0, 0, config.graphWidth, config.graphHeight);
+        });
+
+        // Export CSV
+        document.getElementById('exportCsvBtn').addEventListener('click', () => {
+            if (graphData.length === 0) {
+                alert('No data to export yet. Run the experiment first!');
+                return;
+            }
+
+            // Build CSV with experiment conditions in header
+            let csv = 'Reaction Rates Experiment Results\n';
+            csv += 'Temperature (°C),' + config.temperature + '\n';
+            csv += 'Concentration (M),' + config.concentration.toFixed(1) + '\n';
+            csv += 'Surface Area,' + config.surfaceArea + '\n';
+            csv += 'Catalyst,' + (config.useCatalyst ? 'Yes' : 'No') + '\n';
+            csv += '\n';
+            csv += 'Time (s),Gas Volume (cm³)\n';
+            graphData.forEach(point => {
+                csv += point.time + ',' + point.volume + '\n';
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'reaction-rates-data.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        });
+
+        // Export graph as PNG
+        document.getElementById('exportGraphBtn').addEventListener('click', () => {
+            if (graphData.length === 0) {
+                alert('No data to export yet. Run the experiment first!');
+                return;
+            }
+
+            // Create a temporary canvas with white background for printing
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = config.graphWidth * 2;
+            exportCanvas.height = config.graphHeight * 2;
+            const expCtx = exportCanvas.getContext('2d');
+
+            // Scale up for higher resolution
+            expCtx.scale(2, 2);
+
+            // White background
+            expCtx.fillStyle = '#ffffff';
+            expCtx.fillRect(0, 0, config.graphWidth, config.graphHeight);
+
+            // Redraw graph with print-friendly colours
+            const lastTime = graphData.length > 0 ? graphData[graphData.length - 1].time : 0;
+            const maxTime = Math.max(120, Math.ceil(lastTime / 20) * 20);
+            const maxVol = Math.max(...graphData.map(d => d.volume), TARGET_GAS_VOLUME);
+            const volumeScale = Math.ceil(maxVol / 20) * 20;
+            const pad = 55;
+            const rightPad = 20;
+            const topPad = 30;
+            const gW = config.graphWidth - pad - rightPad;
+            const gH = config.graphHeight - topPad - pad;
+
+            // Title
+            expCtx.fillStyle = '#333';
+            expCtx.font = 'bold 14px Segoe UI';
+            expCtx.textAlign = 'center';
+            expCtx.fillText('Gas Volume vs Time — Reaction Rates', config.graphWidth / 2, 18);
+
+            // Axes
+            expCtx.strokeStyle = '#333';
+            expCtx.lineWidth = 2;
+            expCtx.beginPath();
+            expCtx.moveTo(pad, topPad);
+            expCtx.lineTo(pad, topPad + gH);
+            expCtx.lineTo(pad + gW, topPad + gH);
+            expCtx.stroke();
+
+            // Grid and labels — time
+            expCtx.font = '10px Segoe UI';
+            expCtx.textAlign = 'center';
+            const exportTimeSteps = maxTime / 10;
+            for (let i = 0; i <= exportTimeSteps; i++) {
+                const x = pad + (gW * i / exportTimeSteps);
+                expCtx.strokeStyle = '#ddd';
+                expCtx.lineWidth = 1;
+                expCtx.beginPath();
+                expCtx.moveTo(x, topPad);
+                expCtx.lineTo(x, topPad + gH);
+                expCtx.stroke();
+                if (i % 2 === 0) {
+                    expCtx.fillStyle = '#555';
+                    expCtx.fillText(i * 10, x, topPad + gH + 16);
+                }
+            }
+
+            // Grid and labels — volume
+            expCtx.textAlign = 'right';
+            for (let i = 0; i <= 5; i++) {
+                const y = topPad + gH - (gH * i / 5);
+                expCtx.strokeStyle = '#ddd';
+                expCtx.lineWidth = 1;
+                expCtx.beginPath();
+                expCtx.moveTo(pad, y);
+                expCtx.lineTo(pad + gW, y);
+                expCtx.stroke();
+                expCtx.fillStyle = '#555';
+                expCtx.fillText((volumeScale * i / 5).toFixed(0), pad - 8, y + 4);
+            }
+
+            // Axis titles
+            expCtx.fillStyle = '#333';
+            expCtx.font = 'bold 12px Segoe UI';
+            expCtx.textAlign = 'center';
+            expCtx.fillText('Time (s)', pad + gW / 2, config.graphHeight - 5);
+            expCtx.save();
+            expCtx.translate(14, topPad + gH / 2);
+            expCtx.rotate(-Math.PI / 2);
+            expCtx.fillText('Gas Volume (cm³)', 0, 0);
+            expCtx.restore();
+
+            // Data line
+            if (graphData.length > 1) {
+                expCtx.strokeStyle = '#2266cc';
+                expCtx.lineWidth = 2;
+                expCtx.beginPath();
+                for (let i = 0; i < graphData.length; i++) {
+                    const x = pad + (graphData[i].time / maxTime) * gW;
+                    const y = topPad + gH - (graphData[i].volume / volumeScale) * gH;
+                    if (i === 0) expCtx.moveTo(x, y);
+                    else expCtx.lineTo(x, y);
+                }
+                expCtx.stroke();
+            }
+
+            // Data points as crosses
+            graphData.forEach(point => {
+                const x = pad + (point.time / maxTime) * gW;
+                const y = topPad + gH - (point.volume / volumeScale) * gH;
+                expCtx.strokeStyle = '#2266cc';
+                expCtx.lineWidth = 2;
+                expCtx.beginPath();
+                expCtx.moveTo(x - 5, y - 5);
+                expCtx.lineTo(x + 5, y + 5);
+                expCtx.moveTo(x + 5, y - 5);
+                expCtx.lineTo(x - 5, y + 5);
+                expCtx.stroke();
+            });
+
+            // Conditions label
+            expCtx.fillStyle = '#666';
+            expCtx.font = '10px Segoe UI';
+            expCtx.textAlign = 'left';
+            const condText = `${config.temperature}°C | ${config.concentration.toFixed(1)}M | ${config.surfaceArea} | catalyst: ${config.useCatalyst ? 'yes' : 'no'}`;
+            expCtx.fillText(condText, pad + 5, topPad + 15);
+
+            // Download
+            const a = document.createElement('a');
+            a.href = exportCanvas.toDataURL('image/png');
+            a.download = 'reaction-rates-graph.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+
+        // Initial draw
+        ctx.fillStyle = '#0a0f1a';
+        ctx.fillRect(0, 0, config.canvasWidth, config.canvasHeight);
+        ctx.strokeStyle = '#2d4a7a';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(0, 0, config.canvasWidth, config.canvasHeight);
+
+        graphCtx.fillStyle = '#0a0f1a';
+        graphCtx.fillRect(0, 0, config.graphWidth, config.graphHeight);
+        graphCtx.strokeStyle = '#2d4a7a';
+        graphCtx.lineWidth = 2;
+        graphCtx.strokeRect(0, 0, config.graphWidth, config.graphHeight);
+
+        // Start animation loop
+        animate();
+    </script>
+</body>
+</html>

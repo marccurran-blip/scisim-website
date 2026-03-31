@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IGCSE Chemistry - Energy Profile Diagrams</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0f1729; color: #e0e7ff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px; min-height: 100vh;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 5px; color: #7db4ff; font-size: 26px; }
+        .subtitle { text-align: center; color: #6a8cbf; font-size: 13px; margin-bottom: 18px; }
+        .content { display: grid; grid-template-columns: 1fr 340px; gap: 20px; margin-bottom: 20px; }
+        .panel {
+            background: #1a2744; border: 2px solid #2d4a7a; border-radius: 8px;
+            padding: 18px; display: flex; flex-direction: column; gap: 12px;
+        }
+        .panel-title { color: #7db4ff; font-size: 14px; font-weight: 700; border-bottom: 1px solid #2d4a7a; padding-bottom: 8px; }
+        canvas { background: #0a0f1e; border: 1px solid #2d4a7a; border-radius: 4px; }
+        .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        button {
+            background: #2d4a7a; border: 1px solid #2d4a7a; color: #7db4ff;
+            padding: 7px 14px; border-radius: 4px; cursor: pointer;
+            font-family: 'Segoe UI', sans-serif; font-size: 12px; font-weight: 600;
+        }
+        button:hover { background: #3a5f8a; color: #fff; }
+        button.active { background: #7db4ff; color: #0f1729; border-color: #7db4ff; }
+        button.play-btn { background: #2e7d32; border-color: #4caf50; color: #fff; padding: 7px 20px; }
+        button.play-btn:hover { background: #388e3c; }
+        select {
+            background: #0f1729; border: 1px solid #2d4a7a; color: #e0e7ff;
+            padding: 7px 10px; border-radius: 4px; font-family: 'Segoe UI', sans-serif; font-size: 12px;
+        }
+        .slider-group { margin-bottom: 4px; }
+        .slider-label { display: flex; justify-content: space-between; font-size: 12px; color: #7db4ff; margin-bottom: 3px; }
+        .slider-val { color: #e0e7ff; font-weight: 700; }
+        input[type="range"] {
+            -webkit-appearance: none; width: 100%; height: 5px;
+            background: #2d4a7a; border-radius: 3px; outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 15px; height: 15px;
+            border-radius: 50%; background: #7db4ff; cursor: pointer;
+        }
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .data-card {
+            background: #0f1729; border: 1px solid #2d4a7a; border-radius: 4px;
+            padding: 8px 10px; text-align: center;
+        }
+        .data-card .lbl { color: #7db4ff; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+        .data-card .val { color: #e0e7ff; font-size: 17px; font-weight: 700; margin-top: 2px; }
+        .data-card .val.exo { color: #51cf66; }
+        .data-card .val.endo { color: #ff6b6b; }
+        .concept-box {
+            background: #0f1729; border-left: 3px solid #7db4ff;
+            padding: 10px 12px; border-radius: 4px; font-size: 12px; line-height: 1.5;
+        }
+        .concept-box strong { color: #7db4ff; }
+        .concept-box span { color: #a0b8d8; }
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .footer { text-align: center; padding: 15px; color: #7db4ff; font-size: 12px; border-top: 1px solid #2d4a7a; }
+        @media (max-width: 1000px) { .content { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>⚗️ Energy Profile Diagrams</h1>
+    <p class="subtitle">IGCSE Chemistry — Exothermic & Endothermic Reactions</p>
+
+    <div class="content">
+        <div class="panel">
+            <div class="controls">
+                <button id="exoBtn" class="active" onclick="setType(true)">Exothermic</button>
+                <button id="endoBtn" onclick="setType(false)">Endothermic</button>
+                <button id="catBtn" onclick="toggleCatalyst()">Catalyst: OFF</button>
+                <button class="play-btn" onclick="playAnimation()">▶ Animate</button>
+                <select id="exampleSelect" onchange="loadExample(this.value)">
+                    <option value="">Example Reactions...</option>
+                    <option value="combustion">Combustion of Methane (CH₄ + 2O₂)</option>
+                    <option value="neutralisation">Neutralisation (HCl + NaOH)</option>
+                    <option value="respiration">Respiration (C₆H₁₂O₆ + 6O₂)</option>
+                    <option value="decomposition">Thermal Decomposition (CaCO₃)</option>
+                    <option value="photosynthesis">Photosynthesis (6CO₂ + 6H₂O)</option>
+                    <option value="dissolving">Dissolving NH₄NO₃</option>
+                </select>
+            </div>
+            <canvas id="canvas" width="820" height="520"></canvas>
+            <div class="btn-row">
+                <button onclick="exportCSV()">📥 Export CSV</button>
+                <button onclick="exportPNG()">🖼️ Export PNG</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Energy Parameters</div>
+            <div class="slider-group">
+                <div class="slider-label"><span>Reactant Energy</span><span class="slider-val" id="svR">200 kJ</span></div>
+                <input type="range" id="slR" min="50" max="400" value="200" step="5" oninput="onSlider()">
+            </div>
+            <div class="slider-group">
+                <div class="slider-label"><span>Product Energy</span><span class="slider-val" id="svP">100 kJ</span></div>
+                <input type="range" id="slP" min="50" max="400" value="100" step="5" oninput="onSlider()">
+            </div>
+            <div class="slider-group">
+                <div class="slider-label"><span>Activation Energy (Ea)</span><span class="slider-val" id="svEa">80 kJ</span></div>
+                <input type="range" id="slEa" min="10" max="200" value="80" step="5" oninput="onSlider()">
+            </div>
+
+            <div class="panel-title">Calculated Values</div>
+            <div class="data-grid">
+                <div class="data-card"><div class="lbl">Reactant Energy</div><div class="val" id="dR">200 kJ</div></div>
+                <div class="data-card"><div class="lbl">Product Energy</div><div class="val" id="dP">100 kJ</div></div>
+                <div class="data-card"><div class="lbl">ΔH (enthalpy change)</div><div class="val exo" id="dH">−100 kJ</div></div>
+                <div class="data-card"><div class="lbl">Activation Energy</div><div class="val" id="dEa">80 kJ</div></div>
+                <div class="data-card"><div class="lbl">Ea with catalyst</div><div class="val" id="dEaCat">— kJ</div></div>
+                <div class="data-card"><div class="lbl">Reaction Type</div><div class="val" id="dType">Exothermic</div></div>
+            </div>
+
+            <div class="panel-title">Key Concepts</div>
+            <div class="concept-box" id="conceptBox">
+                <strong>Exothermic (ΔH < 0):</strong>
+                <span>Products have less energy than reactants. Energy is released to surroundings — temperature increases.</span>
+            </div>
+            <div class="concept-box">
+                <strong>Activation Energy (Ea):</strong>
+                <span>Minimum energy needed for reactant particles to collide successfully and start the reaction.</span>
+            </div>
+            <div class="concept-box" id="catConcept">
+                <strong>Catalyst:</strong>
+                <span>Provides an alternative reaction pathway with lower Ea. Does NOT change ΔH — same reactants and products.</span>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="footer">IGCSE Science Simulations</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const CW = canvas.width, CH = canvas.height;
+
+// ─── State ───
+const S = {
+    reactantE: 200,
+    productE: 100,
+    Ea: 80,
+    catalyst: false,
+    ballT: -1, // -1 = not animating, 0..1 = position along curve
+    exampleName: ''
+};
+
+const EXAMPLES = {
+    combustion:     { r: 300, p: 110, ea: 60,  name: 'Combustion of CH₄', eq: 'CH₄ + 2O₂ → CO₂ + 2H₂O', dh: -890 },
+    neutralisation: { r: 200, p: 140, ea: 40,  name: 'Neutralisation', eq: 'HCl + NaOH → NaCl + H₂O', dh: -57 },
+    respiration:    { r: 320, p: 130, ea: 55,  name: 'Respiration', eq: 'C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O', dh: -2803 },
+    decomposition:  { r: 120, p: 280, ea: 90,  name: 'Thermal Decomposition', eq: 'CaCO₃ → CaO + CO₂', dh: 178 },
+    photosynthesis: { r: 100, p: 310, ea: 110, name: 'Photosynthesis', eq: '6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂', dh: 2803 },
+    dissolving:     { r: 150, p: 220, ea: 30,  name: 'Dissolving NH₄NO₃', eq: 'NH₄NO₃(s) → NH₄⁺(aq) + NO₃⁻(aq)', dh: 26 }
+};
+
+// ─── Graph geometry ───
+const PAD = { l: 70, r: 40, t: 50, b: 60 };
+const GW = CW - PAD.l - PAD.r;
+const GH = CH - PAD.t - PAD.b;
+
+// Map energy value to canvas y
+function eToY(e, maxE) {
+    return PAD.t + GH - (e / maxE) * GH;
+}
+
+// Smooth bell curve: combines two halves of a cosine for a nice hump
+// t goes 0→1 along x-axis, returns energy at that point
+function curveE(t, startE, peakE, endE) {
+    if (t <= 0.5) {
+        // Rising half: cosine ease from startE to peakE
+        const s = t * 2; // 0→1
+        return startE + (peakE - startE) * (0.5 - 0.5 * Math.cos(Math.PI * s));
+    } else {
+        // Falling half: cosine ease from peakE to endE
+        const s = (t - 0.5) * 2; // 0→1
+        return peakE + (endE - peakE) * (0.5 - 0.5 * Math.cos(Math.PI * s));
+    }
+}
+
+// ─── Controls ───
+function setType(isExo) {
+    document.getElementById('exoBtn').classList.toggle('active', isExo);
+    document.getElementById('endoBtn').classList.toggle('active', !isExo);
+    // Adjust sliders to match
+    if (isExo && S.productE >= S.reactantE) {
+        S.productE = Math.max(50, S.reactantE - 80);
+        document.getElementById('slP').value = S.productE;
+    } else if (!isExo && S.productE <= S.reactantE) {
+        S.productE = Math.min(400, S.reactantE + 80);
+        document.getElementById('slP').value = S.productE;
+    }
+    S.exampleName = '';
+    document.getElementById('exampleSelect').value = '';
+    onSlider();
+}
+
+function toggleCatalyst() {
+    S.catalyst = !S.catalyst;
+    const btn = document.getElementById('catBtn');
+    btn.textContent = 'Catalyst: ' + (S.catalyst ? 'ON' : 'OFF');
+    btn.classList.toggle('active', S.catalyst);
+    redraw();
+}
+
+function onSlider() {
+    S.reactantE = parseInt(document.getElementById('slR').value);
+    S.productE = parseInt(document.getElementById('slP').value);
+    S.Ea = parseInt(document.getElementById('slEa').value);
+    document.getElementById('svR').textContent = S.reactantE + ' kJ';
+    document.getElementById('svP').textContent = S.productE + ' kJ';
+    document.getElementById('svEa').textContent = S.Ea + ' kJ';
+    // Update exo/endo buttons based on actual values
+    const isExo = S.productE < S.reactantE;
+    document.getElementById('exoBtn').classList.toggle('active', isExo);
+    document.getElementById('endoBtn').classList.toggle('active', !isExo);
+    S.ballT = -1;
+    redraw();
+}
+
+function loadExample(key) {
+    if (!key || !EXAMPLES[key]) return;
+    const ex = EXAMPLES[key];
+    S.reactantE = ex.r; S.productE = ex.p; S.Ea = ex.ea;
+    S.exampleName = ex.name;
+    S.catalyst = false;
+    document.getElementById('catBtn').textContent = 'Catalyst: OFF';
+    document.getElementById('catBtn').classList.remove('active');
+    document.getElementById('slR').value = ex.r;
+    document.getElementById('slP').value = ex.p;
+    document.getElementById('slEa').value = ex.ea;
+    document.getElementById('svR').textContent = ex.r + ' kJ';
+    document.getElementById('svP').textContent = ex.p + ' kJ';
+    document.getElementById('svEa').textContent = ex.ea + ' kJ';
+    const isExo = ex.p < ex.r;
+    document.getElementById('exoBtn').classList.toggle('active', isExo);
+    document.getElementById('endoBtn').classList.toggle('active', !isExo);
+    S.ballT = -1;
+    redraw();
+}
+
+function playAnimation() {
+    S.ballT = 0;
+    animateBall();
+}
+
+let animId = null;
+function animateBall() {
+    if (animId) cancelAnimationFrame(animId);
+    S.ballT += 0.008;
+    if (S.ballT > 1) { S.ballT = 1; redraw(); return; }
+    redraw();
+    animId = requestAnimationFrame(animateBall);
+}
+
+// ─── Drawing ───
+function redraw() {
+    ctx.clearRect(0, 0, CW, CH);
+    ctx.fillStyle = '#0a0f1e';
+    ctx.fillRect(0, 0, CW, CH);
+
+    const peakE = S.reactantE + S.Ea;
+    const catPeakE = S.reactantE + S.Ea * 0.6;
+    const maxE = Math.max(peakE, S.reactantE, S.productE) + 40;
+    const isExo = S.productE < S.reactantE;
+
+    drawGrid(maxE);
+    drawAxes(maxE);
+    drawLevels(maxE);
+    drawCurve(S.reactantE, peakE, S.productE, maxE, '#7db4ff', false);
+    if (S.catalyst) {
+        drawCurve(S.reactantE, catPeakE, S.productE, maxE, '#a78bfa', true);
+    }
+    drawEaArrow(maxE, peakE, catPeakE);
+    drawDeltaHArrow(maxE, isExo);
+    drawBall(maxE, peakE);
+    drawTitle();
+    updateData(isExo, peakE, catPeakE);
+}
+
+function drawGrid(maxE) {
+    ctx.strokeStyle = '#151d30';
+    ctx.lineWidth = 1;
+    // Horizontal grid lines
+    const steps = 5;
+    for (let i = 0; i <= steps; i++) {
+        const e = (i / steps) * maxE;
+        const y = eToY(e, maxE);
+        ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(CW - PAD.r, y); ctx.stroke();
+        // Labels
+        ctx.fillStyle = '#3a5a80';
+        ctx.font = '10px Segoe UI';
+        ctx.textAlign = 'right';
+        ctx.fillText(Math.round(e), PAD.l - 8, y + 3);
+    }
+}
+
+function drawAxes(maxE) {
+    ctx.strokeStyle = '#2d4a7a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(PAD.l, PAD.t);
+    ctx.lineTo(PAD.l, CH - PAD.b);
+    ctx.lineTo(CW - PAD.r, CH - PAD.b);
+    ctx.stroke();
+
+    // Arrow heads
+    ctx.fillStyle = '#2d4a7a';
+    // Y-axis arrow
+    ctx.beginPath(); ctx.moveTo(PAD.l, PAD.t); ctx.lineTo(PAD.l - 5, PAD.t + 10); ctx.lineTo(PAD.l + 5, PAD.t + 10); ctx.fill();
+    // X-axis arrow
+    ctx.beginPath(); ctx.moveTo(CW - PAD.r, CH - PAD.b); ctx.lineTo(CW - PAD.r - 10, CH - PAD.b - 5); ctx.lineTo(CW - PAD.r - 10, CH - PAD.b + 5); ctx.fill();
+
+    // Labels
+    ctx.fillStyle = '#5a8abf';
+    ctx.font = '13px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.fillText('Reaction Progress', CW / 2, CH - 15);
+    ctx.save();
+    ctx.translate(18, CH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Energy (kJ)', 0, 0);
+    ctx.restore();
+}
+
+function drawLevels(maxE) {
+    const rY = eToY(S.reactantE, maxE);
+    const pY = eToY(S.productE, maxE);
+    const x1 = PAD.l + 40, x2 = PAD.l + 170;
+    const x3 = CW - PAD.r - 170, x4 = CW - PAD.r - 40;
+
+    // Reactant level line
+    ctx.strokeStyle = '#51cf66';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(x1, rY); ctx.lineTo(x2, rY); ctx.stroke();
+
+    // Product level line
+    ctx.strokeStyle = '#ff6b6b';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(x3, pY); ctx.lineTo(x4, pY); ctx.stroke();
+
+    // Labels
+    ctx.font = 'bold 13px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#51cf66';
+    ctx.fillText('Reactants', (x1 + x2) / 2, rY - 12);
+    ctx.fillStyle = '#ff6b6b';
+    ctx.fillText('Products', (x3 + x4) / 2, pY - 12);
+
+    // Energy values on levels
+    ctx.font = '11px Segoe UI';
+    ctx.fillStyle = '#51cf66';
+    ctx.fillText(S.reactantE + ' kJ', (x1 + x2) / 2, rY + 18);
+    ctx.fillStyle = '#ff6b6b';
+    ctx.fillText(S.productE + ' kJ', (x3 + x4) / 2, pY + 18);
+}
+
+function drawCurve(startE, peakE, endE, maxE, color, dashed) {
+    const startX = PAD.l + 170;
+    const endX = CW - PAD.r - 170;
+    const w = endX - startX;
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = dashed ? 2.5 : 3;
+    if (dashed) ctx.setLineDash([8, 5]);
+    ctx.beginPath();
+    for (let i = 0; i <= 200; i++) {
+        const t = i / 200;
+        const e = curveE(t, startE, peakE, endE);
+        const x = startX + t * w;
+        const y = eToY(e, maxE);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    if (dashed) ctx.setLineDash([]);
+
+    // Peak label
+    if (!dashed) {
+        const peakX = startX + w * 0.5;
+        const peakY = eToY(peakE, maxE);
+        ctx.fillStyle = color;
+        ctx.font = '11px Segoe UI';
+        ctx.textAlign = 'center';
+        ctx.fillText('Transition State', peakX, peakY - 12);
+    }
+    if (dashed) {
+        const peakX = startX + w * 0.5;
+        const peakY = eToY(peakE, maxE);
+        ctx.fillStyle = color;
+        ctx.font = '11px Segoe UI';
+        ctx.textAlign = 'center';
+        ctx.fillText('With catalyst', peakX, peakY - 12);
+    }
+}
+
+function drawEaArrow(maxE, peakE, catPeakE) {
+    const rY = eToY(S.reactantE, maxE);
+    const peakY = eToY(peakE, maxE);
+    const arrowX = PAD.l + 130;
+
+    // Ea arrow (reactant → peak) — points UP
+    ctx.strokeStyle = '#ffb74d';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(arrowX, rY); ctx.lineTo(arrowX, peakY); ctx.stroke();
+    // Arrowhead pointing UP
+    ctx.fillStyle = '#ffb74d';
+    ctx.beginPath();
+    ctx.moveTo(arrowX, peakY);
+    ctx.lineTo(arrowX - 5, peakY + 10);
+    ctx.lineTo(arrowX + 5, peakY + 10);
+    ctx.fill();
+    // Label
+    ctx.fillStyle = '#ffb74d';
+    ctx.font = 'bold 12px Segoe UI';
+    ctx.textAlign = 'right';
+    ctx.fillText('Ea = ' + S.Ea + ' kJ', arrowX - 8, (rY + peakY) / 2 + 4);
+
+    // Catalyst Ea arrow
+    if (S.catalyst) {
+        const catPeakY = eToY(catPeakE, maxE);
+        const catArrowX = arrowX + 30;
+        ctx.strokeStyle = '#a78bfa';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath(); ctx.moveTo(catArrowX, rY); ctx.lineTo(catArrowX, catPeakY); ctx.stroke();
+        ctx.setLineDash([]);
+        // Arrowhead
+        ctx.fillStyle = '#a78bfa';
+        ctx.beginPath();
+        ctx.moveTo(catArrowX, catPeakY);
+        ctx.lineTo(catArrowX - 4, catPeakY + 8);
+        ctx.lineTo(catArrowX + 4, catPeakY + 8);
+        ctx.fill();
+        const catEa = Math.round(S.Ea * 0.6);
+        ctx.fillStyle = '#a78bfa';
+        ctx.font = 'bold 11px Segoe UI';
+        ctx.textAlign = 'left';
+        ctx.fillText('Ea\' = ' + catEa + ' kJ', catArrowX + 6, (rY + catPeakY) / 2 + 4);
+    }
+}
+
+function drawDeltaHArrow(maxE, isExo) {
+    const rY = eToY(S.reactantE, maxE);
+    const pY = eToY(S.productE, maxE);
+    const arrowX = CW - PAD.r - 100;
+    const deltaH = S.productE - S.reactantE;
+
+    // Vertical arrow from reactant level to product level
+    const color = isExo ? '#51cf66' : '#ff6b6b';
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(arrowX, rY); ctx.lineTo(arrowX, pY); ctx.stroke();
+
+    // Arrowhead points TOWARD the product level
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    if (isExo) {
+        // Product is lower → arrow points DOWN
+        ctx.moveTo(arrowX, pY);
+        ctx.lineTo(arrowX - 5, pY - 10);
+        ctx.lineTo(arrowX + 5, pY - 10);
+    } else {
+        // Product is higher → arrow points UP
+        ctx.moveTo(arrowX, pY);
+        ctx.lineTo(arrowX - 5, pY + 10);
+        ctx.lineTo(arrowX + 5, pY + 10);
+    }
+    ctx.fill();
+
+    // Dashed horizontal reference lines
+    ctx.strokeStyle = color + '40';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(PAD.l + 170, rY); ctx.lineTo(arrowX + 20, rY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(CW - PAD.r - 170, pY); ctx.lineTo(arrowX + 20, pY); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label
+    ctx.fillStyle = color;
+    ctx.font = 'bold 13px Segoe UI';
+    ctx.textAlign = 'left';
+    const sign = deltaH >= 0 ? '+' : '';
+    ctx.fillText('ΔH = ' + sign + deltaH + ' kJ', arrowX + 10, (rY + pY) / 2 + 5);
+    ctx.font = '11px Segoe UI';
+    ctx.fillText(isExo ? '(exothermic)' : '(endothermic)', arrowX + 10, (rY + pY) / 2 + 20);
+}
+
+function drawBall(maxE, peakE) {
+    if (S.ballT < 0 || S.ballT > 1) return;
+    const startX = PAD.l + 170;
+    const endX = CW - PAD.r - 170;
+    const w = endX - startX;
+
+    const useE = S.catalyst ? S.reactantE + S.Ea * 0.6 : peakE;
+    const e = curveE(S.ballT, S.reactantE, useE, S.productE);
+    const x = startX + S.ballT * w;
+    const y = eToY(e, maxE);
+
+    // Glow
+    const grad = ctx.createRadialGradient(x, y, 3, x, y, 15);
+    grad.addColorStop(0, 'rgba(125, 180, 255, 0.6)');
+    grad.addColorStop(1, 'rgba(125, 180, 255, 0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(x, y, 15, 0, Math.PI * 2); ctx.fill();
+
+    // Ball
+    ctx.fillStyle = '#7db4ff';
+    ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+}
+
+function drawTitle() {
+    if (S.exampleName) {
+        const ex = Object.values(EXAMPLES).find(e => e.name === S.exampleName);
+        if (ex) {
+            ctx.fillStyle = '#7db4ff';
+            ctx.font = 'bold 14px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.fillText(ex.name, CW / 2, PAD.t - 20);
+            ctx.font = '12px Segoe UI';
+            ctx.fillStyle = '#6a8cbf';
+            ctx.fillText(ex.eq + '   (ΔH = ' + (ex.dh > 0 ? '+' : '') + ex.dh + ' kJ/mol)', CW / 2, PAD.t - 5);
+        }
+    }
+}
+
+// ─── Data panel ───
+function updateData(isExo, peakE, catPeakE) {
+    const deltaH = S.productE - S.reactantE;
+    const catEa = Math.round(S.Ea * 0.6);
+
+    document.getElementById('dR').textContent = S.reactantE + ' kJ';
+    document.getElementById('dP').textContent = S.productE + ' kJ';
+
+    const dhEl = document.getElementById('dH');
+    dhEl.textContent = (deltaH >= 0 ? '+' : '') + deltaH + ' kJ';
+    dhEl.className = 'val ' + (isExo ? 'exo' : 'endo');
+
+    document.getElementById('dEa').textContent = S.Ea + ' kJ';
+    document.getElementById('dEaCat').textContent = S.catalyst ? catEa + ' kJ' : '—';
+    document.getElementById('dType').textContent = isExo ? 'Exothermic' : 'Endothermic';
+    document.getElementById('dType').className = 'val ' + (isExo ? 'exo' : 'endo');
+
+    // Concept text
+    const cb = document.getElementById('conceptBox');
+    if (isExo) {
+        cb.innerHTML = '<strong>Exothermic (ΔH < 0):</strong> <span>Products have less energy than reactants. Energy is released to surroundings — temperature increases. E.g. combustion, neutralisation, respiration.</span>';
+    } else {
+        cb.innerHTML = '<strong>Endothermic (ΔH > 0):</strong> <span>Products have more energy than reactants. Energy is absorbed from surroundings — temperature decreases. E.g. photosynthesis, thermal decomposition.</span>';
+    }
+
+    const cc = document.getElementById('catConcept');
+    if (S.catalyst) {
+        cc.innerHTML = `<strong>Catalyst active:</strong> <span>Alternative pathway lowers Ea from ${S.Ea} kJ to ${catEa} kJ. ΔH is unchanged at ${(deltaH >= 0 ? '+' : '') + deltaH} kJ — same start and end energy levels.</span>`;
+    } else {
+        cc.innerHTML = '<strong>Catalyst:</strong> <span>Provides an alternative reaction pathway with lower Ea. Does NOT change ΔH — same reactants and products.</span>';
+    }
+}
+
+// ─── Export ───
+function exportCSV() {
+    const deltaH = S.productE - S.reactantE;
+    const catEa = Math.round(S.Ea * 0.6);
+    let csv = 'Parameter,Value\n';
+    csv += `Reaction Type,${S.productE < S.reactantE ? 'Exothermic' : 'Endothermic'}\n`;
+    if (S.exampleName) csv += `Example,${S.exampleName}\n`;
+    csv += `Reactant Energy (kJ),${S.reactantE}\n`;
+    csv += `Product Energy (kJ),${S.productE}\n`;
+    csv += `Delta H (kJ),${deltaH}\n`;
+    csv += `Activation Energy Ea (kJ),${S.Ea}\n`;
+    csv += `Catalyst Active,${S.catalyst}\n`;
+    if (S.catalyst) csv += `Ea with Catalyst (kJ),${catEa}\n`;
+    csv += `\nReaction Progress,Energy (kJ),Energy with Catalyst (kJ)\n`;
+    for (let i = 0; i <= 50; i++) {
+        const t = i / 50;
+        const e = curveE(t, S.reactantE, S.reactantE + S.Ea, S.productE);
+        const ec = curveE(t, S.reactantE, S.reactantE + catEa, S.productE);
+        csv += `${t.toFixed(2)},${e.toFixed(1)},${ec.toFixed(1)}\n`;
+    }
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'energy-profile-data.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function exportPNG() {
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png'); a.download = 'energy-profile-diagram.png';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+// ─── Init ───
+redraw();
+</script>
+</body>
+</html>

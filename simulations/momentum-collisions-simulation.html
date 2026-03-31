@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IGCSE Momentum & Collisions Simulation</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0f1729;color:#e0e7ff;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;padding:20px;min-height:100vh}
+.container{max-width:1350px;margin:0 auto}
+h1{text-align:center;margin-bottom:20px;font-size:1.7em;color:#7db4ff}
+.main{display:grid;grid-template-columns:1fr 340px;gap:20px}
+.panel{background:#1a2744;border:2px solid #2d4a7a;border-radius:8px;padding:20px}
+canvas{display:block;border-radius:4px}
+.ctrl-group{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.ctrl-group label{font-size:.88em;color:#7db4ff;font-weight:600}
+input[type=range]{width:100%;height:6px;border-radius:3px;background:#2d4a7a;outline:none;-webkit-appearance:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#7db4ff;cursor:pointer}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#7db4ff;cursor:pointer;border:none}
+.chk-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.chk-row input{width:18px;height:18px;accent-color:#7db4ff;cursor:pointer}
+.chk-row label{font-size:.9em;color:#aabbdd;margin:0}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.btn{padding:9px 16px;border-radius:5px;cursor:pointer;font-weight:600;font-family:inherit;font-size:.9em;border:2px solid #7db4ff;transition:all .2s;flex:1;text-align:center;min-width:70px}
+.btn-primary{background:#7db4ff;color:#0f1729;border-color:#7db4ff}
+.btn-secondary{background:#1a2744;color:#7db4ff}
+.btn:hover{background:#9ed3ff;color:#0f1729}
+.status{text-align:center;color:#fb923c;font-weight:700;font-size:1em;margin-bottom:12px;min-height:1.3em}
+.data-box{background:#0a0f1f;border:1px solid #2d4a7a;border-radius:6px;padding:14px;margin-bottom:12px}
+.data-title{color:#7db4ff;font-weight:700;font-size:.9em;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.data-row{display:flex;justify-content:space-between;font-size:.88em;padding:4px 0;border-bottom:1px solid rgba(45,74,122,0.25)}
+.data-row:last-child{border-bottom:none}
+.d-label{color:#8899bb}
+.d-val{color:#7db4ff;font-weight:600;text-align:right}
+.highlight{color:#fb923c}
+.sect-title{color:#7db4ff;font-weight:700;font-size:1em;margin:16px 0 10px;padding-top:12px;border-top:2px solid #2d4a7a}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.85em;margin-bottom:10px}
+.leg-item{display:flex;align-items:center;gap:6px}
+.leg-dot{width:16px;height:10px;border-radius:2px}
+.footer{text-align:center;padding:20px;color:#7db4ff;border-top:1px solid #2d4a7a;margin-top:30px;font-size:.9em}
+@media(max-width:900px){.main{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Momentum & Collisions Simulation</h1>
+<div class="main">
+<div>
+<div class="panel" style="padding:12px">
+<canvas id="simCvs" width="760" height="380"></canvas>
+</div>
+<div class="panel" style="margin-top:14px;padding:12px">
+<canvas id="chartCvs" width="760" height="220"></canvas>
+</div>
+</div>
+<div>
+<div class="panel">
+<div class="status" id="status">Ready — press Play</div>
+<div class="legend">
+<div class="leg-item"><div class="leg-dot" style="background:#7db4ff"></div> Trolley A</div>
+<div class="leg-item"><div class="leg-dot" style="background:#fb923c"></div> Trolley B</div>
+</div>
+<div class="sect-title" style="margin-top:0;border-top:none">Trolley A</div>
+<div class="ctrl-group">
+<label>Mass A: <span id="valMA">2.0</span> kg</label>
+<input type="range" id="sldMA" min="0.5" max="5" step="0.1" value="2">
+</div>
+<div class="ctrl-group">
+<label>Velocity A: <span id="valVA">3.0</span> m/s</label>
+<input type="range" id="sldVA" min="-5" max="5" step="0.5" value="3">
+</div>
+<div class="sect-title">Trolley B</div>
+<div class="ctrl-group">
+<label>Mass B: <span id="valMB">2.0</span> kg</label>
+<input type="range" id="sldMB" min="0.5" max="5" step="0.1" value="2">
+</div>
+<div class="ctrl-group">
+<label>Velocity B: <span id="valVB">-2.0</span> m/s</label>
+<input type="range" id="sldVB" min="-5" max="5" step="0.5" value="-2">
+</div>
+<div class="chk-row">
+<input type="checkbox" id="chkElastic" checked>
+<label for="chkElastic">Elastic collision (KE conserved)</label>
+</div>
+<div class="btn-row">
+<button class="btn btn-primary" id="btnPlay">▶ Play</button>
+<button class="btn btn-secondary" id="btnPause">⏸ Pause</button>
+<button class="btn btn-secondary" id="btnReset">↻ Reset</button>
+</div>
+
+<div class="data-box">
+<div class="data-title">Before Collision</div>
+<div class="data-row"><span class="d-label">p_A = m × v</span><span class="d-val" id="bpA">6.00 kg·m/s</span></div>
+<div class="data-row"><span class="d-label">p_B = m × v</span><span class="d-val" id="bpB">-4.00 kg·m/s</span></div>
+<div class="data-row"><span class="d-label">KE_A = ½mv²</span><span class="d-val" id="bkA">9.00 J</span></div>
+<div class="data-row"><span class="d-label">KE_B = ½mv²</span><span class="d-val" id="bkB">4.00 J</span></div>
+<div class="data-row"><span class="d-label">Total momentum</span><span class="d-val highlight" id="bpT">2.00 kg·m/s</span></div>
+<div class="data-row"><span class="d-label">Total KE</span><span class="d-val highlight" id="bkT">13.00 J</span></div>
+</div>
+
+<div class="data-box">
+<div class="data-title">After Collision</div>
+<div class="data-row"><span class="d-label">v'_A</span><span class="d-val" id="avA">— m/s</span></div>
+<div class="data-row"><span class="d-label">v'_B</span><span class="d-val" id="avB">— m/s</span></div>
+<div class="data-row"><span class="d-label">p'_A</span><span class="d-val" id="apA">— kg·m/s</span></div>
+<div class="data-row"><span class="d-label">p'_B</span><span class="d-val" id="apB">— kg·m/s</span></div>
+<div class="data-row"><span class="d-label">KE'_A</span><span class="d-val" id="akA">— J</span></div>
+<div class="data-row"><span class="d-label">KE'_B</span><span class="d-val" id="akB">— J</span></div>
+<div class="data-row"><span class="d-label">Total momentum</span><span class="d-val highlight" id="apT">— kg·m/s</span></div>
+<div class="data-row"><span class="d-label">Total KE</span><span class="d-val highlight" id="akT">— J</span></div>
+<div class="data-row"><span class="d-label">KE lost</span><span class="d-val" id="akL" style="color:#ee6666">— J</span></div>
+</div>
+
+<div class="btn-row">
+<button class="btn btn-secondary" id="btnCSV">Export CSV</button>
+<button class="btn btn-secondary" id="btnPNG">Export PNG</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="footer">IGCSE Science Simulations</div>
+
+<script>
+// ==================== SETUP ====================
+const simCvs = document.getElementById('simCvs');
+const simCtx = simCvs.getContext('2d');
+const chartCvs = document.getElementById('chartCvs');
+const chartCtx = chartCvs.getContext('2d');
+const SW = simCvs.width, SH = simCvs.height;
+const CW = chartCvs.width, CH = chartCvs.height;
+
+// ==================== STATE ====================
+let mA = 2.0, mB = 2.0, uA = 3.0, uB = -2.0;
+let elastic = true, playing = false;
+let posA, posB, vA, vB;
+let collided = false, collisionX = 0;
+let flashTimer = 0;
+let afterVA = 0, afterVB = 0;
+let simTime = 0;
+
+const TRACK_Y = 220;
+const SPEED_SCALE = 60; // pixels per m/s per second
+const TROLLEY_W = 60;
+const TROLLEY_H = 40;
+const WHEEL_R = 7;
+const MARGIN = 80;
+
+function trolleyWidth(mass) {
+  return TROLLEY_W + (mass - 0.5) * 6; // wider for heavier
+}
+
+function resetSim() {
+  playing = false;
+  collided = false;
+  flashTimer = 0;
+  simTime = 0;
+  const twA = trolleyWidth(mA);
+  const twB = trolleyWidth(mB);
+  posA = MARGIN + twA / 2 + 30;
+  posB = SW - MARGIN - twB / 2 - 30;
+  vA = uA;
+  vB = uB;
+  calcAfterCollision();
+  document.getElementById('status').textContent = 'Ready — press Play';
+  updateBeforePanel();
+  updateAfterPanel();
+}
+
+function calcAfterCollision() {
+  if (elastic) {
+    afterVA = ((mA - mB) * uA + 2 * mB * uB) / (mA + mB);
+    afterVB = ((mB - mA) * uB + 2 * mA * uA) / (mA + mB);
+  } else {
+    const combined = (mA * uA + mB * uB) / (mA + mB);
+    afterVA = combined;
+    afterVB = combined;
+  }
+}
+
+// ==================== PHYSICS ====================
+function step(dt) {
+  if (!playing) return;
+  simTime += dt;
+
+  if (!collided) {
+    posA += vA * SPEED_SCALE * dt;
+    posB += vB * SPEED_SCALE * dt;
+
+    // Check collision
+    const twA = trolleyWidth(mA) / 2;
+    const twB = trolleyWidth(mB) / 2;
+    const gap = posB - twB - (posA + twA);
+
+    if (gap <= 0) {
+      // Collision!
+      collided = true;
+      flashTimer = 0.5;
+      // Place them touching
+      collisionX = (posA + twA + posB - twB) / 2;
+      posA = collisionX - twA;
+      posB = collisionX + twB;
+      vA = afterVA;
+      vB = afterVB;
+      document.getElementById('status').textContent = 'Collision! Momentum is conserved.';
+    }
+  } else {
+    posA += vA * SPEED_SCALE * dt;
+    posB += vB * SPEED_SCALE * dt;
+    if (flashTimer > 0) flashTimer -= dt;
+
+    // For inelastic, keep them together
+    if (!elastic) {
+      const avg = (posA + posB) / 2;
+      const twA = trolleyWidth(mA) / 2;
+      const twB = trolleyWidth(mB) / 2;
+      posA = avg - twB;
+      posB = avg + twA;
+    }
+
+    // Auto-stop when both off-screen or after 5 seconds post-collision
+    if (simTime > 8) {
+      playing = false;
+      document.getElementById('status').textContent = 'Complete — momentum conserved!';
+    }
+  }
+}
+
+// ==================== DRAW SIM ====================
+function drawSim() {
+  simCtx.fillStyle = '#0a0f1f';
+  simCtx.fillRect(0, 0, SW, SH);
+
+  // Track surface
+  simCtx.fillStyle = '#141e33';
+  simCtx.fillRect(30, TRACK_Y + TROLLEY_H / 2 + WHEEL_R, SW - 60, 20);
+  // Track top line
+  simCtx.strokeStyle = '#2d4a7a';
+  simCtx.lineWidth = 2;
+  simCtx.beginPath();
+  simCtx.moveTo(30, TRACK_Y + TROLLEY_H / 2 + WHEEL_R);
+  simCtx.lineTo(SW - 30, TRACK_Y + TROLLEY_H / 2 + WHEEL_R);
+  simCtx.stroke();
+
+  // Distance markers
+  simCtx.fillStyle = '#2d4a7a';
+  simCtx.font = '10px Segoe UI';
+  simCtx.textAlign = 'center';
+  for (let x = 80; x < SW - 40; x += 60) {
+    simCtx.fillRect(x, TRACK_Y + TROLLEY_H / 2 + WHEEL_R, 1, 8);
+  }
+
+  // Collision flash
+  if (flashTimer > 0) {
+    const alpha = flashTimer * 1.5;
+    simCtx.fillStyle = `rgba(255, 200, 50, ${Math.min(alpha, 0.4)})`;
+    simCtx.beginPath();
+    simCtx.arc(collisionX, TRACK_Y, 50 * (0.5 - flashTimer + 0.5), 0, Math.PI * 2);
+    simCtx.fill();
+  }
+
+  // Draw trolleys
+  drawTrolley(posA, mA, vA, '#7db4ff', '#5a8fd8', 'A');
+  drawTrolley(posB, mB, vB, '#fb923c', '#d97706', 'B');
+
+  // Velocity arrows above trolleys
+  drawVelocityArrow(posA, TRACK_Y - TROLLEY_H / 2 - 40, collided ? vA : uA, '#7db4ff', 'v_A');
+  drawVelocityArrow(posB, TRACK_Y - TROLLEY_H / 2 - 40, collided ? vB : uB, '#fb923c', 'v_B');
+
+  // Momentum arrows below track
+  const momY = TRACK_Y + TROLLEY_H / 2 + WHEEL_R + 40;
+  const momA = mA * (collided ? vA : uA);
+  const momB = mB * (collided ? vB : uB);
+  drawMomentumArrow(posA, momY, momA, '#7db4ff', 'p_A');
+  drawMomentumArrow(posB, momY, momB, '#fb923c', 'p_B');
+
+  // Labels at top
+  simCtx.fillStyle = '#556688';
+  simCtx.font = '11px Segoe UI';
+  simCtx.textAlign = 'left';
+  simCtx.fillText('Velocity arrows (top)  |  Momentum arrows (bottom)', 30, 20);
+
+  // Conservation indicator
+  if (collided) {
+    const totalBefore = mA * uA + mB * uB;
+    const totalAfter = mA * vA + mB * vB;
+    simCtx.fillStyle = '#4ade80';
+    simCtx.font = 'bold 12px Segoe UI';
+    simCtx.textAlign = 'center';
+    simCtx.fillText(`Total momentum: ${totalBefore.toFixed(2)} kg·m/s (before) = ${totalAfter.toFixed(2)} kg·m/s (after) ✓`, SW / 2, SH - 12);
+  }
+}
+
+function drawTrolley(x, mass, vel, color, darkColor, label) {
+  const tw = trolleyWidth(mass);
+  const th = TROLLEY_H;
+  const ty = TRACK_Y - th / 2;
+
+  // Body
+  const grad = simCtx.createLinearGradient(x - tw / 2, ty, x - tw / 2, ty + th);
+  grad.addColorStop(0, color);
+  grad.addColorStop(1, darkColor);
+  simCtx.fillStyle = grad;
+  roundRect(simCtx, x - tw / 2, ty, tw, th, 6);
+
+  // Border
+  simCtx.strokeStyle = color;
+  simCtx.lineWidth = 2;
+  roundRectStroke(simCtx, x - tw / 2, ty, tw, th, 6);
+
+  // Mass label inside
+  simCtx.fillStyle = '#0f1729';
+  simCtx.font = 'bold 13px Segoe UI';
+  simCtx.textAlign = 'center';
+  simCtx.fillText(label, x, ty + th / 2 - 4);
+  simCtx.font = '10px Segoe UI';
+  simCtx.fillText(mass.toFixed(1) + ' kg', x, ty + th / 2 + 10);
+
+  // Wheels
+  const wheelY = ty + th + WHEEL_R - 2;
+  simCtx.fillStyle = '#556688';
+  simCtx.strokeStyle = '#778899';
+  simCtx.lineWidth = 2;
+  for (const wx of [x - tw / 3, x + tw / 3]) {
+    simCtx.beginPath();
+    simCtx.arc(wx, wheelY, WHEEL_R, 0, Math.PI * 2);
+    simCtx.fill(); simCtx.stroke();
+    // Hub
+    simCtx.fillStyle = '#99aabb';
+    simCtx.beginPath();
+    simCtx.arc(wx, wheelY, 2, 0, Math.PI * 2);
+    simCtx.fill();
+    simCtx.fillStyle = '#556688';
+  }
+}
+
+function drawVelocityArrow(x, y, vel, color, label) {
+  if (Math.abs(vel) < 0.01) {
+    simCtx.fillStyle = '#556688';
+    simCtx.font = '10px Segoe UI';
+    simCtx.textAlign = 'center';
+    simCtx.fillText(label + ' = 0', x, y + 4);
+    return;
+  }
+  const len = vel * 18;
+  const endX = x + len;
+  simCtx.strokeStyle = color;
+  simCtx.lineWidth = 3;
+  simCtx.beginPath();
+  simCtx.moveTo(x, y);
+  simCtx.lineTo(endX, y);
+  simCtx.stroke();
+  // Arrowhead
+  const dir = vel > 0 ? 1 : -1;
+  simCtx.fillStyle = color;
+  simCtx.beginPath();
+  simCtx.moveTo(endX, y);
+  simCtx.lineTo(endX - 8 * dir, y - 5);
+  simCtx.lineTo(endX - 8 * dir, y + 5);
+  simCtx.closePath();
+  simCtx.fill();
+  // Label
+  simCtx.font = '10px Segoe UI';
+  simCtx.textAlign = 'center';
+  simCtx.fillText(label + ' = ' + vel.toFixed(1) + ' m/s', x + len / 2, y - 8);
+}
+
+function drawMomentumArrow(x, y, mom, color, label) {
+  if (Math.abs(mom) < 0.01) {
+    simCtx.fillStyle = '#556688';
+    simCtx.font = '10px Segoe UI';
+    simCtx.textAlign = 'center';
+    simCtx.fillText(label + ' = 0', x, y + 4);
+    return;
+  }
+  const maxLen = 100;
+  const scale = 12;
+  const len = Math.max(-maxLen, Math.min(maxLen, mom * scale));
+  const endX = x + len;
+  simCtx.strokeStyle = color;
+  simCtx.lineWidth = 4;
+  simCtx.globalAlpha = 0.7;
+  simCtx.beginPath();
+  simCtx.moveTo(x, y);
+  simCtx.lineTo(endX, y);
+  simCtx.stroke();
+  const dir = mom > 0 ? 1 : -1;
+  simCtx.fillStyle = color;
+  simCtx.beginPath();
+  simCtx.moveTo(endX, y);
+  simCtx.lineTo(endX - 10 * dir, y - 6);
+  simCtx.lineTo(endX - 10 * dir, y + 6);
+  simCtx.closePath();
+  simCtx.fill();
+  simCtx.globalAlpha = 1;
+  simCtx.font = '10px Segoe UI';
+  simCtx.textAlign = 'center';
+  simCtx.fillText(label + ' = ' + mom.toFixed(1), x + len / 2, y + 16);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function roundRectStroke(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+  ctx.stroke();
+}
+
+// ==================== DRAW CHART ====================
+function drawChart() {
+  chartCtx.fillStyle = '#0a0f1f';
+  chartCtx.fillRect(0, 0, CW, CH);
+
+  const bpA = mA * uA, bpB = mB * uB;
+  const bpT = bpA + bpB;
+  const bkA = 0.5 * mA * uA * uA, bkB = 0.5 * mB * uB * uB;
+  const bkT = bkA + bkB;
+
+  const apA = mA * afterVA, apB = mB * afterVB;
+  const apT = apA + apB;
+  const akA = 0.5 * mA * afterVA * afterVA, akB = 0.5 * mB * afterVB * afterVB;
+  const akT = akA + akB;
+
+  // Left half: Momentum bars
+  const midX = CW / 2;
+  drawBarSection(0, midX, 'Momentum (kg·m/s)',
+    [
+      { label: 'p before', val: Math.abs(bpT), color: '#7db4ff' },
+      { label: 'p after', val: Math.abs(apT), color: '#9ed3ff' }
+    ], Math.max(Math.abs(bpT), Math.abs(apT), 1));
+
+  // Right half: KE bars
+  drawBarSection(midX, midX, 'Kinetic Energy (J)',
+    [
+      { label: 'KE before', val: bkT, color: '#fb923c' },
+      { label: 'KE after', val: akT, color: '#fbbf24' }
+    ], Math.max(bkT, akT, 1));
+
+  // Divider
+  chartCtx.strokeStyle = '#2d4a7a';
+  chartCtx.lineWidth = 1;
+  chartCtx.beginPath();
+  chartCtx.moveTo(midX, 10);
+  chartCtx.lineTo(midX, CH - 10);
+  chartCtx.stroke();
+}
+
+function drawBarSection(ox, width, title, bars, maxVal) {
+  const pad = { l: 20, r: 20, t: 35, b: 40 };
+  const barW = 50;
+  const gap = 30;
+  const totalBarsW = bars.length * barW + (bars.length - 1) * gap;
+  const startX = ox + (width - totalBarsW) / 2;
+  const maxH = CH - pad.t - pad.b;
+
+  // Title
+  chartCtx.fillStyle = '#7db4ff';
+  chartCtx.font = 'bold 12px Segoe UI';
+  chartCtx.textAlign = 'center';
+  chartCtx.fillText(title, ox + width / 2, 20);
+
+  // Baseline
+  const baseY = CH - pad.b;
+  chartCtx.strokeStyle = '#2d4a7a';
+  chartCtx.lineWidth = 1;
+  chartCtx.beginPath();
+  chartCtx.moveTo(ox + pad.l, baseY);
+  chartCtx.lineTo(ox + width - pad.r, baseY);
+  chartCtx.stroke();
+
+  bars.forEach((bar, i) => {
+    const bx = startX + i * (barW + gap);
+    const bh = maxVal > 0 ? (bar.val / (maxVal * 1.2)) * maxH : 0;
+    const by = baseY - Math.max(bh, 4);
+
+    // Bar
+    const grad = chartCtx.createLinearGradient(bx, by, bx, baseY);
+    grad.addColorStop(0, bar.color);
+    grad.addColorStop(1, bar.color + '88');
+    chartCtx.fillStyle = grad;
+    chartCtx.fillRect(bx, by, barW, baseY - by);
+
+    // Border
+    chartCtx.strokeStyle = bar.color;
+    chartCtx.lineWidth = 1;
+    chartCtx.strokeRect(bx, by, barW, baseY - by);
+
+    // Value on top
+    chartCtx.fillStyle = '#e0e7ff';
+    chartCtx.font = 'bold 11px Segoe UI';
+    chartCtx.textAlign = 'center';
+    chartCtx.fillText(bar.val.toFixed(1), bx + barW / 2, by - 6);
+
+    // Label below
+    chartCtx.fillStyle = '#8899bb';
+    chartCtx.font = '10px Segoe UI';
+    chartCtx.fillText(bar.label, bx + barW / 2, baseY + 16);
+  });
+}
+
+// ==================== DATA PANELS ====================
+function fmt(n) { return n.toFixed(2); }
+
+function updateBeforePanel() {
+  const pA = mA * uA, pB = mB * uB;
+  const kA = 0.5 * mA * uA * uA, kB = 0.5 * mB * uB * uB;
+  document.getElementById('bpA').textContent = fmt(pA) + ' kg·m/s';
+  document.getElementById('bpB').textContent = fmt(pB) + ' kg·m/s';
+  document.getElementById('bkA').textContent = fmt(kA) + ' J';
+  document.getElementById('bkB').textContent = fmt(kB) + ' J';
+  document.getElementById('bpT').textContent = fmt(pA + pB) + ' kg·m/s';
+  document.getElementById('bkT').textContent = fmt(kA + kB) + ' J';
+}
+
+function updateAfterPanel() {
+  calcAfterCollision();
+  const pA = mA * afterVA, pB = mB * afterVB;
+  const kA = 0.5 * mA * afterVA * afterVA, kB = 0.5 * mB * afterVB * afterVB;
+  const bkT = 0.5 * mA * uA * uA + 0.5 * mB * uB * uB;
+  const akT = kA + kB;
+
+  document.getElementById('avA').textContent = fmt(afterVA) + ' m/s';
+  document.getElementById('avB').textContent = fmt(afterVB) + ' m/s';
+  document.getElementById('apA').textContent = fmt(pA) + ' kg·m/s';
+  document.getElementById('apB').textContent = fmt(pB) + ' kg·m/s';
+  document.getElementById('akA').textContent = fmt(kA) + ' J';
+  document.getElementById('akB').textContent = fmt(kB) + ' J';
+  document.getElementById('apT').textContent = fmt(pA + pB) + ' kg·m/s';
+  document.getElementById('akT').textContent = fmt(akT) + ' J';
+  document.getElementById('akL').textContent = fmt(bkT - akT) + ' J';
+}
+
+// ==================== SLIDER LABELS ====================
+function updateSliderLabels() {
+  document.getElementById('valMA').textContent = mA.toFixed(1);
+  document.getElementById('valVA').textContent = uA.toFixed(1);
+  document.getElementById('valMB').textContent = mB.toFixed(1);
+  document.getElementById('valVB').textContent = uB.toFixed(1);
+}
+
+// ==================== EVENTS ====================
+document.getElementById('sldMA').addEventListener('input', e => { mA = parseFloat(e.target.value); updateSliderLabels(); resetSim(); });
+document.getElementById('sldVA').addEventListener('input', e => { uA = parseFloat(e.target.value); updateSliderLabels(); resetSim(); });
+document.getElementById('sldMB').addEventListener('input', e => { mB = parseFloat(e.target.value); updateSliderLabels(); resetSim(); });
+document.getElementById('sldVB').addEventListener('input', e => { uB = parseFloat(e.target.value); updateSliderLabels(); resetSim(); });
+document.getElementById('chkElastic').addEventListener('change', e => { elastic = e.target.checked; resetSim(); });
+
+document.getElementById('btnPlay').addEventListener('click', () => {
+  playing = true;
+  document.getElementById('status').textContent = 'Running...';
+});
+document.getElementById('btnPause').addEventListener('click', () => {
+  playing = false;
+  document.getElementById('status').textContent = 'Paused';
+});
+document.getElementById('btnReset').addEventListener('click', () => resetSim());
+
+// Export CSV
+document.getElementById('btnCSV').addEventListener('click', () => {
+  const pAb = mA * uA, pBb = mB * uB;
+  const kAb = 0.5 * mA * uA * uA, kBb = 0.5 * mB * uB * uB;
+  const pAa = mA * afterVA, pBa = mB * afterVB;
+  const kAa = 0.5 * mA * afterVA * afterVA, kBa = 0.5 * mB * afterVB * afterVB;
+  const rows = [
+    'Stage,Mass A (kg),Vel A (m/s),Momentum A (kg m/s),KE A (J),Mass B (kg),Vel B (m/s),Momentum B (kg m/s),KE B (J),Total Momentum,Total KE',
+    `Before,${mA},${uA},${fmt(pAb)},${fmt(kAb)},${mB},${uB},${fmt(pBb)},${fmt(kBb)},${fmt(pAb+pBb)},${fmt(kAb+kBb)}`,
+    `After,${mA},${fmt(afterVA)},${fmt(pAa)},${fmt(kAa)},${mB},${fmt(afterVB)},${fmt(pBa)},${fmt(kBa)},${fmt(pAa+pBa)},${fmt(kAa+kBa)}`,
+    `Type,${elastic ? 'Elastic' : 'Inelastic'}`
+  ];
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'momentum-data.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+// Export PNG
+document.getElementById('btnPNG').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = simCvs.toDataURL('image/png');
+  a.download = 'momentum-simulation.png';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+});
+
+// ==================== MAIN LOOP ====================
+let lastT = performance.now();
+
+function tick(now) {
+  const dt = Math.min((now - lastT) / 1000, 0.05); // cap at 50ms
+  lastT = now;
+
+  step(dt);
+  drawSim();
+  drawChart();
+  requestAnimationFrame(tick);
+}
+
+// ==================== INIT ====================
+resetSim();
+updateSliderLabels();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

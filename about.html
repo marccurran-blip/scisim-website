@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="About SciSim — Free interactive IGCSE Science simulations for revision.">
+<title>About — SciSim.co.uk</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
+<style>
+:root {
+    --bg: #0f1729;--bg2: #1a2744;--bg3: #0a0f1f;--border: #2d4a7a;--accent: #7db4ff;--accent2: #5a9aee;--text: #e0e7ff;--text2: #8899bb;--text3: #aabbdd;--shadow: rgba(0,0,0,0.4);--font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+[data-theme="light"] {
+    --bg: #f0f4f8;--bg2: #ffffff;--bg3: #e8ecf2;--border: #c0cee0;--accent: #2070c0;--accent2: #1858a0;--text: #1a2744;--text2: #5a6a80;--text3: #3a4a60;--shadow: rgba(0,0,0,0.1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;transition:background .3s,color .3s}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.navbar{background:var(--bg2);border-bottom:2px solid var(--border);padding:0 30px;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;transition:background .3s,border .3s}
+.nav-brand{display:flex;align-items:center;gap:10px;font-size:1.4em;font-weight:800;color:var(--accent);letter-spacing:-0.5px;text-decoration:none}
+.nav-brand span.logo-icon{font-size:1.3em}
+.nav-brand .dot-uk{color:var(--text2);font-weight:400;font-size:0.7em}
+.nav-links{display:flex;align-items:center;gap:16px}
+.nav-link{color:var(--text3);font-size:.9em;font-weight:600;padding:6px 12px;border-radius:6px;transition:all .2s;text-decoration:none}
+.nav-link:hover,.nav-link.active{color:var(--accent);background:var(--bg3);text-decoration:none}
+.nav-controls{display:flex;align-items:center;gap:10px}
+.theme-toggle{width:38px;height:38px;border-radius:8px;border:2px solid var(--border);background:var(--bg3);color:var(--text);cursor:pointer;font-size:1.1em;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.theme-toggle:hover{border-color:var(--accent);color:var(--accent)}
+
+.content{max-width:800px;margin:0 auto;padding:50px 20px 60px}
+.content h1{font-size:2em;color:var(--accent);margin-bottom:8px}
+.content .tagline{color:var(--text2);font-size:1.1em;margin-bottom:40px}
+.section{margin-bottom:36px}
+.section h2{font-size:1.3em;color:var(--accent);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--border)}
+.section p{color:var(--text3);line-height:1.7;margin-bottom:12px;font-size:.95em}
+.features{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.feature{background:var(--bg2);border:2px solid var(--border);border-radius:8px;padding:16px;transition:border .2s}
+.feature:hover{border-color:var(--accent)}
+.feature-icon{font-size:1.5em;margin-bottom:6px}
+.feature-title{font-weight:700;color:var(--text);margin-bottom:4px}
+.feature-desc{font-size:.85em;color:var(--text2);line-height:1.4}
+.subjects{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px}
+.subject-card{background:var(--bg2);border:2px solid var(--border);border-radius:8px;padding:20px;text-align:center}
+.subject-card .num{font-size:2em;font-weight:800;margin-bottom:4px}
+.subject-card .label{font-size:.85em;color:var(--text2);text-transform:uppercase;letter-spacing:1px}
+.subject-card.phys .num{color:#5eead4}
+.subject-card.chem .num{color:#f0a050}
+.subject-card.bio .num{color:#80e080}
+.cta{background:var(--bg2);border:2px solid var(--accent);border-radius:12px;padding:30px;text-align:center;margin-top:40px}
+.cta h3{color:var(--accent);font-size:1.3em;margin-bottom:8px}
+.cta p{color:var(--text2);margin-bottom:16px}
+.cta-btn{display:inline-block;padding:12px 30px;background:var(--accent);color:var(--bg);border-radius:8px;font-weight:700;font-size:1em;transition:all .2s;text-decoration:none}
+.cta-btn:hover{background:var(--accent2);text-decoration:none;transform:translateY(-2px)}
+.footer{max-width:800px;margin:0 auto;padding:30px 20px;border-top:2px solid var(--border);text-align:center;color:var(--text2);font-size:.85em}
+@media(max-width:600px){.features,.subjects{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+    <a class="nav-brand" href="index.html">
+        <span class="logo-icon">🧪</span>
+        SciSim<span class="dot-uk">.co.uk</span>
+    </a>
+    <div class="nav-links">
+        <a class="nav-link" href="index.html">Home</a>
+        <a class="nav-link active" href="about.html">About</a>
+    </div>
+    <div class="nav-controls">
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+    </div>
+</nav>
+
+<div class="content">
+    <h1>About SciSim</h1>
+    <p class="tagline">Free, interactive science simulations built for IGCSE students and teachers.</p>
+
+    <div class="section">
+        <h2>What is SciSim?</h2>
+        <p>SciSim.co.uk is a collection of interactive browser-based simulations covering the IGCSE Physics, Chemistry and Biology syllabus. Every simulation runs directly in your browser — no downloads, no installations, no sign-up required.</p>
+        <p>Each simulation is designed to help students visualise abstract scientific concepts, from gas particle behaviour to enzyme kinetics to radioactive decay. They're ideal for classroom demonstrations, independent revision, or simply satisfying your curiosity about how the world works.</p>
+    </div>
+
+    <div class="section">
+        <h2>Features</h2>
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🎮</div>
+                <div class="feature-title">Fully Interactive</div>
+                <div class="feature-desc">Adjust variables with sliders and controls. See results in real time with animated visuals and live graphs.</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📊</div>
+                <div class="feature-title">Data Export</div>
+                <div class="feature-desc">Export your experimental data as CSV files and save graphs as PNG images for your coursework and notes.</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📱</div>
+                <div class="feature-title">Works Everywhere</div>
+                <div class="feature-desc">Runs on any device with a modern browser — desktop, tablet or phone. No special software needed.</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🌍</div>
+                <div class="feature-title">Multi-Language</div>
+                <div class="feature-desc">Homepage available in 10 languages including Chinese, Hindi, Spanish, French, Arabic and more.</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔬</div>
+                <div class="feature-title">Accurate Science</div>
+                <div class="feature-desc">Every simulation uses correct scientific equations and models aligned with the IGCSE specification.</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🆓</div>
+                <div class="feature-title">Completely Free</div>
+                <div class="feature-desc">All simulations are free to use for students, teachers and anyone interested in science.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Simulations by Subject</h2>
+        <div class="subjects">
+            <div class="subject-card phys">
+                <div class="num">6</div>
+                <div class="label">Physics</div>
+            </div>
+            <div class="subject-card chem">
+                <div class="num">6</div>
+                <div class="label">Chemistry</div>
+            </div>
+            <div class="subject-card bio">
+                <div class="num">6</div>
+                <div class="label">Biology</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>For Teachers</h2>
+        <p>SciSim simulations work brilliantly on interactive whiteboards and projectors. Use them for lesson starters, demonstrations, or student-led investigation tasks. Every simulation includes key IGCSE concept definitions at the bottom for quick reference.</p>
+        <p>Because everything runs in the browser, there's nothing to install on school computers. Just visit the site and start exploring.</p>
+    </div>
+
+    <div class="cta">
+        <h3>Ready to explore?</h3>
+        <p>Jump straight into the simulations and start learning.</p>
+        <a class="cta-btn" href="index.html">Browse Simulations →</a>
+    </div>
+</div>
+
+<div class="footer">© 2026 SciSim.co.uk — Interactive IGCSE Science Simulations</div>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('themeToggle').textContent=t==='dark'?'🌙':'☀️';localStorage.setItem('scisim-theme',t)}
+document.getElementById('themeToggle').addEventListener('click',function(){setTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark')});
+setTheme(localStorage.getItem('scisim-theme')||'dark');
+</script>
+</body>
+</html>

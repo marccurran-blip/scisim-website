@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paper Chromatography Simulation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f1729;
+            color: #e0e7ff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            color: #7db4ff;
+        }
+
+        .controls-panel {
+            background-color: #1a2744;
+            border: 2px solid #2d4a7a;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #7db4ff;
+        }
+
+        .samples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .sample-checkbox {
+            display: flex;
+            align-items: center;
+            background-color: #0f1729;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #2d4a7a;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .sample-checkbox:hover {
+            background-color: #243354;
+        }
+
+        .sample-checkbox input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #7db4ff;
+        }
+
+        .sample-checkbox label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: 500;
+            color: #e0e7ff;
+        }
+
+        .solvent-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .solvent-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .solvent-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .solvent-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #2d4a7a;
+            background-color: #0f1729;
+            color: #e0e7ff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .solvent-btn:hover {
+            border-color: #7db4ff;
+            background-color: #243354;
+        }
+
+        .solvent-btn.active {
+            background-color: #7db4ff;
+            color: #0f1729;
+            border-color: #7db4ff;
+        }
+
+        .speed-control {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .speed-input {
+            padding: 10px;
+            border: 2px solid #2d4a7a;
+            background-color: #0f1729;
+            color: #7db4ff;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .speed-display {
+            margin-top: 8px;
+            color: #7db4ff;
+            font-size: 14px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-start {
+            background-color: #7db4ff;
+            color: #0f1729;
+        }
+
+        .btn-start:hover:not(:disabled) {
+            background-color: #5ba8ff;
+            transform: scale(1.05);
+        }
+
+        .btn-start:disabled {
+            background-color: #5a5a5a;
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        .btn-reset {
+            background-color: #2d4a7a;
+            color: #e0e7ff;
+        }
+
+        .btn-reset:hover {
+            background-color: #3d5a8a;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        .canvas-wrapper {
+            background-color: #1a2744;
+            border: 2px solid #2d4a7a;
+            border-radius: 8px;
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        canvas {
+            display: block;
+            background-color: #0f1729;
+            border-radius: 4px;
+            margin: 0 auto;
+        }
+
+        .info-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel {
+            background-color: #1a2744;
+            border: 2px solid #2d4a7a;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .panel h3 {
+            color: #7db4ff;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #2d4a7a;
+            padding-bottom: 10px;
+        }
+
+        .rf-results {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .rf-entry {
+            background-color: #0f1729;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #7db4ff;
+        }
+
+        .rf-sample-name {
+            font-weight: 600;
+            color: #7db4ff;
+            margin-bottom: 8px;
+        }
+
+        .rf-pigment {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 13px;
+            color: #e0e7ff;
+        }
+
+        .rf-pigment-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pigment-swatch {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            border: 1px solid #666;
+        }
+
+        .rf-value {
+            font-family: 'Courier New', monospace;
+            color: #7db4ff;
+        }
+
+        .concepts {
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .concept-item {
+            background-color: #0f1729;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            border-left: 2px solid #7db4ff;
+        }
+
+        .concept-item strong {
+            color: #7db4ff;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #2d4a7a;
+            color: #7db4ff;
+            font-size: 14px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            .canvas-wrapper {
+                overflow-x: auto;
+            }
+        }
+
+        .status-message {
+            text-align: center;
+            color: #7db4ff;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Paper Chromatography Simulation</h1>
+
+        <div class="controls-panel">
+            <div class="control-group">
+                <label>Select Samples (multiple):</label>
+                <div class="samples-grid">
+                    <div class="sample-checkbox">
+                        <input type="checkbox" id="sample-black" value="Black Ink">
+                        <label for="sample-black">Black Ink</label>
+                    </div>
+                    <div class="sample-checkbox">
+                        <input type="checkbox" id="sample-green" value="Green Food Colouring">
+                        <label for="sample-green">Green Food Colouring</label>
+                    </div>
+                    <div class="sample-checkbox">
+                        <input type="checkbox" id="sample-brown" value="Brown Food Colouring">
+                        <label for="sample-brown">Brown Food Colouring</label>
+                    </div>
+                    <div class="sample-checkbox">
+                        <input type="checkbox" id="sample-red" value="Pure Red Dye">
+                        <label for="sample-red">Pure Red Dye</label>
+                    </div>
+                    <div class="sample-checkbox">
+                        <input type="checkbox" id="sample-blue" value="Pure Blue Dye">
+                        <label for="sample-blue">Pure Blue Dye</label>
+                    </div>
+                    <div class="sample-checkbox">
+                        <input type="checkbox" id="sample-unknown" value="Unknown Mixture">
+                        <label for="sample-unknown">Unknown Mixture</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="solvent-controls">
+                <div class="solvent-group">
+                    <label>Choose Solvent:</label>
+                    <div class="solvent-buttons">
+                        <button class="solvent-btn active" data-solvent="water">Water</button>
+                        <button class="solvent-btn" data-solvent="ethanol">Ethanol</button>
+                        <button class="solvent-btn" data-solvent="propanone">Propanone</button>
+                    </div>
+                </div>
+
+                <div class="speed-control">
+                    <label for="speed-slider">Solvent Speed (1-5):</label>
+                    <input type="range" id="speed-slider" min="1" max="5" value="3" class="speed-input">
+                    <div class="speed-display">Speed: <span id="speed-value">3</span></div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-start" id="start-btn">Start Experiment</button>
+                <button class="btn btn-reset" id="reset-btn">Reset</button>
+            </div>
+            <div class="status-message" id="status-msg"></div>
+        </div>
+
+        <div class="main-content">
+            <div class="canvas-wrapper">
+                <canvas id="chromatography-canvas" width="900" height="500"></canvas>
+            </div>
+
+            <div class="info-panel">
+                <div class="panel">
+                    <h3>Rf Values</h3>
+                    <div class="rf-results" id="rf-results">
+                        <p style="color: #999; font-size: 13px;">Select samples and run experiment to see results</p>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>Key Concepts</h3>
+                    <div class="concepts">
+                        <div class="concept-item">
+                            <strong>Chromatography:</strong> A technique to separate pigments based on how far they travel in a solvent.
+                        </div>
+                        <div class="concept-item">
+                            <strong>Rf Value:</strong> Distance travelled by pigment / Distance travelled by solvent. Unique for each pigment-solvent combination.
+                        </div>
+                        <div class="concept-item">
+                            <strong>Solvent Front:</strong> The leading edge of the solvent moving up the paper.
+                        </div>
+                        <div class="concept-item">
+                            <strong>Origin:</strong> The pencil line where samples are initially placed.
+                        </div>
+                        <div class="concept-item">
+                            <strong>Pigments:</strong> Different colours separate because they have different affinities for the solvent.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">IGCSE Science Simulations</div>
+    </div>
+
+    <script>
+        // Sample data with pigment compositions
+        const samples = {
+            'Black Ink': [
+                { name: 'Blue Dye', color: '#0066ff', rfWater: 0.85, rfEthanol: 0.72, rfPropanone: 0.68 },
+                { name: 'Red Dye', color: '#ff3333', rfWater: 0.65, rfEthanol: 0.52, rfPropanone: 0.48 },
+                { name: 'Yellow Dye', color: '#ffdd00', rfWater: 0.95, rfEthanol: 0.88, rfPropanone: 0.82 }
+            ],
+            'Green Food Colouring': [
+                { name: 'Blue Dye', color: '#0066ff', rfWater: 0.85, rfEthanol: 0.72, rfPropanone: 0.68 },
+                { name: 'Yellow Dye', color: '#ffdd00', rfWater: 0.95, rfEthanol: 0.88, rfPropanone: 0.82 }
+            ],
+            'Brown Food Colouring': [
+                { name: 'Red Dye', color: '#ff3333', rfWater: 0.65, rfEthanol: 0.52, rfPropanone: 0.48 },
+                { name: 'Yellow Dye', color: '#ffdd00', rfWater: 0.95, rfEthanol: 0.88, rfPropanone: 0.82 },
+                { name: 'Blue Dye', color: '#0066ff', rfWater: 0.85, rfEthanol: 0.72, rfPropanone: 0.68 }
+            ],
+            'Pure Red Dye': [
+                { name: 'Red Dye', color: '#ff3333', rfWater: 0.65, rfEthanol: 0.52, rfPropanone: 0.48 }
+            ],
+            'Pure Blue Dye': [
+                { name: 'Blue Dye', color: '#0066ff', rfWater: 0.85, rfEthanol: 0.72, rfPropanone: 0.68 }
+            ],
+            'Unknown Mixture': [
+                { name: 'Yellow Dye', color: '#ffdd00', rfWater: 0.95, rfEthanol: 0.88, rfPropanone: 0.82 },
+                { name: 'Blue Dye', color: '#0066ff', rfWater: 0.85, rfEthanol: 0.72, rfPropanone: 0.68 }
+            ]
+        };
+
+        let currentSolvent = 'water';
+        let currentSpeed = 3;
+        let isRunning = false;
+        let animationFrame = null;
+        let startTime = 0;
+        let selectedSamples = [];
+
+        const canvas = document.getElementById('chromatography-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // UI Elements
+        const startBtn = document.getElementById('start-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const speedSlider = document.getElementById('speed-slider');
+        const speedValue = document.getElementById('speed-value');
+        const rfResults = document.getElementById('rf-results');
+        const statusMsg = document.getElementById('status-msg');
+
+        // Solvent button listeners
+        document.querySelectorAll('.solvent-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.solvent-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentSolvent = this.dataset.solvent;
+            });
+        });
+
+        // Speed slider
+        speedSlider.addEventListener('input', function() {
+            currentSpeed = parseInt(this.value);
+            speedValue.textContent = currentSpeed;
+        });
+
+        // Sample checkboxes
+        document.querySelectorAll('.sample-checkbox input').forEach(checkbox => {
+            checkbox.addEventListener('change', updateSelectedSamples);
+        });
+
+        function updateSelectedSamples() {
+            selectedSamples = Array.from(document.querySelectorAll('.sample-checkbox input:checked'))
+                .map(cb => cb.value);
+            statusMsg.textContent = '';
+        }
+
+        // Start button
+        startBtn.addEventListener('click', function() {
+            if (selectedSamples.length === 0) {
+                statusMsg.textContent = 'Please select at least one sample';
+                return;
+            }
+            if (isRunning) return;
+
+            isRunning = true;
+            startTime = Date.now();
+            startBtn.disabled = true;
+            resetBtn.disabled = false;
+            statusMsg.textContent = 'Experiment running...';
+
+            animate();
+        });
+
+        // Reset button
+        resetBtn.addEventListener('click', function() {
+            isRunning = false;
+            if (animationFrame) cancelAnimationFrame(animationFrame);
+            startBtn.disabled = false;
+            resetBtn.disabled = true;
+            startTime = 0;
+            rfResults.innerHTML = '<p style="color: #999; font-size: 13px;">Select samples and run experiment to see results</p>';
+            statusMsg.textContent = '';
+            draw(0);
+        });
+
+        // Canvas drawing
+        function draw(progress) {
+            ctx.fillStyle = '#0f1729';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Paper dimensions (smaller, centered)
+            const numSamples = Math.max(selectedSamples.length, 1);
+            const laneSize = Math.min(120, (canvas.width - 200) / numSamples);
+            const totalPaperWidth = Math.max(laneSize * numSamples + 40, 200);
+            const paperLeft = (canvas.width - totalPaperWidth) / 2;
+            const paperRight = paperLeft + totalPaperWidth;
+            const paperTop = 50;
+            const paperBottom = canvas.height - 60;
+            const paperWidth = totalPaperWidth;
+            const paperHeight = paperBottom - paperTop;
+
+            // Draw paper
+            ctx.fillStyle = '#f5f5f5';
+            ctx.fillRect(paperLeft, paperTop, paperWidth, paperHeight);
+
+            // Draw origin line (pencil line at bottom)
+            const originY = paperBottom - 20;
+            ctx.strokeStyle = '#999999';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(paperLeft + 10, originY);
+            ctx.lineTo(paperRight - 10, originY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Draw origin label (outside paper, on the left)
+            ctx.fillStyle = '#7db4ff';
+            ctx.font = 'bold 11px Segoe UI';
+            ctx.textAlign = 'right';
+            ctx.fillText('Origin', paperLeft - 8, originY + 4);
+
+            // Calculate solvent front position (stops 1cm from top, approximately 93% of paper height)
+            const maxSolventDistance = paperHeight * 0.93;
+            const solventDistance = maxSolventDistance * progress;
+            const solventY = originY - solventDistance;
+
+            // Draw solvent wash (wet paper area)
+            if (progress > 0) {
+                ctx.fillStyle = 'rgba(200, 215, 240, 0.35)';
+                ctx.fillRect(paperLeft, solventY, paperWidth, originY - solventY);
+
+                // Draw solvent front line
+                ctx.strokeStyle = '#4488ff';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(paperLeft + 10, solventY);
+                ctx.lineTo(paperRight - 10, solventY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Solvent front label (outside paper, on the right)
+                ctx.fillStyle = '#4488ff';
+                ctx.font = 'bold 11px Segoe UI';
+                ctx.textAlign = 'left';
+                ctx.fillText('Solvent front', paperRight + 8, solventY + 4);
+            }
+
+            // Draw lanes for each selected sample
+            const laneWidth = paperWidth / Math.max(selectedSamples.length, 1);
+
+            // Draw lane dividers between lanes (not through spots)
+            for (let i = 1; i < selectedSamples.length; i++) {
+                const dividerX = paperLeft + i * laneWidth;
+                ctx.strokeStyle = '#ddd';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(dividerX, paperTop);
+                ctx.lineTo(dividerX, paperBottom);
+                ctx.stroke();
+            }
+
+            selectedSamples.forEach((sampleName, laneIndex) => {
+                const laneCenterX = paperLeft + laneIndex * laneWidth + laneWidth / 2;
+
+                // Sample name label below origin on the paper (written in pencil style)
+                ctx.fillStyle = '#666';
+                ctx.font = '10px Segoe UI';
+                ctx.textAlign = 'center';
+                ctx.fillText(sampleName, laneCenterX, originY + 15);
+
+                // Sample name label below the paper (in theme colour for clarity)
+                ctx.fillStyle = '#7db4ff';
+                ctx.font = 'bold 11px Segoe UI';
+                ctx.textAlign = 'center';
+                ctx.fillText(sampleName, laneCenterX, paperBottom + 18);
+
+                // Draw pigment spots
+                const pigments = samples[sampleName];
+                pigments.forEach((pigment, pigmentIndex) => {
+                    // Get Rf value for current solvent
+                    const rfKey = 'rf' + currentSolvent.charAt(0).toUpperCase() + currentSolvent.slice(1);
+                    const rfValue = pigment[rfKey];
+
+                    // Spot travels from origin upward: distance = solventDistance * rfValue
+                    // solventDistance already includes progress, so no need to multiply again
+                    const spotY = originY - (solventDistance * rfValue);
+
+                    // Only draw if solvent has reached this point (spot must be at or below solvent front)
+                    if (progress > 0 && spotY >= solventY) {
+                        // Spot size grows slightly as it separates
+                        const spotRadius = 4 + progress * 3;
+                        ctx.fillStyle = pigment.color;
+                        ctx.globalAlpha = 0.75;
+                        ctx.beginPath();
+                        ctx.ellipse(laneCenterX, spotY, spotRadius, spotRadius * 1.5, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.globalAlpha = 1.0;
+
+                        // Label each pigment spot once experiment is complete
+                        if (progress >= 1) {
+                            ctx.fillStyle = '#333';
+                            ctx.font = 'bold 9px Segoe UI';
+                            ctx.textAlign = 'center';
+                            // Pigment name above the spot
+                            ctx.fillText(pigment.name, laneCenterX, spotY - spotRadius * 1.5 - 10);
+                            // Rf value just above the spot
+                            ctx.font = '8px Courier New';
+                            ctx.fillStyle = '#555';
+                            ctx.fillText('Rf=' + rfValue.toFixed(2), laneCenterX, spotY - spotRadius * 1.5 - 1);
+                        }
+                    }
+                });
+
+                // Draw initial sample spot (mixed color at origin, fades out as pigments separate)
+                if (progress < 0.15) {
+                    ctx.globalAlpha = 1 - (progress / 0.15);
+                    ctx.fillStyle = '#333';
+                    ctx.beginPath();
+                    ctx.arc(laneCenterX, originY, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1.0;
+                }
+            });
+
+            // Draw instructions
+            ctx.fillStyle = '#7db4ff';
+            ctx.font = '13px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Solvent: ${currentSolvent.charAt(0).toUpperCase() + currentSolvent.slice(1)} | Progress: ${Math.round(progress * 100)}%`, canvas.width / 2, 30);
+        }
+
+        function animate() {
+            const elapsed = Date.now() - startTime;
+            const duration = 8000 / currentSpeed;
+            const progress = Math.min(elapsed / duration, 1);
+
+            draw(progress);
+
+            if (progress < 1) {
+                animationFrame = requestAnimationFrame(animate);
+            } else {
+                isRunning = false;
+                startBtn.disabled = false;
+                statusMsg.textContent = 'Experiment complete!';
+                displayRfResults();
+            }
+        }
+
+        function displayRfResults() {
+            rfResults.innerHTML = '';
+
+            selectedSamples.forEach(sampleName => {
+                const pigments = samples[sampleName];
+                const rfKey = 'rf' + currentSolvent.charAt(0).toUpperCase() + currentSolvent.slice(1);
+
+                const entry = document.createElement('div');
+                entry.className = 'rf-entry';
+
+                const sampleNameDiv = document.createElement('div');
+                sampleNameDiv.className = 'rf-sample-name';
+                sampleNameDiv.textContent = sampleName;
+                entry.appendChild(sampleNameDiv);
+
+                pigments.forEach(pigment => {
+                    const rfValue = pigment[rfKey];
+                    const pigmentDiv = document.createElement('div');
+                    pigmentDiv.className = 'rf-pigment';
+
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'rf-pigment-name';
+                    const swatch = document.createElement('div');
+                    swatch.className = 'pigment-swatch';
+                    swatch.style.backgroundColor = pigment.color;
+                    nameSpan.appendChild(swatch);
+                    nameSpan.appendChild(document.createTextNode(pigment.name));
+
+                    const valueSpan = document.createElement('span');
+                    valueSpan.className = 'rf-value';
+                    valueSpan.textContent = rfValue.toFixed(2);
+
+                    pigmentDiv.appendChild(nameSpan);
+                    pigmentDiv.appendChild(valueSpan);
+                    entry.appendChild(pigmentDiv);
+                });
+
+                rfResults.appendChild(entry);
+            });
+        }
+
+        // Initialize
+        resetBtn.disabled = true;
+        draw(0);
+    </script>
+</body>
+</html>

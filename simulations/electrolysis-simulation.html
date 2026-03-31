@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IGCSE Electrolysis Simulation</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0f1729; color: #e0e7ff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px; min-height: 100vh;
+        }
+        .container { max-width: 1300px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 20px; color: #7db4ff; font-size: 1.8em; }
+        .main-content { display: grid; grid-template-columns: 1fr 320px; gap: 20px; margin-bottom: 20px; }
+        .canvas-section { display: flex; flex-direction: column; align-items: center; }
+        canvas { background: #1a2744; border: 2px solid #2d4a7a; border-radius: 8px; }
+        .control-panel {
+            background: #1a2744; border: 2px solid #2d4a7a; border-radius: 8px;
+            padding: 20px; display: flex; flex-direction: column; gap: 14px;
+            max-height: 560px; overflow-y: auto;
+        }
+        .control-group { display: flex; flex-direction: column; gap: 6px; }
+        .control-group label { color: #7db4ff; font-weight: 600; font-size: 13px; }
+        select, button {
+            background: #0f1729; color: #e0e7ff; border: 1px solid #2d4a7a;
+            padding: 9px 12px; border-radius: 6px; font-family: 'Segoe UI', sans-serif;
+            cursor: pointer; font-size: 13px;
+        }
+        select:hover, button:hover { border-color: #7db4ff; }
+        button { background: #2d4a7a; font-weight: 600; }
+        button:active { background: #1a2744; }
+        input[type="range"] {
+            -webkit-appearance: none; width: 100%; height: 6px;
+            background: #2d4a7a; border-radius: 3px; outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 16px; height: 16px;
+            border-radius: 50%; background: #7db4ff; cursor: pointer;
+        }
+        .slider-val { text-align: center; color: #7db4ff; font-weight: 700; font-size: 15px; }
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .btn-start { background: #2e7d32 !important; border-color: #4caf50 !important; }
+        .btn-stop { background: #7d4a4a !important; border-color: #c0392b !important; }
+        .timer-box {
+            background: #0f1729; border: 2px solid #2d4a7a; padding: 10px; border-radius: 6px;
+            text-align: center; font-weight: 700; font-size: 1.1em; color: #7db4ff;
+        }
+        .data-panel {
+            background: #1a2744; border: 2px solid #2d4a7a; border-radius: 8px;
+            padding: 20px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;
+        }
+        .data-section h3 {
+            color: #7db4ff; margin-bottom: 12px; font-size: 14px;
+            border-bottom: 1px solid #2d4a7a; padding-bottom: 8px;
+        }
+        .data-item {
+            margin-bottom: 10px; padding: 8px 10px;
+            background: rgba(125, 180, 255, 0.08);
+            border-left: 3px solid #7db4ff; border-radius: 4px;
+        }
+        .data-item label { display: block; color: #7db4ff; font-weight: 600; font-size: 11px; margin-bottom: 2px; }
+        .data-item .value { color: #e0e7ff; font-size: 13px; font-family: 'Courier New', monospace; }
+        .equation {
+            background: #0f1729; padding: 8px 10px; border-radius: 4px;
+            border-left: 3px solid #7db4ff; font-family: 'Courier New', monospace;
+            font-size: 12px; margin-bottom: 6px; word-break: break-word;
+        }
+        .status-bar {
+            text-align: center; padding: 8px; border-radius: 6px; font-weight: 600;
+            margin-top: 10px; font-size: 13px;
+        }
+        .status-bar.running { background: rgba(46, 125, 50, 0.2); color: #81c784; }
+        .status-bar.stopped { background: rgba(125, 180, 255, 0.1); color: #8fa8cc; }
+        .footer { text-align: center; padding: 15px; color: #7db4ff; font-size: 13px; border-top: 1px solid #2d4a7a; margin-top: 20px; }
+        @media (max-width: 1024px) {
+            .main-content { grid-template-columns: 1fr; }
+            .data-panel { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>⚡ Electrolysis Simulation</h1>
+    <div class="main-content">
+        <div class="canvas-section">
+            <canvas id="canvas" width="800" height="520"></canvas>
+            <div class="status-bar stopped" id="status">Ready — select electrolyte and press Start</div>
+        </div>
+        <div class="control-panel">
+            <div class="control-group">
+                <label>Electrolyte:</label>
+                <select id="electrolyteSelect">
+                    <option value="cuso4">Copper Sulfate Solution (CuSO₄)</option>
+                    <option value="nacl">Brine (NaCl solution)</option>
+                    <option value="h2so4">Dilute Sulfuric Acid (H₂SO₄)</option>
+                    <option value="pbbr2">Molten Lead Bromide (PbBr₂)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Electrode Material:</label>
+                <select id="electrodeSelect">
+                    <option value="carbon">Carbon (Graphite) — Inert</option>
+                    <option value="copper">Copper — Active</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Applied Voltage (DC):</label>
+                <input type="range" id="voltageSlider" min="2" max="12" value="6" step="0.5">
+                <div class="slider-val" id="voltageVal">6.0 V</div>
+            </div>
+            <div class="timer-box" id="timer">Time: 0.0 s</div>
+            <div class="btn-row">
+                <button class="btn-start" id="startBtn">▶ Start</button>
+                <button class="btn-stop" id="stopBtn">■ Stop</button>
+            </div>
+            <button id="resetBtn" style="width:100%">↻ Reset</button>
+            <div class="btn-row">
+                <button id="csvBtn">📥 Export CSV</button>
+                <button id="pngBtn">🖼️ Export PNG</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="data-panel">
+        <div class="data-section">
+            <h3>⊖ Cathode (−) — Reduction</h3>
+            <div class="data-item"><label>Product</label><div class="value" id="catProd">—</div></div>
+            <div class="data-item"><label>Half-equation</label><div class="equation" id="catEq">—</div></div>
+            <div class="data-item"><label>Mass deposited / Volume produced</label><div class="value" id="catMass">—</div></div>
+        </div>
+        <div class="data-section">
+            <h3>⊕ Anode (+) — Oxidation</h3>
+            <div class="data-item"><label>Product</label><div class="value" id="anProd">—</div></div>
+            <div class="data-item"><label>Half-equation</label><div class="equation" id="anEq">—</div></div>
+            <div class="data-item"><label>Mass deposited / Volume produced</label><div class="value" id="anMass">—</div></div>
+        </div>
+        <div class="data-section">
+            <h3>📊 Faraday's Law Data</h3>
+            <div class="data-item"><label>Current (I)</label><div class="value" id="fCurrent">—</div></div>
+            <div class="data-item"><label>Charge passed (Q = I×t)</label><div class="value" id="fCharge">—</div></div>
+            <div class="data-item"><label>Moles of electrons</label><div class="value" id="fMoles">—</div></div>
+            <div class="data-item"><label>Faraday constant (F)</label><div class="value">96 485 C mol⁻¹</div></div>
+        </div>
+    </div>
+</div>
+<div class="footer">IGCSE Science Simulations</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+// ─── Constants ───
+const F_CONST = 96485; // Faraday constant C/mol
+const MOLAR_VOL = 24000; // cm³ at RTP (24 dm³)
+
+// ─── Electrolyte data ───
+// Each product: { formula, name, M (g/mol), n (electrons per formula unit), phase: 'solid'|'gas'|'liquid' }
+const ELECTROLYTES = {
+    cuso4: {
+        name: 'Copper Sulfate Solution',
+        solutionColor: 'rgba(30, 100, 200, 0.18)',
+        cation: { label: 'Cu²⁺', color: '#ff7043' },
+        anion:  { label: 'SO₄²⁻', color: '#4dd0e1' },
+        cathode: {
+            carbon: { product: 'Copper (Cu)', eq: 'Cu²⁺ + 2e⁻ → Cu', M: 63.5, n: 2, phase: 'solid' },
+            copper: { product: 'Copper (Cu)', eq: 'Cu²⁺ + 2e⁻ → Cu', M: 63.5, n: 2, phase: 'solid' }
+        },
+        anode: {
+            carbon: { product: 'Oxygen (O₂)', eq: '4OH⁻ → O₂ + 2H₂O + 4e⁻', M: 32, n: 4, phase: 'gas' },
+            copper: { product: 'Copper dissolves', eq: 'Cu → Cu²⁺ + 2e⁻', M: 63.5, n: 2, phase: 'dissolve' }
+        }
+    },
+    nacl: {
+        name: 'Brine (NaCl solution)',
+        solutionColor: 'rgba(125, 180, 255, 0.12)',
+        cation: { label: 'Na⁺', color: '#ffd54f' },
+        anion:  { label: 'Cl⁻', color: '#81c784' },
+        cathode: {
+            carbon: { product: 'Hydrogen (H₂)', eq: '2H⁺ + 2e⁻ → H₂', M: 2, n: 2, phase: 'gas' },
+            copper: { product: 'Hydrogen (H₂)', eq: '2H⁺ + 2e⁻ → H₂', M: 2, n: 2, phase: 'gas' }
+        },
+        anode: {
+            carbon: { product: 'Chlorine (Cl₂)', eq: '2Cl⁻ → Cl₂ + 2e⁻', M: 71, n: 2, phase: 'gas' },
+            copper: { product: 'Chlorine (Cl₂)', eq: '2Cl⁻ → Cl₂ + 2e⁻', M: 71, n: 2, phase: 'gas' }
+        }
+    },
+    h2so4: {
+        name: 'Dilute Sulfuric Acid',
+        solutionColor: 'rgba(180, 140, 255, 0.12)',
+        cation: { label: 'H⁺', color: '#ce93d8' },
+        anion:  { label: 'SO₄²⁻', color: '#ffab91' },
+        cathode: {
+            carbon: { product: 'Hydrogen (H₂)', eq: '2H⁺ + 2e⁻ → H₂', M: 2, n: 2, phase: 'gas' },
+            copper: { product: 'Hydrogen (H₂)', eq: '2H⁺ + 2e⁻ → H₂', M: 2, n: 2, phase: 'gas' }
+        },
+        anode: {
+            carbon: { product: 'Oxygen (O₂)', eq: '4OH⁻ → O₂ + 2H₂O + 4e⁻', M: 32, n: 4, phase: 'gas' },
+            copper: { product: 'Oxygen (O₂)', eq: '4OH⁻ → O₂ + 2H₂O + 4e⁻', M: 32, n: 4, phase: 'gas' }
+        }
+    },
+    pbbr2: {
+        name: 'Molten Lead Bromide',
+        solutionColor: 'rgba(200, 160, 80, 0.18)',
+        cation: { label: 'Pb²⁺', color: '#a5d6a7' },
+        anion:  { label: 'Br⁻', color: '#ef5350' },
+        cathode: {
+            carbon: { product: 'Lead (Pb)', eq: 'Pb²⁺ + 2e⁻ → Pb', M: 207.2, n: 2, phase: 'solid' },
+            copper: { product: 'Lead (Pb)', eq: 'Pb²⁺ + 2e⁻ → Pb', M: 207.2, n: 2, phase: 'solid' }
+        },
+        anode: {
+            carbon: { product: 'Bromine (Br₂)', eq: '2Br⁻ → Br₂ + 2e⁻', M: 160, n: 2, phase: 'gas' },
+            copper: { product: 'Bromine (Br₂)', eq: '2Br⁻ → Br₂ + 2e⁻', M: 160, n: 2, phase: 'gas' }
+        }
+    }
+};
+
+// ─── State ───
+const state = {
+    electrolyte: 'cuso4',
+    electrode: 'carbon',
+    voltage: 6,
+    running: false,
+    time: 0,
+    ions: [],
+    bubbles: [],
+    cathodeDeposit: 0, // visual height
+    anodeDeposit: 0,
+    dataLog: []
+};
+
+// ─── Geometry ───
+const BEAKER = { left: 120, right: 680, top: 180, bottom: 420 };
+const CATHODE_X = 185, ANODE_X = 615;
+const ELECTRODE_W = 18, ELECTRODE_TOP = 170, ELECTRODE_BOT = 410;
+const SOLUTION_TOP = 210;
+
+// ─── Helpers ───
+function getConfig() { return ELECTROLYTES[state.electrolyte]; }
+function getCathodeInfo() { return getConfig().cathode[state.electrode]; }
+function getAnodeInfo() { return getConfig().anode[state.electrode]; }
+
+// Effective current: I = V / R_solution (assume ~10 Ω for aqueous, ~5 Ω for molten)
+function getCurrent() {
+    const R = state.electrolyte === 'pbbr2' ? 5 : 10;
+    return state.voltage / R;
+}
+
+// Faraday's law: mass or volume produced
+function calcProduct(info, charge) {
+    const molesElectrons = charge / F_CONST;
+    const molesProduct = molesElectrons / info.n;
+    if (info.phase === 'gas') {
+        return { moles: molesProduct, volume: molesProduct * MOLAR_VOL, mass: molesProduct * info.M };
+    } else if (info.phase === 'solid') {
+        return { moles: molesProduct, mass: molesProduct * info.M };
+    } else { // dissolve
+        return { moles: molesProduct, mass: molesProduct * info.M };
+    }
+}
+
+function formatProduct(info, data) {
+    if (!data || data.moles === 0) return '—';
+    if (info.phase === 'gas') {
+        if (data.volume > 1000) return `${(data.volume / 1000).toFixed(2)} dm³ (${data.mass.toFixed(3)} g)`;
+        return `${data.volume.toFixed(1)} cm³ (${data.mass.toFixed(4)} g)`;
+    } else if (info.phase === 'solid') {
+        return `${data.mass.toFixed(4)} g`;
+    } else {
+        return `${data.mass.toFixed(4)} g dissolved`;
+    }
+}
+
+// ─── Ion management ───
+function spawnIons() {
+    const config = getConfig();
+    if (state.ions.length >= 30) return;
+    // Spawn ions distributed throughout the solution
+    for (let i = 0; i < 2; i++) {
+        const x = BEAKER.left + 80 + Math.random() * (BEAKER.right - BEAKER.left - 160);
+        const y = SOLUTION_TOP + 20 + Math.random() * (BEAKER.bottom - SOLUTION_TOP - 40);
+        const isPositive = Math.random() > 0.5;
+        state.ions.push({
+            x, y,
+            vx: (Math.random() - 0.5) * 1.5,
+            vy: (Math.random() - 0.5) * 1.5,
+            isPositive,
+            color: isPositive ? config.cation.color : config.anion.color,
+            label: isPositive ? config.cation.label : config.anion.label,
+            radius: 8
+        });
+    }
+}
+
+function spawnBubble(x, electrode) {
+    state.bubbles.push({
+        x: x + (Math.random() - 0.5) * 14,
+        y: SOLUTION_TOP + 40 + Math.random() * (BEAKER.bottom - SOLUTION_TOP - 80),
+        radius: 2 + Math.random() * 3,
+        vy: -(0.5 + Math.random() * 1.2),
+        life: 1,
+        electrode
+    });
+}
+
+// ─── Physics update ───
+function update() {
+    state.time += 1 / 60;
+    const speed = state.voltage * 0.35;
+
+    // Spawn new ions
+    if (state.ions.length < 30) spawnIons();
+
+    // Move ions
+    for (let i = state.ions.length - 1; i >= 0; i--) {
+        const ion = state.ions[i];
+        // Cations → cathode (left), Anions → anode (right)
+        const targetX = ion.isPositive ? CATHODE_X + ELECTRODE_W : ANODE_X;
+        // Add some brownian motion
+        ion.vx += (Math.random() - 0.5) * 0.3;
+        ion.vy += (Math.random() - 0.5) * 0.3;
+        // Drift toward target electrode
+        const dx = targetX - ion.x;
+        const dist = Math.abs(dx);
+        if (dist > 5) {
+            ion.x += (dx / dist) * speed * 0.6 + ion.vx * 0.2;
+            ion.y += ion.vy * 0.3;
+            // Keep in solution bounds
+            ion.y = Math.max(SOLUTION_TOP + 10, Math.min(BEAKER.bottom - 10, ion.y));
+            ion.x = Math.max(BEAKER.left + 10, Math.min(BEAKER.right - 10, ion.x));
+        } else {
+            // Reached electrode — produce product
+            const catInfo = getCathodeInfo();
+            const anInfo = getAnodeInfo();
+            if (ion.isPositive) {
+                // Reached cathode
+                if (catInfo.phase === 'gas') {
+                    spawnBubble(CATHODE_X, 'cathode');
+                } else {
+                    state.cathodeDeposit = Math.min(state.cathodeDeposit + 0.3, 120);
+                }
+            } else {
+                // Reached anode
+                if (anInfo.phase === 'gas') {
+                    spawnBubble(ANODE_X, 'anode');
+                } else if (anInfo.phase === 'dissolve') {
+                    state.anodeDeposit = Math.max(state.anodeDeposit - 0.1, -40);
+                }
+            }
+            state.ions.splice(i, 1);
+        }
+    }
+
+    // Update bubbles (rise upward)
+    for (let i = state.bubbles.length - 1; i >= 0; i--) {
+        const b = state.bubbles[i];
+        b.y += b.vy; // vy is negative, so bubbles rise
+        b.x += (Math.random() - 0.5) * 0.5; // slight wobble
+        b.life -= 0.008;
+        if (b.life <= 0 || b.y < SOLUTION_TOP - 20) {
+            state.bubbles.splice(i, 1);
+        }
+    }
+
+    // Log data every second
+    const sec = Math.floor(state.time);
+    if (sec > 0 && sec > state.dataLog.length) {
+        const I = getCurrent();
+        const Q = I * state.time;
+        const catData = calcProduct(getCathodeInfo(), Q);
+        const anData = calcProduct(getAnodeInfo(), Q);
+        state.dataLog.push({
+            time: state.time,
+            current: I,
+            charge: Q,
+            catMass: catData.mass,
+            catVol: catData.volume || 0,
+            anMass: anData.mass,
+            anVol: anData.volume || 0
+        });
+    }
+}
+
+// ─── Drawing ───
+function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#1a2744';
+    ctx.fillRect(0, 0, W, H);
+
+    drawWiresAndBattery();
+    drawBeaker();
+    drawSolution();
+    drawElectrodes();
+    drawDeposits();
+    drawIons();
+    drawBubbles();
+    drawLabels();
+    updateUI();
+}
+
+function drawWiresAndBattery() {
+    const batX = W / 2, batY = 50;
+
+    // Wires from electrodes up to battery
+    ctx.strokeStyle = '#5a8abf';
+    ctx.lineWidth = 3;
+    // Cathode wire
+    ctx.beginPath();
+    ctx.moveTo(CATHODE_X + ELECTRODE_W / 2, ELECTRODE_TOP);
+    ctx.lineTo(CATHODE_X + ELECTRODE_W / 2, batY);
+    ctx.lineTo(batX - 35, batY);
+    ctx.stroke();
+    // Anode wire
+    ctx.beginPath();
+    ctx.moveTo(ANODE_X + ELECTRODE_W / 2, ELECTRODE_TOP);
+    ctx.lineTo(ANODE_X + ELECTRODE_W / 2, batY);
+    ctx.lineTo(batX + 35, batY);
+    ctx.stroke();
+
+    // Battery symbol
+    // Negative terminal (short thick line, left)
+    ctx.strokeStyle = '#7db4ff';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(batX - 35, batY - 14);
+    ctx.lineTo(batX - 35, batY + 14);
+    ctx.stroke();
+    // Positive terminal (long thin line, right)
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(batX + 35, batY - 20);
+    ctx.lineTo(batX + 35, batY + 20);
+    ctx.stroke();
+
+    // Labels
+    ctx.fillStyle = '#7db4ff';
+    ctx.font = 'bold 14px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.fillText('−', batX - 35, batY - 22);
+    ctx.fillText('+', batX + 35, batY - 26);
+    ctx.fillStyle = '#e0e7ff';
+    ctx.font = 'bold 13px Segoe UI';
+    ctx.fillText(state.voltage.toFixed(1) + ' V DC', batX, batY + 38);
+
+    // Electron flow arrows on wires
+    if (state.running) {
+        ctx.fillStyle = '#4fc3f7';
+        const t = (Date.now() / 300) % 1;
+        // Left wire: electrons flow DOWN from battery to cathode
+        for (let i = 0; i < 4; i++) {
+            const frac = (t + i * 0.25) % 1;
+            const ey = batY + frac * (ELECTRODE_TOP - batY);
+            ctx.beginPath();
+            ctx.arc(CATHODE_X + ELECTRODE_W / 2 - 6, ey, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        // Right wire: electrons flow UP from anode to battery
+        for (let i = 0; i < 4; i++) {
+            const frac = (t + i * 0.25) % 1;
+            const ey = ELECTRODE_TOP - frac * (ELECTRODE_TOP - batY);
+            ctx.beginPath();
+            ctx.arc(ANODE_X + ELECTRODE_W / 2 + 6, ey, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+}
+
+function drawBeaker() {
+    ctx.strokeStyle = '#3a6090';
+    ctx.lineWidth = 3;
+    // Beaker body (trapezoid)
+    ctx.beginPath();
+    ctx.moveTo(BEAKER.left, BEAKER.top - 10);
+    ctx.lineTo(BEAKER.left - 10, BEAKER.bottom + 10);
+    ctx.lineTo(BEAKER.right + 10, BEAKER.bottom + 10);
+    ctx.lineTo(BEAKER.right, BEAKER.top - 10);
+    ctx.stroke();
+    // Beaker base
+    ctx.beginPath();
+    ctx.moveTo(BEAKER.left - 10, BEAKER.bottom + 10);
+    ctx.lineTo(BEAKER.right + 10, BEAKER.bottom + 10);
+    ctx.stroke();
+}
+
+function drawSolution() {
+    const config = getConfig();
+    ctx.fillStyle = config.solutionColor;
+    ctx.beginPath();
+    ctx.moveTo(BEAKER.left + 2, SOLUTION_TOP);
+    ctx.lineTo(BEAKER.left - 8, BEAKER.bottom + 8);
+    ctx.lineTo(BEAKER.right + 8, BEAKER.bottom + 8);
+    ctx.lineTo(BEAKER.right - 2, SOLUTION_TOP);
+    ctx.closePath();
+    ctx.fill();
+
+    // Solution surface line
+    ctx.strokeStyle = 'rgba(125, 180, 255, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(BEAKER.left + 2, SOLUTION_TOP);
+    ctx.lineTo(BEAKER.right - 2, SOLUTION_TOP);
+    ctx.stroke();
+}
+
+function drawElectrodes() {
+    const isCopper = state.electrode === 'copper';
+    const baseColor = isCopper ? '#b87333' : '#555';
+    const highlightColor = isCopper ? '#d4915e' : '#6a6a6a';
+
+    // Cathode
+    ctx.fillStyle = baseColor;
+    ctx.fillRect(CATHODE_X, ELECTRODE_TOP, ELECTRODE_W, ELECTRODE_BOT - ELECTRODE_TOP);
+    ctx.fillStyle = highlightColor;
+    ctx.fillRect(CATHODE_X + 2, ELECTRODE_TOP, 3, ELECTRODE_BOT - ELECTRODE_TOP);
+
+    // Anode
+    ctx.fillStyle = baseColor;
+    ctx.fillRect(ANODE_X, ELECTRODE_TOP, ELECTRODE_W, ELECTRODE_BOT - ELECTRODE_TOP);
+    ctx.fillStyle = highlightColor;
+    ctx.fillRect(ANODE_X + 2, ELECTRODE_TOP, 3, ELECTRODE_BOT - ELECTRODE_TOP);
+}
+
+function drawDeposits() {
+    const catInfo = getCathodeInfo();
+    const anInfo = getAnodeInfo();
+
+    // Cathode deposit (solid buildup on surface)
+    if (catInfo.phase === 'solid' && state.cathodeDeposit > 0) {
+        const h = state.cathodeDeposit;
+        const depositColor = state.electrolyte === 'pbbr2' ? '#8a8a8a' : '#e07040';
+        ctx.fillStyle = depositColor;
+        // Build up on the right face of cathode
+        ctx.fillRect(CATHODE_X + ELECTRODE_W, ELECTRODE_BOT - h, 6 + h * 0.04, h);
+        // Small bumps for texture
+        for (let i = 0; i < h / 10; i++) {
+            const by = ELECTRODE_BOT - i * 10 - 5;
+            const bw = 2 + Math.random() * 3;
+            ctx.beginPath();
+            ctx.arc(CATHODE_X + ELECTRODE_W + 6 + h * 0.04, by, bw, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    // Anode dissolving (copper in CuSO4) — show electrode getting thinner
+    if (anInfo.phase === 'dissolve' && state.anodeDeposit < 0) {
+        const erosion = Math.abs(state.anodeDeposit);
+        ctx.fillStyle = '#1a2744'; // background color to "eat" the electrode
+        ctx.fillRect(ANODE_X - erosion * 0.05, ELECTRODE_BOT - erosion, erosion * 0.08 + 2, erosion);
+    }
+}
+
+function drawIons() {
+    state.ions.forEach(ion => {
+        // Ion glow
+        ctx.fillStyle = ion.color + '40';
+        ctx.beginPath();
+        ctx.arc(ion.x, ion.y, ion.radius + 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ion body
+        ctx.fillStyle = ion.color;
+        ctx.beginPath();
+        ctx.arc(ion.x, ion.y, ion.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff30';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Ion label
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 8px Segoe UI';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(ion.isPositive ? '+' : '−', ion.x, ion.y);
+    });
+}
+
+function drawBubbles() {
+    state.bubbles.forEach(b => {
+        const alpha = b.life * 0.7;
+        ctx.fillStyle = `rgba(200, 230, 255, ${alpha * 0.3})`;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = `rgba(125, 200, 255, ${alpha})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        // Highlight
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.4})`;
+        ctx.beginPath();
+        ctx.arc(b.x - b.radius * 0.3, b.y - b.radius * 0.3, b.radius * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+    });
+}
+
+function drawLabels() {
+    const config = getConfig();
+    ctx.textAlign = 'center';
+
+    // Electrode labels
+    ctx.fillStyle = '#7db4ff';
+    ctx.font = 'bold 13px Segoe UI';
+    ctx.fillText('CATHODE (−)', CATHODE_X + ELECTRODE_W / 2, BEAKER.bottom + 35);
+    ctx.fillText('ANODE (+)', ANODE_X + ELECTRODE_W / 2, BEAKER.bottom + 35);
+
+    // Ion legend
+    ctx.font = '12px Segoe UI';
+    ctx.fillStyle = config.cation.color;
+    ctx.beginPath(); ctx.arc(BEAKER.left + 30, BEAKER.bottom + 55, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#e0e7ff';
+    ctx.textAlign = 'left';
+    ctx.fillText(config.cation.label + ' (cation → cathode)', BEAKER.left + 42, BEAKER.bottom + 59);
+
+    ctx.fillStyle = config.anion.color;
+    ctx.beginPath(); ctx.arc(W / 2 + 20, BEAKER.bottom + 55, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#e0e7ff';
+    ctx.textAlign = 'left';
+    ctx.fillText(config.anion.label + ' (anion → anode)', W / 2 + 32, BEAKER.bottom + 59);
+
+    // Product labels near electrodes
+    const catInfo = getCathodeInfo();
+    const anInfo = getAnodeInfo();
+    ctx.textAlign = 'center';
+    ctx.font = '11px Segoe UI';
+    ctx.fillStyle = '#81c784';
+    if (state.running || state.time > 0) {
+        ctx.fillText(catInfo.product, CATHODE_X + ELECTRODE_W / 2, ELECTRODE_TOP - 15);
+        ctx.fillText(anInfo.product, ANODE_X + ELECTRODE_W / 2, ELECTRODE_TOP - 15);
+    }
+
+    // Electrolyte name
+    ctx.fillStyle = 'rgba(125, 180, 255, 0.5)';
+    ctx.font = '12px Segoe UI';
+    ctx.fillText(config.name, W / 2, SOLUTION_TOP + 18);
+
+    // Electron flow label
+    if (state.running) {
+        ctx.fillStyle = '#4fc3f7';
+        ctx.font = '10px Segoe UI';
+        ctx.textAlign = 'left';
+        ctx.fillText('e⁻ flow →', CATHODE_X - 50, ELECTRODE_TOP - 30);
+        ctx.textAlign = 'right';
+        ctx.fillText('← e⁻ flow', ANODE_X + ELECTRODE_W + 50, ELECTRODE_TOP - 30);
+    }
+}
+
+// ─── UI Updates ───
+function updateUI() {
+    document.getElementById('timer').textContent = `Time: ${state.time.toFixed(1)} s`;
+
+    const catInfo = getCathodeInfo();
+    const anInfo = getAnodeInfo();
+    const I = getCurrent();
+    const Q = I * state.time;
+
+    document.getElementById('catProd').textContent = catInfo.product;
+    document.getElementById('anProd').textContent = anInfo.product;
+    document.getElementById('catEq').textContent = catInfo.eq;
+    document.getElementById('anEq').textContent = anInfo.eq;
+
+    if (state.time > 0) {
+        const catData = calcProduct(catInfo, Q);
+        const anData = calcProduct(anInfo, Q);
+        document.getElementById('catMass').textContent = formatProduct(catInfo, catData);
+        document.getElementById('anMass').textContent = formatProduct(anInfo, anData);
+        document.getElementById('fCurrent').textContent = I.toFixed(2) + ' A';
+        document.getElementById('fCharge').textContent = Q.toFixed(1) + ' C';
+        document.getElementById('fMoles').textContent = (Q / F_CONST).toExponential(3) + ' mol';
+    } else {
+        document.getElementById('catMass').textContent = '—';
+        document.getElementById('anMass').textContent = '—';
+        document.getElementById('fCurrent').textContent = '—';
+        document.getElementById('fCharge').textContent = '—';
+        document.getElementById('fMoles').textContent = '—';
+    }
+}
+
+function updateEquationsDisplay() {
+    const catInfo = getCathodeInfo();
+    const anInfo = getAnodeInfo();
+    document.getElementById('catProd').textContent = catInfo.product;
+    document.getElementById('anProd').textContent = anInfo.product;
+    document.getElementById('catEq').textContent = catInfo.eq;
+    document.getElementById('anEq').textContent = anInfo.eq;
+}
+
+// ─── Controls ───
+document.getElementById('electrolyteSelect').addEventListener('change', e => {
+    state.electrolyte = e.target.value;
+    updateEquationsDisplay();
+    if (!state.running) draw();
+});
+
+document.getElementById('electrodeSelect').addEventListener('change', e => {
+    state.electrode = e.target.value;
+    updateEquationsDisplay();
+    if (!state.running) draw();
+});
+
+document.getElementById('voltageSlider').addEventListener('input', e => {
+    state.voltage = parseFloat(e.target.value);
+    document.getElementById('voltageVal').textContent = state.voltage.toFixed(1) + ' V';
+});
+
+document.getElementById('startBtn').addEventListener('click', () => {
+    if (state.running) return;
+    state.running = true;
+    document.getElementById('status').textContent = 'Experiment running...';
+    document.getElementById('status').className = 'status-bar running';
+    document.getElementById('electrolyteSelect').disabled = true;
+    document.getElementById('electrodeSelect').disabled = true;
+    animate();
+});
+
+document.getElementById('stopBtn').addEventListener('click', () => {
+    state.running = false;
+    document.getElementById('status').textContent = 'Experiment paused';
+    document.getElementById('status').className = 'status-bar stopped';
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+    state.running = false;
+    state.time = 0;
+    state.ions = [];
+    state.bubbles = [];
+    state.cathodeDeposit = 0;
+    state.anodeDeposit = 0;
+    state.dataLog = [];
+    document.getElementById('electrolyteSelect').disabled = false;
+    document.getElementById('electrodeSelect').disabled = false;
+    document.getElementById('status').textContent = 'Ready — select electrolyte and press Start';
+    document.getElementById('status').className = 'status-bar stopped';
+    updateEquationsDisplay();
+    draw();
+});
+
+document.getElementById('csvBtn').addEventListener('click', () => {
+    if (state.dataLog.length === 0) return;
+    const catInfo = getCathodeInfo();
+    const anInfo = getAnodeInfo();
+    let csv = `Time (s),Current (A),Charge (C),Cathode: ${catInfo.product} mass (g),`;
+    csv += catInfo.phase === 'gas' ? `Cathode volume (cm³),` : '';
+    csv += `Anode: ${anInfo.product} mass (g)`;
+    csv += anInfo.phase === 'gas' ? `,Anode volume (cm³)` : '';
+    csv += '\n';
+    state.dataLog.forEach(d => {
+        csv += `${d.time.toFixed(2)},${d.current.toFixed(3)},${d.charge.toFixed(2)},${d.catMass.toFixed(5)},`;
+        if (catInfo.phase === 'gas') csv += `${d.catVol.toFixed(2)},`;
+        csv += `${d.anMass.toFixed(5)}`;
+        if (anInfo.phase === 'gas') csv += `,${d.anVol.toFixed(2)}`;
+        csv += '\n';
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'electrolysis-data.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+
+document.getElementById('pngBtn').addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = 'electrolysis-diagram.png';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+});
+
+// ─── Animation loop ───
+function animate() {
+    if (!state.running) return;
+    update();
+    draw();
+    requestAnimationFrame(animate);
+}
+
+// ─── Init ───
+updateEquationsDisplay();
+draw();
+</script>
+</body>
+</html>

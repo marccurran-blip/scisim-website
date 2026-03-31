@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IGCSE Mendel Genetics Simulation</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0f1729;color:#e0e7ff;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;padding:20px;min-height:100vh}
+.container{max-width:1300px;margin:0 auto}
+h1{text-align:center;margin-bottom:4px;font-size:1.7em;color:#7db4ff}
+.subtitle{text-align:center;color:#8899bb;font-size:.9em;margin-bottom:20px}
+.main{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.panel{background:#1a2744;border:2px solid #2d4a7a;border-radius:8px;padding:20px}
+canvas{display:block;border-radius:4px}
+.ctrl-group{margin-bottom:14px}
+.ctrl-group label{display:block;font-size:.88em;color:#7db4ff;font-weight:600;margin-bottom:6px}
+select{width:100%;padding:9px;background:#0a0f1f;color:#e0e7ff;border:1px solid #2d4a7a;border-radius:4px;font-family:inherit;font-size:.9em}
+input[type=range]{width:100%;height:6px;border-radius:3px;background:#2d4a7a;outline:none;-webkit-appearance:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#7db4ff;cursor:pointer}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#7db4ff;cursor:pointer;border:none}
+.range-row{display:flex;justify-content:space-between;font-size:.82em;color:#8899bb;margin-top:4px}
+.btn-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.btn{padding:10px 14px;border-radius:5px;cursor:pointer;font-weight:600;font-family:inherit;font-size:.9em;border:2px solid #7db4ff;background:#1a2744;color:#7db4ff;transition:all .2s;flex:1;text-align:center;min-width:100px}
+.btn:hover{background:#7db4ff;color:#0f1729}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.stat{background:#0a0f1f;border:1px solid #2d4a7a;border-radius:4px;padding:10px;text-align:center}
+.stat-label{font-size:.75em;text-transform:uppercase;letter-spacing:.5px;color:#8899bb}
+.stat-val{font-size:1.3em;font-weight:700;color:#7db4ff;margin-top:2px}
+.genotype-row{display:flex;gap:6px;margin-bottom:10px}
+.genotype-btn{padding:8px 12px;border-radius:4px;cursor:pointer;font-weight:700;font-family:inherit;font-size:.95em;border:2px solid #2d4a7a;background:#0a0f1f;color:#e0e7ff;transition:all .2s;flex:1;text-align:center}
+.genotype-btn.active{border-color:#7db4ff;background:#1a2744;color:#7db4ff}
+.genotype-btn:hover{border-color:#7db4ff}
+.concepts{background:#1a2744;border:2px solid #2d4a7a;border-radius:8px;padding:20px;margin-bottom:20px}
+.concepts h2{color:#7db4ff;font-size:1.1em;margin-bottom:12px}
+.concepts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.concept{background:#0a0f1f;border-left:3px solid #7db4ff;padding:10px 12px;border-radius:4px}
+.concept-term{color:#7db4ff;font-weight:700;font-size:.92em;margin-bottom:3px}
+.concept-def{color:#8899bb;font-size:.82em;line-height:1.4}
+.footer{text-align:center;padding:20px;color:#7db4ff;border-top:1px solid #2d4a7a;margin-top:30px;font-size:.9em}
+@media(max-width:900px){.main{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Mendel's Genetics & Inheritance</h1>
+<p class="subtitle">IGCSE Biology — Monohybrid crosses, Punnett squares, dominance, and genetic ratios</p>
+
+<div class="main">
+<div>
+<div class="panel">
+<div class="ctrl-group">
+<label>Trait</label>
+<select id="selTrait">
+<option value="seed_shape">Pea Seed Shape (Round vs Wrinkled)</option>
+<option value="seed_colour">Pea Seed Colour (Yellow vs Green)</option>
+<option value="flower_colour">Flower Colour (Purple vs White)</option>
+<option value="plant_height">Plant Height (Tall vs Short)</option>
+<option value="pod_shape">Pod Shape (Inflated vs Constricted)</option>
+</select>
+</div>
+<div class="ctrl-group">
+<label>Parent 1 (♀) Genotype</label>
+<div class="genotype-row" id="geno1Row"></div>
+</div>
+<div class="ctrl-group">
+<label>Parent 2 (♂) Genotype</label>
+<div class="genotype-row" id="geno2Row"></div>
+</div>
+<div class="ctrl-group">
+<label>Offspring per Cross: <span id="valOff">16</span></label>
+<input type="range" id="sldOff" min="4" max="100" value="16" step="4">
+</div>
+<div class="btn-row">
+<button class="btn" id="btnCross">🧬 Cross</button>
+<button class="btn" id="btnMulti">×10 Crosses</button>
+<button class="btn" id="btnReset">↻ Reset</button>
+</div>
+<div class="stats" id="statsPanel">
+<div class="stat"><div class="stat-label">Generation</div><div class="stat-val" id="sGen">0</div></div>
+<div class="stat"><div class="stat-label">Total Offspring</div><div class="stat-val" id="sTotal">0</div></div>
+<div class="stat"><div class="stat-label">Dominant Phenotype</div><div class="stat-val" id="sDom">0</div></div>
+<div class="stat"><div class="stat-label">Recessive Phenotype</div><div class="stat-val" id="sRec">0</div></div>
+</div>
+<div class="stats">
+<div class="stat"><div class="stat-label">Observed Ratio</div><div class="stat-val" id="sObsRatio">—</div></div>
+<div class="stat"><div class="stat-label">Expected Ratio</div><div class="stat-val" id="sExpRatio">—</div></div>
+<div class="stat"><div class="stat-label">Genotype: Homo Dom</div><div class="stat-val" id="sHD">0</div></div>
+<div class="stat"><div class="stat-label">Genotype: Hetero</div><div class="stat-val" id="sHet">0</div></div>
+</div>
+<div class="stats" style="grid-template-columns:1fr">
+<div class="stat"><div class="stat-label">Genotype: Homo Rec</div><div class="stat-val" id="sHR">0</div></div>
+</div>
+<div class="btn-row">
+<button class="btn" id="btnCSV">📊 Export CSV</button>
+<button class="btn" id="btnPNG">🖼 Export PNG</button>
+</div>
+</div>
+</div>
+
+<div>
+<div class="panel" style="margin-bottom:20px">
+<canvas id="cvsPunnett" width="620" height="340"></canvas>
+</div>
+<div class="panel">
+<canvas id="cvsOffspring" width="620" height="340"></canvas>
+</div>
+</div>
+</div>
+
+<div class="concepts">
+<h2>Key IGCSE Concepts</h2>
+<div class="concepts-grid">
+<div class="concept"><div class="concept-term">Gene</div><div class="concept-def">A short section of DNA on a chromosome that codes for a specific protein, determining a characteristic.</div></div>
+<div class="concept"><div class="concept-term">Allele</div><div class="concept-def">Different versions of the same gene. For example, the gene for seed shape has a 'round' allele and a 'wrinkled' allele.</div></div>
+<div class="concept"><div class="concept-term">Dominant Allele</div><div class="concept-def">An allele that is expressed in the phenotype even when only one copy is present (e.g., Rr shows dominant trait). Shown as a capital letter.</div></div>
+<div class="concept"><div class="concept-term">Recessive Allele</div><div class="concept-def">An allele that is only expressed when two copies are present (homozygous recessive, e.g., rr). Shown as a lowercase letter.</div></div>
+<div class="concept"><div class="concept-term">Genotype</div><div class="concept-def">The genetic makeup of an organism — the combination of alleles it carries (e.g., RR, Rr, or rr).</div></div>
+<div class="concept"><div class="concept-term">Phenotype</div><div class="concept-def">The observable physical characteristic that results from the genotype (e.g., round seeds or wrinkled seeds).</div></div>
+<div class="concept"><div class="concept-term">Homozygous</div><div class="concept-def">Having two identical alleles for a gene: homozygous dominant (RR) or homozygous recessive (rr).</div></div>
+<div class="concept"><div class="concept-term">Heterozygous</div><div class="concept-def">Having two different alleles for a gene (e.g., Rr). The dominant allele determines the phenotype.</div></div>
+<div class="concept"><div class="concept-term">Punnett Square</div><div class="concept-def">A diagram used to predict the genotypes and phenotypes of offspring from a genetic cross between two parents.</div></div>
+<div class="concept"><div class="concept-term">Monohybrid Cross</div><div class="concept-def">A cross between two organisms looking at the inheritance of a single gene with two alleles.</div></div>
+<div class="concept"><div class="concept-term">F1 Generation</div><div class="concept-def">The first generation of offspring from a cross between two true-breeding (homozygous) parents.</div></div>
+<div class="concept"><div class="concept-term">3:1 Ratio</div><div class="concept-def">The expected phenotype ratio when two heterozygous organisms are crossed (Rr × Rr), giving 3 dominant : 1 recessive.</div></div>
+</div>
+</div>
+
+<div class="footer">IGCSE Biology — Mendel's Genetics Simulation</div>
+</div>
+
+<script>
+// ===== TRAIT DATA =====
+const TRAITS = {
+    seed_shape: {
+        name: 'Seed Shape', letter: 'R',
+        dominant: 'Round', recessive: 'Wrinkled',
+        domColor: '#f0c040', recColor: '#8a6e2f',
+        drawDom: function(ctx, x, y, r) {
+            ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
+            const g = ctx.createRadialGradient(x-r*0.3, y-r*0.3, r*0.1, x, y, r);
+            g.addColorStop(0, '#ffe070'); g.addColorStop(1, '#c09020');
+            ctx.fillStyle = g; ctx.fill();
+            ctx.strokeStyle = '#8a6e2f'; ctx.lineWidth = 1.5; ctx.stroke();
+        },
+        drawRec: function(ctx, x, y, r) {
+            ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
+            const g = ctx.createRadialGradient(x-r*0.3, y-r*0.3, r*0.1, x, y, r);
+            g.addColorStop(0, '#b89840'); g.addColorStop(1, '#6a5020');
+            ctx.fillStyle = g; ctx.fill();
+            ctx.strokeStyle = '#4a3510'; ctx.lineWidth = 1.5; ctx.stroke();
+            // wrinkle lines
+            ctx.strokeStyle = '#4a3510'; ctx.lineWidth = 1;
+            for (let i = 0; i < 5; i++) {
+                const a = (i/5)*Math.PI*2 + 0.3;
+                ctx.beginPath();
+                ctx.moveTo(x + Math.cos(a)*r*0.3, y + Math.sin(a)*r*0.3);
+                const mx = x + Math.cos(a+0.2)*r*0.6;
+                const my = y + Math.sin(a+0.2)*r*0.6;
+                ctx.quadraticCurveTo(mx, my, x + Math.cos(a+0.4)*r*0.85, y + Math.sin(a+0.4)*r*0.85);
+                ctx.stroke();
+            }
+        }
+    },
+    seed_colour: {
+        name: 'Seed Colour', letter: 'Y',
+        dominant: 'Yellow', recessive: 'Green',
+        domColor: '#f0d040', recColor: '#5a8a30',
+        drawDom: function(ctx, x, y, r) {
+            ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
+            const g = ctx.createRadialGradient(x-r*0.3, y-r*0.3, r*0.1, x, y, r);
+            g.addColorStop(0, '#fff080'); g.addColorStop(1, '#d0a020');
+            ctx.fillStyle = g; ctx.fill();
+            ctx.strokeStyle = '#a08010'; ctx.lineWidth = 1.5; ctx.stroke();
+        },
+        drawRec: function(ctx, x, y, r) {
+            ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
+            const g = ctx.createRadialGradient(x-r*0.3, y-r*0.3, r*0.1, x, y, r);
+            g.addColorStop(0, '#80c050'); g.addColorStop(1, '#3a6a10');
+            ctx.fillStyle = g; ctx.fill();
+            ctx.strokeStyle = '#2a4a08'; ctx.lineWidth = 1.5; ctx.stroke();
+        }
+    },
+    flower_colour: {
+        name: 'Flower Colour', letter: 'P',
+        dominant: 'Purple', recessive: 'White',
+        domColor: '#9040d0', recColor: '#e0e0e0',
+        drawDom: function(ctx, x, y, r) {
+            drawFlower(ctx, x, y, r, '#b060e0', '#7020a0');
+        },
+        drawRec: function(ctx, x, y, r) {
+            drawFlower(ctx, x, y, r, '#f0f0f0', '#c0c0c0');
+        }
+    },
+    plant_height: {
+        name: 'Plant Height', letter: 'T',
+        dominant: 'Tall', recessive: 'Short',
+        domColor: '#40b060', recColor: '#80b040',
+        drawDom: function(ctx, x, y, r) {
+            drawPlant(ctx, x, y, r, true);
+        },
+        drawRec: function(ctx, x, y, r) {
+            drawPlant(ctx, x, y, r, false);
+        }
+    },
+    pod_shape: {
+        name: 'Pod Shape', letter: 'I',
+        dominant: 'Inflated', recessive: 'Constricted',
+        domColor: '#50b050', recColor: '#7a9a40',
+        drawDom: function(ctx, x, y, r) {
+            drawPod(ctx, x, y, r, true);
+        },
+        drawRec: function(ctx, x, y, r) {
+            drawPod(ctx, x, y, r, false);
+        }
+    }
+};
+
+function drawFlower(ctx, x, y, r, c1, c2) {
+    const petals = 5;
+    for (let i = 0; i < petals; i++) {
+        const a = (i / petals) * Math.PI * 2 - Math.PI/2;
+        const px = x + Math.cos(a) * r * 0.5;
+        const py = y + Math.sin(a) * r * 0.5;
+        ctx.beginPath(); ctx.arc(px, py, r * 0.45, 0, Math.PI*2);
+        ctx.fillStyle = c1; ctx.fill();
+        ctx.strokeStyle = c2; ctx.lineWidth = 1; ctx.stroke();
+    }
+    ctx.beginPath(); ctx.arc(x, y, r*0.25, 0, Math.PI*2);
+    ctx.fillStyle = '#f0d040'; ctx.fill();
+    ctx.strokeStyle = '#c0a020'; ctx.lineWidth = 1; ctx.stroke();
+}
+
+function drawPlant(ctx, x, y, r, tall) {
+    const h = tall ? r * 1.8 : r * 0.8;
+    const baseY = y + r * 0.6;
+    // stem
+    ctx.strokeStyle = '#3a8a30'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(x, baseY); ctx.lineTo(x, baseY - h); ctx.stroke();
+    // leaves
+    const leafY1 = baseY - h * 0.4;
+    const leafY2 = baseY - h * 0.7;
+    ctx.fillStyle = '#50a040';
+    ctx.beginPath(); ctx.ellipse(x + r*0.4, leafY1, r*0.35, r*0.15, 0.3, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x - r*0.4, leafY2, r*0.35, r*0.15, -0.3, 0, Math.PI*2); ctx.fill();
+    // top
+    ctx.beginPath(); ctx.arc(x, baseY - h, r*0.2, 0, Math.PI*2);
+    ctx.fillStyle = '#60c050'; ctx.fill();
+    // label
+    ctx.fillStyle = '#e0e7ff'; ctx.font = `bold ${Math.max(8, r*0.35)}px Segoe UI`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText(tall ? 'Tall' : 'Short', x, baseY + 4);
+}
+
+function drawPod(ctx, x, y, r, inflated) {
+    ctx.save(); ctx.translate(x, y);
+    if (inflated) {
+        ctx.beginPath();
+        ctx.moveTo(0, -r*0.9);
+        ctx.bezierCurveTo(r*0.7, -r*0.6, r*0.7, r*0.6, 0, r*0.9);
+        ctx.bezierCurveTo(-r*0.7, r*0.6, -r*0.7, -r*0.6, 0, -r*0.9);
+        const g = ctx.createLinearGradient(-r*0.5, 0, r*0.5, 0);
+        g.addColorStop(0, '#3a8a20'); g.addColorStop(0.5, '#60c040'); g.addColorStop(1, '#3a8a20');
+        ctx.fillStyle = g; ctx.fill();
+        ctx.strokeStyle = '#2a6a10'; ctx.lineWidth = 1.5; ctx.stroke();
+    } else {
+        ctx.beginPath();
+        ctx.moveTo(0, -r*0.9);
+        for (let t = 0; t <= 1; t += 0.02) {
+            const ty = -r*0.9 + t * r*1.8;
+            const pinch = Math.sin(t * Math.PI * 3) * r * 0.15 + r * 0.2;
+            ctx.lineTo(pinch, ty);
+        }
+        for (let t = 1; t >= 0; t -= 0.02) {
+            const ty = -r*0.9 + t * r*1.8;
+            const pinch = Math.sin(t * Math.PI * 3) * r * 0.15 + r * 0.2;
+            ctx.lineTo(-pinch, ty);
+        }
+        ctx.closePath();
+        ctx.fillStyle = '#5a9a30'; ctx.fill();
+        ctx.strokeStyle = '#3a6a10'; ctx.lineWidth = 1.5; ctx.stroke();
+    }
+    ctx.restore();
+}
+
+// ===== STATE =====
+const cvsPunnett = document.getElementById('cvsPunnett');
+const ctxP = cvsPunnett.getContext('2d');
+const cvsOffspring = document.getElementById('cvsOffspring');
+const ctxO = cvsOffspring.getContext('2d');
+
+let trait = TRAITS.seed_shape;
+let parent1 = 'Rr';
+let parent2 = 'Rr';
+let offspringCount = 16;
+let generation = 0;
+let totalOffspring = [];
+let allCrossData = [];
+
+// ===== UI SETUP =====
+function getLetter() { return trait.letter; }
+function getGenotypes() {
+    const L = getLetter();
+    return [L+L, L+L.toLowerCase(), L.toLowerCase()+L.toLowerCase()];
+}
+function getGenoLabel(g) {
+    const L = getLetter();
+    if (g === L+L) return L+L + ' (Homozygous dominant)';
+    if (g === L+L.toLowerCase()) return L+L.toLowerCase() + ' (Heterozygous)';
+    return L.toLowerCase()+L.toLowerCase() + ' (Homozygous recessive)';
+}
+
+function buildGenoButtons(containerId, current, setter) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    const genos = getGenotypes();
+    genos.forEach(g => {
+        const btn = document.createElement('div');
+        btn.className = 'genotype-btn' + (current === g ? ' active' : '');
+        btn.textContent = g;
+        btn.onclick = () => { setter(g); buildGenoButtons(containerId, g, setter); drawPunnett(); };
+        container.appendChild(btn);
+    });
+}
+
+function updateUI() {
+    const L = getLetter();
+    parent1 = L + L.toLowerCase();
+    parent2 = L + L.toLowerCase();
+    buildGenoButtons('geno1Row', parent1, g => { parent1 = g; });
+    buildGenoButtons('geno2Row', parent2, g => { parent2 = g; });
+    resetAll();
+}
+
+document.getElementById('selTrait').onchange = function() {
+    trait = TRAITS[this.value];
+    updateUI();
+};
+
+document.getElementById('sldOff').oninput = function() {
+    offspringCount = parseInt(this.value);
+    document.getElementById('valOff').textContent = this.value;
+};
+
+document.getElementById('btnCross').onclick = () => doCross(1);
+document.getElementById('btnMulti').onclick = () => doCross(10);
+document.getElementById('btnReset').onclick = resetAll;
+document.getElementById('btnCSV').onclick = exportCSV;
+document.getElementById('btnPNG').onclick = exportPNG;
+
+function resetAll() {
+    generation = 0;
+    totalOffspring = [];
+    allCrossData = [];
+    updateStats();
+    drawPunnett();
+    drawOffspring();
+}
+
+// ===== GENETICS ENGINE =====
+function getAlleles(genotype) {
+    return [genotype[0], genotype[1]];
+}
+
+function isDominant(allele) {
+    return allele === allele.toUpperCase();
+}
+
+function getPhenotype(genotype) {
+    return (isDominant(genotype[0]) || isDominant(genotype[1])) ? 'dominant' : 'recessive';
+}
+
+function getGenotypeCategory(genotype) {
+    const a = genotype[0], b = genotype[1];
+    if (isDominant(a) && isDominant(b)) return 'homoDom';
+    if (!isDominant(a) && !isDominant(b)) return 'homoRec';
+    return 'hetero';
+}
+
+function cross(g1, g2) {
+    const a1 = getAlleles(g1);
+    const a2 = getAlleles(g2);
+    // Random allele from each parent
+    const fromP1 = a1[Math.random() < 0.5 ? 0 : 1];
+    const fromP2 = a2[Math.random() < 0.5 ? 0 : 1];
+    // Convention: uppercase first
+    if (isDominant(fromP1) || (!isDominant(fromP2) && fromP1 <= fromP2)) {
+        return fromP1 + fromP2;
+    }
+    return fromP2 + fromP1;
+}
+
+function getPunnettSquare(g1, g2) {
+    const a1 = getAlleles(g1);
+    const a2 = getAlleles(g2);
+    const cells = [];
+    for (let i = 0; i < 2; i++) {
+        for (let j = 0; j < 2; j++) {
+            const al1 = a1[i], al2 = a2[j];
+            let geno;
+            if (isDominant(al1) || (!isDominant(al2) && al1 <= al2)) {
+                geno = al1 + al2;
+            } else {
+                geno = al2 + al1;
+            }
+            cells.push({ allele1: a1[i], allele2: a2[j], genotype: geno, phenotype: getPhenotype(geno) });
+        }
+    }
+    return { parent1Alleles: a1, parent2Alleles: a2, cells };
+}
+
+function getExpectedRatio(g1, g2) {
+    const ps = getPunnettSquare(g1, g2);
+    let dom = 0, rec = 0;
+    ps.cells.forEach(c => { if (c.phenotype === 'dominant') dom++; else rec++; });
+    if (rec === 0) return '4:0 (all dominant)';
+    if (dom === 0) return '0:4 (all recessive)';
+    const g = gcd(dom, rec);
+    return (dom/g) + ':' + (rec/g);
+}
+
+function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+
+// ===== CROSS EXECUTION (stratified sampling) =====
+// For every group of 4 offspring, produce one from each Punnett cell (shuffled).
+// Remaining offspring (count % 4) use pure random. This keeps observed ratios
+// close to expected while still showing natural variation.
+function makeOffspring(genotype) {
+    return { genotype: genotype, phenotype: getPhenotype(genotype), category: getGenotypeCategory(genotype) };
+}
+
+function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+function stratifiedCross(g1, g2, count) {
+    const ps = getPunnettSquare(g1, g2);
+    const punnettGenos = ps.cells.map(c => c.genotype); // 4 genotypes from square
+    const batch = [];
+    const fullSets = Math.floor(count / 4);
+    const remainder = count % 4;
+
+    // Full sets of 4: one from each Punnett cell, shuffled
+    for (let s = 0; s < fullSets; s++) {
+        const set = punnettGenos.map(g => makeOffspring(g));
+        shuffleArray(set);
+        batch.push(...set);
+    }
+    // Remainder: random picks from the 4 cells
+    if (remainder > 0) {
+        const pool = shuffleArray([...punnettGenos]);
+        for (let i = 0; i < remainder; i++) {
+            batch.push(makeOffspring(pool[i]));
+        }
+    }
+    return batch;
+}
+
+function doCross(times) {
+    for (let t = 0; t < times; t++) {
+        generation++;
+        const batch = stratifiedCross(parent1, parent2, offspringCount);
+        totalOffspring.push(...batch);
+        allCrossData.push({
+            generation: generation,
+            parent1: parent1,
+            parent2: parent2,
+            offspring: batch
+        });
+    }
+    updateStats();
+    drawPunnett();
+    drawOffspring();
+}
+
+function updateStats() {
+    const dom = totalOffspring.filter(o => o.phenotype === 'dominant').length;
+    const rec = totalOffspring.filter(o => o.phenotype === 'recessive').length;
+    const hd = totalOffspring.filter(o => o.category === 'homoDom').length;
+    const het = totalOffspring.filter(o => o.category === 'hetero').length;
+    const hr = totalOffspring.filter(o => o.category === 'homoRec').length;
+
+    document.getElementById('sGen').textContent = generation;
+    document.getElementById('sTotal').textContent = totalOffspring.length;
+    document.getElementById('sDom').textContent = dom;
+    document.getElementById('sRec').textContent = rec;
+    document.getElementById('sHD').textContent = hd;
+    document.getElementById('sHet').textContent = het;
+    document.getElementById('sHR').textContent = hr;
+
+    if (totalOffspring.length > 0) {
+        if (rec === 0) {
+            document.getElementById('sObsRatio').textContent = dom + ':0';
+        } else if (dom === 0) {
+            document.getElementById('sObsRatio').textContent = '0:' + rec;
+        } else {
+            const ratio = dom / rec;
+            document.getElementById('sObsRatio').textContent = ratio.toFixed(2) + ':1';
+        }
+    } else {
+        document.getElementById('sObsRatio').textContent = '—';
+    }
+    document.getElementById('sExpRatio').textContent = getExpectedRatio(parent1, parent2);
+}
+
+// ===== DRAWING: PUNNETT SQUARE =====
+function drawPunnett() {
+    const W = cvsPunnett.width, H = cvsPunnett.height;
+    ctxP.fillStyle = '#0a0f1f';
+    ctxP.fillRect(0, 0, W, H);
+
+    const ps = getPunnettSquare(parent1, parent2);
+    const margin = 20;
+    const headerSize = 60;
+    const gridX = margin + headerSize;
+    const gridY = margin + headerSize + 10;
+    const cellW = (W - gridX - margin) / 2;
+    const cellH = Math.min(cellW, (H - gridY - margin - 50) / 2);
+
+    // Title
+    ctxP.fillStyle = '#7db4ff'; ctxP.font = 'bold 16px Segoe UI';
+    ctxP.textAlign = 'center'; ctxP.textBaseline = 'top';
+    ctxP.fillText('Punnett Square: ' + parent1 + ' × ' + parent2, W/2, 8);
+
+    // Parent 2 alleles (top)
+    ctxP.font = 'bold 22px Segoe UI'; ctxP.textBaseline = 'middle';
+    for (let j = 0; j < 2; j++) {
+        const cx = gridX + j * cellW + cellW/2;
+        const cy = gridY - 20;
+        const a = ps.parent2Alleles[j];
+        ctxP.fillStyle = isDominant(a) ? '#7db4ff' : '#ff9060';
+        ctxP.fillText(a, cx, cy);
+    }
+    // Label
+    ctxP.font = '11px Segoe UI'; ctxP.fillStyle = '#8899bb';
+    ctxP.fillText('Parent 2 (♂) gametes', gridX + cellW, gridY - 40);
+
+    // Parent 1 alleles (left)
+    ctxP.font = 'bold 22px Segoe UI';
+    for (let i = 0; i < 2; i++) {
+        const cx = gridX - 20;
+        const cy = gridY + i * cellH + cellH/2;
+        const a = ps.parent1Alleles[i];
+        ctxP.fillStyle = isDominant(a) ? '#7db4ff' : '#ff9060';
+        ctxP.textAlign = 'center';
+        ctxP.fillText(a, cx, cy);
+    }
+    // Label (rotated)
+    ctxP.save();
+    ctxP.translate(margin - 2, gridY + cellH);
+    ctxP.rotate(-Math.PI/2);
+    ctxP.font = '11px Segoe UI'; ctxP.fillStyle = '#8899bb';
+    ctxP.textAlign = 'center';
+    ctxP.fillText('Parent 1 (♀) gametes', 0, 0);
+    ctxP.restore();
+
+    // Grid cells
+    for (let i = 0; i < 2; i++) {
+        for (let j = 0; j < 2; j++) {
+            const ci = i * 2 + j;
+            const cell = ps.cells[ci];
+            const cx = gridX + j * cellW;
+            const cy = gridY + i * cellH;
+
+            // Background
+            const isDom = cell.phenotype === 'dominant';
+            ctxP.fillStyle = isDom ? 'rgba(125,180,255,0.12)' : 'rgba(255,144,96,0.12)';
+            ctxP.fillRect(cx, cy, cellW, cellH);
+            ctxP.strokeStyle = '#2d4a7a'; ctxP.lineWidth = 2;
+            ctxP.strokeRect(cx, cy, cellW, cellH);
+
+            // Draw organism
+            const midX = cx + cellW/2;
+            const midY = cy + cellH/2 - 8;
+            const rad = Math.min(cellW, cellH) * 0.22;
+            if (isDom) {
+                trait.drawDom(ctxP, midX, midY, rad);
+            } else {
+                trait.drawRec(ctxP, midX, midY, rad);
+            }
+
+            // Genotype text
+            ctxP.font = 'bold 16px Segoe UI'; ctxP.textAlign = 'center'; ctxP.textBaseline = 'top';
+            ctxP.fillStyle = isDom ? '#7db4ff' : '#ff9060';
+            ctxP.fillText(cell.genotype, midX, cy + cellH - 28);
+
+            // Phenotype text
+            ctxP.font = '11px Segoe UI';
+            ctxP.fillStyle = '#8899bb';
+            ctxP.fillText(isDom ? trait.dominant : trait.recessive, midX, cy + cellH - 12);
+        }
+    }
+
+    // Summary below grid
+    const sumY = gridY + cellH * 2 + 14;
+    const ps2 = ps.cells;
+    const domCount = ps2.filter(c => c.phenotype === 'dominant').length;
+    const recCount = ps2.filter(c => c.phenotype === 'recessive').length;
+    ctxP.font = '13px Segoe UI'; ctxP.textAlign = 'center'; ctxP.fillStyle = '#aabbdd';
+    let ratioText = 'Predicted: ';
+    if (recCount === 0) ratioText += '100% ' + trait.dominant;
+    else if (domCount === 0) ratioText += '100% ' + trait.recessive;
+    else {
+        const g2 = gcd(domCount, recCount);
+        ratioText += (domCount/g2) + ' ' + trait.dominant + ' : ' + (recCount/g2) + ' ' + trait.recessive;
+    }
+    ctxP.fillText(ratioText, W/2, sumY);
+
+    // Genotype breakdown
+    const genoCounts = {};
+    ps2.forEach(c => { genoCounts[c.genotype] = (genoCounts[c.genotype]||0) + 1; });
+    const genoText = Object.entries(genoCounts).map(([k,v]) => v + ' ' + k).join('  :  ');
+    ctxP.font = '12px Segoe UI'; ctxP.fillStyle = '#8899bb';
+    ctxP.fillText('Genotypes → ' + genoText, W/2, sumY + 18);
+}
+
+// ===== DRAWING: OFFSPRING GRID =====
+function drawOffspring() {
+    const W = cvsOffspring.width, H = cvsOffspring.height;
+    ctxO.fillStyle = '#0a0f1f';
+    ctxO.fillRect(0, 0, W, H);
+
+    if (totalOffspring.length === 0) {
+        ctxO.fillStyle = '#8899bb'; ctxO.font = '16px Segoe UI';
+        ctxO.textAlign = 'center'; ctxO.textBaseline = 'middle';
+        ctxO.fillText('Press "Cross" to generate offspring', W/2, H/2 - 10);
+        ctxO.font = '12px Segoe UI'; ctxO.fillStyle = '#556688';
+        ctxO.fillText('Offspring will appear here with their phenotypes', W/2, H/2 + 14);
+        return;
+    }
+
+    // Title
+    ctxO.fillStyle = '#7db4ff'; ctxO.font = 'bold 14px Segoe UI';
+    ctxO.textAlign = 'center'; ctxO.textBaseline = 'top';
+    ctxO.fillText('Offspring (last ' + Math.min(totalOffspring.length, 200) + ' of ' + totalOffspring.length + ')', W/2, 6);
+
+    // Draw bar chart on right side showing phenotype ratio
+    const barW = 90, barAreaX = W - barW - 15, barTop = 35, barH = H - 65;
+    const dom = totalOffspring.filter(o => o.phenotype === 'dominant').length;
+    const rec = totalOffspring.length - dom;
+    const maxV = Math.max(dom, rec, 1);
+
+    // Bar backgrounds
+    ctxO.fillStyle = '#1a2744';
+    ctxO.fillRect(barAreaX, barTop, barW/2 - 4, barH);
+    ctxO.fillRect(barAreaX + barW/2 + 4, barTop, barW/2 - 4, barH);
+
+    // Dominant bar
+    const domH = (dom / maxV) * barH;
+    const domG = ctxO.createLinearGradient(0, barTop + barH - domH, 0, barTop + barH);
+    domG.addColorStop(0, trait.domColor); domG.addColorStop(1, '#1a2744');
+    ctxO.fillStyle = domG;
+    ctxO.fillRect(barAreaX, barTop + barH - domH, barW/2 - 4, domH);
+    ctxO.strokeStyle = '#2d4a7a'; ctxO.lineWidth = 1;
+    ctxO.strokeRect(barAreaX, barTop, barW/2 - 4, barH);
+
+    // Recessive bar
+    const recH = (rec / maxV) * barH;
+    const recG = ctxO.createLinearGradient(0, barTop + barH - recH, 0, barTop + barH);
+    recG.addColorStop(0, trait.recColor); recG.addColorStop(1, '#1a2744');
+    ctxO.fillStyle = recG;
+    ctxO.fillRect(barAreaX + barW/2 + 4, barTop + barH - recH, barW/2 - 4, recH);
+    ctxO.strokeStyle = '#2d4a7a';
+    ctxO.strokeRect(barAreaX + barW/2 + 4, barTop, barW/2 - 4, barH);
+
+    // Bar labels
+    ctxO.font = 'bold 12px Segoe UI'; ctxO.textAlign = 'center'; ctxO.fillStyle = '#e0e7ff';
+    ctxO.fillText(dom, barAreaX + barW/4 - 2, barTop + barH - domH - 8);
+    ctxO.fillText(rec, barAreaX + barW*3/4 + 2, barTop + barH - recH - 8);
+    ctxO.font = '9px Segoe UI'; ctxO.fillStyle = '#8899bb';
+    ctxO.fillText('Dom', barAreaX + barW/4 - 2, barTop + barH + 12);
+    ctxO.fillText('Rec', barAreaX + barW*3/4 + 2, barTop + barH + 12);
+
+    // Offspring grid (left area)
+    const gridRight = barAreaX - 15;
+    const gridTop = 28;
+    const gridArea = gridRight - 10;
+    const gridHeight = H - gridTop - 10;
+
+    const show = totalOffspring.slice(-200); // show last 200
+    const count = show.length;
+
+    // Calculate grid dimensions
+    const aspect = gridArea / gridHeight;
+    let cols = Math.ceil(Math.sqrt(count * aspect));
+    let rows = Math.ceil(count / cols);
+    const cellSize = Math.min(gridArea / cols, gridHeight / rows);
+    const r = cellSize * 0.35;
+    const startX = 8;
+    const startY = gridTop + 4;
+
+    for (let idx = 0; idx < count; idx++) {
+        const o = show[idx];
+        const col = idx % cols;
+        const row = Math.floor(idx / cols);
+        const cx = startX + col * cellSize + cellSize/2;
+        const cy = startY + row * cellSize + cellSize/2;
+
+        if (cx > gridRight || cy > H - 4) continue;
+
+        if (o.phenotype === 'dominant') {
+            trait.drawDom(ctxO, cx, cy, r);
+        } else {
+            trait.drawRec(ctxO, cx, cy, r);
+        }
+    }
+
+    // Legend
+    ctxO.font = '10px Segoe UI'; ctxO.textAlign = 'left'; ctxO.fillStyle = '#8899bb';
+    const legY = H - 8;
+    ctxO.fillStyle = trait.domColor;
+    ctxO.fillRect(8, legY - 8, 10, 10);
+    ctxO.fillStyle = '#aabbdd';
+    ctxO.fillText(trait.dominant, 22, legY);
+
+    ctxO.fillStyle = trait.recColor;
+    ctxO.fillRect(110, legY - 8, 10, 10);
+    ctxO.fillStyle = '#aabbdd';
+    ctxO.fillText(trait.recessive, 124, legY);
+}
+
+// ===== EXPORT =====
+function exportCSV() {
+    if (totalOffspring.length === 0) return;
+    let csv = 'Index,Genotype,Genotype Category,Phenotype\n';
+    totalOffspring.forEach((o, i) => {
+        csv += (i+1) + ',' + o.genotype + ',' + o.category + ',' + o.phenotype + '\n';
+    });
+    csv += '\nSummary\n';
+    const dom = totalOffspring.filter(o => o.phenotype === 'dominant').length;
+    const rec = totalOffspring.length - dom;
+    csv += 'Total Offspring,' + totalOffspring.length + '\n';
+    csv += 'Dominant Phenotype (' + trait.dominant + '),' + dom + '\n';
+    csv += 'Recessive Phenotype (' + trait.recessive + '),' + rec + '\n';
+    csv += 'Observed Ratio,' + (rec > 0 ? (dom/rec).toFixed(3) + ':1' : dom + ':0') + '\n';
+    csv += 'Expected Ratio,' + getExpectedRatio(parent1, parent2) + '\n';
+    csv += 'Parent 1,' + parent1 + '\n';
+    csv += 'Parent 2,' + parent2 + '\n';
+    csv += 'Trait,' + trait.name + '\n';
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'mendel_genetics_data.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+function exportPNG() {
+    // Combine both canvases
+    const combo = document.createElement('canvas');
+    combo.width = Math.max(cvsPunnett.width, cvsOffspring.width);
+    combo.height = cvsPunnett.height + cvsOffspring.height + 20;
+    const ctx = combo.getContext('2d');
+    ctx.fillStyle = '#0f1729';
+    ctx.fillRect(0, 0, combo.width, combo.height);
+    ctx.drawImage(cvsPunnett, 0, 0);
+    ctx.drawImage(cvsOffspring, 0, cvsPunnett.height + 20);
+
+    const a = document.createElement('a');
+    a.href = combo.toDataURL('image/png');
+    a.download = 'mendel_genetics.png';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+// ===== INIT =====
+updateUI();
+</script>
+</body>
+</html>

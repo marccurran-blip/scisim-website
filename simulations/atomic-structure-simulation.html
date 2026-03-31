@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IGCSE Chemistry - Atomic Structure Simulation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #0f1729;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #e0e7ff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #7db4ff;
+            font-size: 2em;
+            text-shadow: 0 0 10px rgba(125, 180, 255, 0.3);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background-color: #1a2744;
+            border: 2px solid #2d4a7a;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .canvas-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        canvas {
+            background-color: #0f1729;
+            border: 2px solid #2d4a7a;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            width: 600px;
+            height: 600px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #7db4ff;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        select, input[type="range"], button {
+            width: 100%;
+            padding: 8px 12px;
+            background-color: #0f1729;
+            color: #e0e7ff;
+            border: 1px solid #2d4a7a;
+            border-radius: 4px;
+            font-family: 'Segoe UI', sans-serif;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        select:hover, button:hover {
+            background-color: #1a2744;
+            border-color: #7db4ff;
+        }
+
+        button {
+            background-color: #2d4a7a;
+            color: #7db4ff;
+            font-weight: 600;
+            margin-top: 5px;
+            transition: all 0.3s ease;
+        }
+
+        button:active {
+            background-color: #7db4ff;
+            color: #0f1729;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            padding: 0;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: linear-gradient(to right, #2d4a7a 0%, #7db4ff 100%);
+            outline: none;
+            border-radius: 3px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #7db4ff;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(125, 180, 255, 0.5);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #7db4ff;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 5px rgba(125, 180, 255, 0.5);
+        }
+
+        .slider-value {
+            min-width: 40px;
+            text-align: center;
+            color: #7db4ff;
+            font-weight: 600;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .data-item {
+            background-color: #0f1729;
+            border: 1px solid #2d4a7a;
+            border-radius: 4px;
+            padding: 12px;
+        }
+
+        .data-label {
+            color: #7db4ff;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-value {
+            color: #e0e7ff;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-top: 4px;
+        }
+
+        .info-text {
+            background-color: #0f1729;
+            border-left: 3px solid #7db4ff;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        .canvas-buttons {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .canvas-buttons button {
+            flex: 1;
+            margin: 0;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .export-buttons button {
+            flex: 1;
+        }
+
+        .toggle-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .toggle-buttons button {
+            flex: 1;
+            margin: 0;
+        }
+
+        .toggle-buttons button.active {
+            background-color: #7db4ff;
+            color: #0f1729;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #2d4a7a;
+            color: #7db4ff;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            canvas {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Atomic Structure Simulator</h1>
+
+        <div class="main-content">
+            <!-- Canvas Panel -->
+            <div class="panel canvas-panel">
+                <canvas id="atomCanvas" width="600" height="600"></canvas>
+                <div class="canvas-buttons">
+                    <button onclick="toggleNucleusZoom()">Toggle Nucleus View</button>
+                    <button onclick="toggleAnimation()">Pause/Resume</button>
+                </div>
+                <div class="export-buttons">
+                    <button onclick="exportPNG()">Export Atom PNG</button>
+                    <button onclick="exportCSV()">Export Data CSV</button>
+                </div>
+            </div>
+
+            <!-- Control Panel -->
+            <div class="panel">
+                <div class="control-group">
+                    <label for="elementSelect">Select Element:</label>
+                    <select id="elementSelect" onchange="updateElement()">
+                        <option value="0">Hydrogen (H)</option>
+                        <option value="1">Helium (He)</option>
+                        <option value="2">Lithium (Li)</option>
+                        <option value="3">Beryllium (Be)</option>
+                        <option value="4">Boron (B)</option>
+                        <option value="5">Carbon (C)</option>
+                        <option value="6">Nitrogen (N)</option>
+                        <option value="7">Oxygen (O)</option>
+                        <option value="8">Fluorine (F)</option>
+                        <option value="9">Neon (Ne)</option>
+                        <option value="10">Sodium (Na)</option>
+                        <option value="11">Magnesium (Mg)</option>
+                        <option value="12">Aluminium (Al)</option>
+                        <option value="13">Silicon (Si)</option>
+                        <option value="14">Phosphorus (P)</option>
+                        <option value="15">Sulfur (S)</option>
+                        <option value="16">Chlorine (Cl)</option>
+                        <option value="17">Argon (Ar)</option>
+                        <option value="18">Potassium (K)</option>
+                        <option value="19">Calcium (Ca)</option>
+                    </select>
+                </div>
+
+                <div class="toggle-buttons">
+                    <button id="normalBtn" class="active" onclick="setMode('normal')">Normal Atom</button>
+                    <button id="ionBtn" onclick="setMode('ion')">Ion Mode</button>
+                    <button id="isotopeBtn" onclick="setMode('isotope')">Isotope Mode</button>
+                </div>
+
+                <div class="control-group" id="ionControls" style="display: none;">
+                    <label for="ionSlider">Electron Change:</label>
+                    <div class="slider-container">
+                        <input type="range" id="ionSlider" min="-10" max="10" value="0" oninput="updateIon()">
+                        <span class="slider-value" id="ionValue">0</span>
+                    </div>
+                    <div class="info-text" id="ionInfo"></div>
+                </div>
+
+                <div class="control-group" id="isotopeControls" style="display: none;">
+                    <label for="neutronSlider">Neutron Adjustment:</label>
+                    <div class="slider-container">
+                        <input type="range" id="neutronSlider" min="-5" max="5" value="0" oninput="updateIsotope()">
+                        <span class="slider-value" id="neutronValue">0</span>
+                    </div>
+                    <div class="info-text" id="isotopeInfo"></div>
+                </div>
+
+                <div class="data-grid">
+                    <div class="data-item">
+                        <div class="data-label">Atomic Number</div>
+                        <div class="data-value" id="atomicNumber">1</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">Mass Number</div>
+                        <div class="data-value" id="massNumber">1</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">Protons</div>
+                        <div class="data-value" id="protons">1</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">Neutrons</div>
+                        <div class="data-value" id="neutrons">0</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">Electrons</div>
+                        <div class="data-value" id="electrons">1</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">Charge</div>
+                        <div class="data-value" id="charge">0</div>
+                    </div>
+                </div>
+
+                <div class="info-text">
+                    <strong id="elementName">Hydrogen</strong><br>
+                    Symbol: <strong id="elementSymbol">H</strong><br>
+                    Group: <strong id="group">1</strong><br>
+                    Period: <strong id="period">1</strong><br>
+                    Configuration: <strong id="config">1</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        IGCSE Science Simulations
+    </footer>
+
+    <script>
+        // Element data: [name, symbol, atomicNumber, massNumber, group, period]
+        const elements = [
+            {name: 'Hydrogen', symbol: 'H', atomicNum: 1, massNum: 1, group: 1, period: 1},
+            {name: 'Helium', symbol: 'He', atomicNum: 2, massNum: 4, group: 18, period: 1},
+            {name: 'Lithium', symbol: 'Li', atomicNum: 3, massNum: 7, group: 1, period: 2},
+            {name: 'Beryllium', symbol: 'Be', atomicNum: 4, massNum: 9, group: 2, period: 2},
+            {name: 'Boron', symbol: 'B', atomicNum: 5, massNum: 11, group: 13, period: 2},
+            {name: 'Carbon', symbol: 'C', atomicNum: 6, massNum: 12, group: 14, period: 2},
+            {name: 'Nitrogen', symbol: 'N', atomicNum: 7, massNum: 14, group: 15, period: 2},
+            {name: 'Oxygen', symbol: 'O', atomicNum: 8, massNum: 16, group: 16, period: 2},
+            {name: 'Fluorine', symbol: 'F', atomicNum: 9, massNum: 19, group: 17, period: 2},
+            {name: 'Neon', symbol: 'Ne', atomicNum: 10, massNum: 20, group: 18, period: 2},
+            {name: 'Sodium', symbol: 'Na', atomicNum: 11, massNum: 23, group: 1, period: 3},
+            {name: 'Magnesium', symbol: 'Mg', atomicNum: 12, massNum: 24, group: 2, period: 3},
+            {name: 'Aluminium', symbol: 'Al', atomicNum: 13, massNum: 27, group: 13, period: 3},
+            {name: 'Silicon', symbol: 'Si', atomicNum: 14, massNum: 28, group: 14, period: 3},
+            {name: 'Phosphorus', symbol: 'P', atomicNum: 15, massNum: 31, group: 15, period: 3},
+            {name: 'Sulfur', symbol: 'S', atomicNum: 16, massNum: 32, group: 16, period: 3},
+            {name: 'Chlorine', symbol: 'Cl', atomicNum: 17, massNum: 35, group: 17, period: 3},
+            {name: 'Argon', symbol: 'Ar', atomicNum: 18, massNum: 40, group: 18, period: 3},
+            {name: 'Potassium', symbol: 'K', atomicNum: 19, massNum: 39, group: 1, period: 4},
+            {name: 'Calcium', symbol: 'Ca', atomicNum: 20, massNum: 40, group: 2, period: 4}
+        ];
+
+        let currentElement = 0;
+        let currentMode = 'normal';
+        let ionCharge = 0;
+        let isotopeNeutronDiff = 0;
+        let animationRunning = true;
+        let nucleusZoomed = false;
+        let animationTime = 0;
+
+        const canvas = document.getElementById('atomCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function getElectronConfiguration(atomicNum) {
+            const config = [];
+            let remaining = atomicNum;
+            const shells = [2, 8, 8, 8, 8, 8, 8];
+
+            for (let shell of shells) {
+                if (remaining <= 0) break;
+                const electronInShell = Math.min(remaining, shell);
+                config.push(electronInShell);
+                remaining -= electronInShell;
+            }
+
+            return config;
+        }
+
+        function updateElement() {
+            currentElement = parseInt(document.getElementById('elementSelect').value);
+            ionCharge = 0;
+            isotopeNeutronDiff = 0;
+            document.getElementById('ionSlider').value = 0;
+            document.getElementById('neutronSlider').value = 0;
+            updateDisplay();
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            ionCharge = 0;
+            isotopeNeutronDiff = 0;
+            document.getElementById('ionSlider').value = 0;
+            document.getElementById('neutronSlider').value = 0;
+
+            document.getElementById('ionControls').style.display = mode === 'ion' ? 'block' : 'none';
+            document.getElementById('isotopeControls').style.display = mode === 'isotope' ? 'block' : 'none';
+
+            document.getElementById('normalBtn').classList.toggle('active', mode === 'normal');
+            document.getElementById('ionBtn').classList.toggle('active', mode === 'ion');
+            document.getElementById('isotopeBtn').classList.toggle('active', mode === 'isotope');
+
+            updateDisplay();
+        }
+
+        function updateIon() {
+            ionCharge = parseInt(document.getElementById('ionSlider').value);
+            document.getElementById('ionValue').textContent = ionCharge > 0 ? `+${ionCharge}` : (ionCharge < 0 ? `${ionCharge}` : '0');
+            updateDisplay();
+        }
+
+        function updateIsotope() {
+            isotopeNeutronDiff = parseInt(document.getElementById('neutronSlider').value);
+            document.getElementById('neutronValue').textContent = isotopeNeutronDiff;
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            const elem = elements[currentElement];
+            const protons = elem.atomicNum;
+            const baseNeutrons = elem.massNum - elem.atomicNum;
+            const neutrons = baseNeutrons + isotopeNeutronDiff;
+            const electrons = Math.max(0, protons - ionCharge);
+            const massNum = protons + neutrons;
+
+            document.getElementById('atomicNumber').textContent = protons;
+            document.getElementById('massNumber').textContent = massNum;
+            document.getElementById('protons').textContent = protons;
+            document.getElementById('neutrons').textContent = neutrons;
+            document.getElementById('electrons').textContent = electrons;
+            document.getElementById('charge').textContent = ionCharge > 0 ? `+${ionCharge}` : (ionCharge < 0 ? `${ionCharge}` : '0');
+
+            document.getElementById('elementName').textContent = elem.name;
+            document.getElementById('elementSymbol').textContent = elem.symbol;
+            document.getElementById('group').textContent = elem.group;
+            document.getElementById('period').textContent = elem.period;
+
+            const config = getElectronConfiguration(electrons);
+            document.getElementById('config').textContent = config.join(', ');
+
+            if (currentMode === 'ion') {
+                const ionSymbol = ionCharge > 0 ? `${elem.symbol}⁺` : (ionCharge < 0 ? `${elem.symbol}⁻` : elem.symbol);
+                document.getElementById('ionInfo').innerHTML = `<strong>${ionSymbol}</strong> ion with ${electrons} electrons`;
+            }
+
+            if (currentMode === 'isotope') {
+                document.getElementById('isotopeInfo').innerHTML = `<strong>${elem.symbol}-${massNum}</strong> (Isotope with ${neutrons} neutrons)`;
+            }
+
+            const electronConfig = getElectronConfiguration(electrons);
+            draw(protons, neutrons, electrons, electronConfig);
+        }
+
+        function draw(protons, neutrons, electrons, config) {
+            ctx.fillStyle = '#0f1729';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            if (nucleusZoomed) {
+                drawZoomedNucleus(centerX, centerY, protons, neutrons);
+            } else {
+                drawNucleus(centerX, centerY, protons, neutrons);
+                drawElectronShells(centerX, centerY, config, electrons);
+            }
+        }
+
+        function drawNucleus(x, y, protons, neutrons) {
+            const nucleusRadius = 15;
+
+            // Draw nucleus circle
+            ctx.fillStyle = 'rgba(255, 100, 100, 0.3)';
+            ctx.beginPath();
+            ctx.arc(x, y, nucleusRadius + 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw protons (red)
+            const protonRadius = nucleusRadius / (Math.max(protons, neutrons) * 2 + 1);
+            for (let i = 0; i < protons; i++) {
+                const angle = (i / protons) * Math.PI * 2;
+                const px = x + Math.cos(angle) * (nucleusRadius * 0.5);
+                const py = y + Math.sin(angle) * (nucleusRadius * 0.5);
+                ctx.fillStyle = '#ff6464';
+                ctx.beginPath();
+                ctx.arc(px, py, protonRadius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Draw neutrons (grey)
+            for (let i = 0; i < neutrons; i++) {
+                const angle = (i / neutrons) * Math.PI * 2 + Math.PI / neutrons;
+                const nx = x + Math.cos(angle) * (nucleusRadius * 0.7);
+                const ny = y + Math.sin(angle) * (nucleusRadius * 0.7);
+                ctx.fillStyle = '#a0a0a0';
+                ctx.beginPath();
+                ctx.arc(nx, ny, protonRadius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Label
+            ctx.fillStyle = '#7db4ff';
+            ctx.font = 'bold 11px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.fillText(`P:${protons} N:${neutrons}`, x, y + nucleusRadius + 20);
+        }
+
+        function drawZoomedNucleus(x, y, protons, neutrons) {
+            const total = protons + neutrons;
+            const baseRadius = 8;
+            const spacing = 35;
+
+            ctx.fillStyle = '#7db4ff';
+            ctx.font = 'bold 14px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.fillText('Nucleus (Zoomed View)', x, 30);
+
+            let count = 0;
+            for (let i = 0; i < protons; i++) {
+                const row = Math.floor(count / 8);
+                const col = count % 8;
+                const px = 80 + col * spacing;
+                const py = 100 + row * spacing;
+                ctx.fillStyle = '#ff6464';
+                ctx.beginPath();
+                ctx.arc(px, py, baseRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#e0e7ff';
+                ctx.font = 'bold 8px Segoe UI';
+                ctx.textAlign = 'center';
+                ctx.fillText('P', px, py + 2);
+                count++;
+            }
+
+            for (let i = 0; i < neutrons; i++) {
+                const row = Math.floor(count / 8);
+                const col = count % 8;
+                const nx = 80 + col * spacing;
+                const ny = 100 + row * spacing;
+                ctx.fillStyle = '#a0a0a0';
+                ctx.beginPath();
+                ctx.arc(nx, ny, baseRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#0f1729';
+                ctx.font = 'bold 8px Segoe UI';
+                ctx.textAlign = 'center';
+                ctx.fillText('N', nx, ny + 2);
+                count++;
+            }
+        }
+
+        function drawElectronShells(x, y, config, totalElectrons) {
+            const shellRadii = [80, 130, 180, 230];
+
+            // Cardinal directions: North, East, South, West (angles in radians)
+            // N = -π/2 (top), E = 0 (right), S = π/2 (bottom), W = π (left)
+            const cardinalAngles = [-Math.PI / 2, 0, Math.PI / 2, Math.PI];
+            const cardinalLabels = ['N', 'E', 'S', 'W'];
+
+            // Shell 1 has 1 orbital (max 2 electrons): just N position
+            // Shells 2, 3, 4 have 4 orbitals (max 8 electrons): N, E, S, W
+            const orbitalsPerShell = [1, 4, 4, 4];
+
+            // Draw shell rings and labels
+            for (let i = 0; i < shellRadii.length; i++) {
+                ctx.strokeStyle = '#2d4a7a';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.arc(x, y, shellRadii[i], 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Shell number label
+                ctx.fillStyle = 'rgba(125, 180, 255, 0.3)';
+                ctx.font = '10px Segoe UI';
+                ctx.textAlign = 'left';
+                ctx.fillText(`n=${i + 1}`, x + shellRadii[i] + 5, y - 5);
+            }
+
+            // Pair offset: how far apart paired electrons sit
+            const pairOffset = 8;
+
+            // Draw electrons following Hund's rule:
+            // Fill each orbital singly first (N, E, S, W), then pair up
+            let electronCount = 0;
+            for (let shell = 0; shell < config.length && shell < shellRadii.length; shell++) {
+                const electronsInShell = config[shell];
+                const radius = shellRadii[shell];
+                const numOrbitals = orbitalsPerShell[shell];
+
+                // Work out which orbitals have electrons and which are paired
+                // First pass: one electron per orbital (up to numOrbitals)
+                // Second pass: pair up (electrons beyond numOrbitals)
+                for (let i = 0; i < electronsInShell; i++) {
+                    if (electronCount >= totalElectrons) break;
+
+                    let orbitalIndex, isPaired;
+                    if (i < numOrbitals) {
+                        // First electron in each orbital (singly filling)
+                        orbitalIndex = i;
+                        isPaired = false;
+                    } else {
+                        // Pairing: second electron in orbital
+                        orbitalIndex = i - numOrbitals;
+                        isPaired = true;
+                    }
+
+                    // Get the cardinal angle for this orbital
+                    const baseAngle = cardinalAngles[orbitalIndex % 4];
+
+                    // Position: paired electrons sit either side of the orbital position
+                    let ex, ey;
+                    if (isPaired) {
+                        // Second electron: offset to one side along the shell tangent
+                        const tangentAngle = baseAngle + Math.PI / 2;
+                        ex = x + Math.cos(baseAngle) * radius + Math.cos(tangentAngle) * pairOffset;
+                        ey = y + Math.sin(baseAngle) * radius + Math.sin(tangentAngle) * pairOffset;
+                    } else {
+                        // First electron: offset to the other side (or centred if no pair yet)
+                        // Check if this orbital WILL be paired
+                        const willPair = electronsInShell > numOrbitals && (i + numOrbitals) < electronsInShell;
+                        if (willPair || (electronsInShell > numOrbitals && i < electronsInShell - numOrbitals)) {
+                            const tangentAngle = baseAngle + Math.PI / 2;
+                            ex = x + Math.cos(baseAngle) * radius - Math.cos(tangentAngle) * pairOffset;
+                            ey = y + Math.sin(baseAngle) * radius - Math.sin(tangentAngle) * pairOffset;
+                        } else {
+                            // Unpaired: sit right on the cardinal position
+                            ex = x + Math.cos(baseAngle) * radius;
+                            ey = y + Math.sin(baseAngle) * radius;
+                        }
+                    }
+
+                    // Draw electron dot
+                    ctx.fillStyle = '#7db4ff';
+                    ctx.beginPath();
+                    ctx.arc(ex, ey, 5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Glow
+                    ctx.strokeStyle = 'rgba(125, 180, 255, 0.4)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(ex, ey, 8, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Draw spin arrow (up for first, down for paired)
+                    ctx.strokeStyle = '#e0e7ff';
+                    ctx.lineWidth = 1.5;
+                    const arrowLen = 6;
+                    if (!isPaired) {
+                        // Up arrow ↑
+                        ctx.beginPath();
+                        ctx.moveTo(ex, ey + arrowLen);
+                        ctx.lineTo(ex, ey - arrowLen);
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.moveTo(ex - 3, ey - arrowLen + 3);
+                        ctx.lineTo(ex, ey - arrowLen);
+                        ctx.lineTo(ex + 3, ey - arrowLen + 3);
+                        ctx.stroke();
+                    } else {
+                        // Down arrow ↓
+                        ctx.beginPath();
+                        ctx.moveTo(ex, ey - arrowLen);
+                        ctx.lineTo(ex, ey + arrowLen);
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.moveTo(ex - 3, ey + arrowLen - 3);
+                        ctx.lineTo(ex, ey + arrowLen);
+                        ctx.lineTo(ex + 3, ey + arrowLen - 3);
+                        ctx.stroke();
+                    }
+
+                    electronCount++;
+                }
+            }
+
+            // Draw N E S W labels lightly on outermost used shell
+            const outerShell = Math.min(config.length - 1, shellRadii.length - 1);
+            const labelRadius = shellRadii[outerShell] + 20;
+            ctx.fillStyle = 'rgba(125, 180, 255, 0.25)';
+            ctx.font = '11px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            for (let i = 0; i < 4; i++) {
+                const lx = x + Math.cos(cardinalAngles[i]) * labelRadius;
+                const ly = y + Math.sin(cardinalAngles[i]) * labelRadius;
+                ctx.fillText(cardinalLabels[i], lx, ly);
+            }
+            ctx.textBaseline = 'alphabetic';
+        }
+
+        function toggleNucleusZoom() {
+            nucleusZoomed = !nucleusZoomed;
+            updateDisplay();
+        }
+
+        function toggleAnimation() {
+            animationRunning = !animationRunning;
+        }
+
+        function exportPNG() {
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL('image/png');
+            link.download = `atom-${elements[currentElement].symbol}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportCSV() {
+            const elem = elements[currentElement];
+            const protons = elem.atomicNum;
+            const baseNeutrons = elem.massNum - elem.atomicNum;
+            const neutrons = baseNeutrons + isotopeNeutronDiff;
+            const electrons = Math.max(0, protons - ionCharge);
+            const massNum = protons + neutrons;
+            const config = getElectronConfiguration(protons);
+
+            let csv = 'Atomic Structure Data\n\n';
+            csv += 'Element,Symbol,Atomic Number,Mass Number,Protons,Neutrons,Electrons,Configuration,Group,Period,Charge\n';
+            csv += `${elem.name},${elem.symbol},${protons},${massNum},${protons},${neutrons},${electrons},"${config.join(', ')}",${elem.group},${elem.period},${ionCharge}\n`;
+
+            const link = document.createElement('a');
+            link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+            link.download = `atom-data-${elem.symbol}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Initialize
+        updateDisplay();
+    </script>
+</body>
+</html>

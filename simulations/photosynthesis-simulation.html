@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IGCSE Photosynthesis Rate Simulation</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0f1729;color:#e0e7ff;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;padding:20px;min-height:100vh}
+.container{max-width:1300px;margin:0 auto}
+h1{text-align:center;margin-bottom:4px;font-size:1.7em;color:#7db4ff}
+.subtitle{text-align:center;color:#8899bb;font-size:.9em;margin-bottom:20px}
+.main{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;margin-bottom:20px}
+.panel{background:#1a2744;border:2px solid #2d4a7a;border-radius:8px;padding:20px}
+canvas{display:block;border-radius:4px}
+.mode-label{font-size:.88em;color:#7db4ff;font-weight:700;margin-bottom:8px}
+.mode-btns{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.mbtn{padding:8px 14px;border-radius:5px;cursor:pointer;font-weight:600;font-family:inherit;font-size:.85em;border:2px solid #2d4a7a;background:#0f1729;color:#7db4ff;transition:all .2s;flex:1;text-align:center;min-width:100px}
+.mbtn:hover{border-color:#7db4ff}
+.mbtn.active{background:#7db4ff;color:#0f1729;border-color:#7db4ff}
+.bubble-box{background:#0a0f1f;border:2px solid #7db4ff;border-radius:8px;padding:14px;text-align:center;margin-bottom:16px}
+.bubble-num{font-size:2.2em;font-weight:700;color:#7db4ff}
+.bubble-lbl{font-size:.8em;color:#8899bb;margin-top:2px}
+.ctrl-group{margin-bottom:14px}
+.ctrl-label{display:flex;justify-content:space-between;margin-bottom:6px;font-size:.88em;font-weight:600;color:#7db4ff}
+.ctrl-val{color:#e0e7ff}
+input[type=range]{width:100%;height:6px;border-radius:3px;background:#2d4a7a;outline:none;-webkit-appearance:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#7db4ff;cursor:pointer}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#7db4ff;cursor:pointer;border:none}
+.eq-box{background:#0a0f1f;border:1px solid #2d4a7a;border-radius:4px;padding:12px;text-align:center;font-size:1.05em;margin-bottom:14px;color:#7db4ff}
+.data-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.data-item{background:#0a0f1f;border:1px solid #2d4a7a;border-radius:4px;padding:10px}
+.data-label{font-size:.75em;text-transform:uppercase;letter-spacing:.5px;color:#8899bb}
+.data-val{font-size:1.1em;font-weight:700;color:#7db4ff;margin-top:2px}
+.lf-box{background:#0a0f1f;border-left:3px solid #7db4ff;border-radius:4px;padding:10px 12px;font-size:.9em;margin-bottom:14px;min-height:38px;display:flex;align-items:center;gap:6px}
+.lf-box.warn{border-left-color:#ef4444;background:rgba(239,68,68,0.08)}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:9px 14px;border-radius:5px;cursor:pointer;font-weight:600;font-family:inherit;font-size:.88em;border:2px solid #2d4a7a;background:#1a2744;color:#7db4ff;transition:all .2s;flex:1;text-align:center;min-width:100px}
+.btn:hover{border-color:#7db4ff;background:#7db4ff;color:#0f1729}
+.footer{text-align:center;padding:20px;color:#7db4ff;border-top:1px solid #2d4a7a;margin-top:30px;font-size:.9em}
+@media(max-width:900px){.main{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Photosynthesis Rate Simulation</h1>
+<p class="subtitle">IGCSE Biology — Investigating the rate of photosynthesis using pondweed</p>
+
+<div class="main">
+<div>
+<div class="panel" style="padding:12px">
+<canvas id="simCvs" width="620" height="440"></canvas>
+</div>
+<div class="panel" style="margin-top:14px;padding:12px">
+<canvas id="graphCvs" width="620" height="260"></canvas>
+<div class="btn-row" style="margin-top:10px">
+<button class="btn" id="btnCSV">Export Data (CSV)</button>
+<button class="btn" id="btnPNG">Export Graph (PNG)</button>
+</div>
+</div>
+</div>
+<div>
+<div class="panel">
+<div class="mode-label">Investigation Mode</div>
+<div class="mode-btns">
+<button class="mbtn active" data-mode="light">Light Intensity</button>
+<button class="mbtn" data-mode="temperature">Temperature</button>
+<button class="mbtn" data-mode="co2">CO₂ Level</button>
+</div>
+<div class="bubble-box">
+<div class="bubble-num" id="bubbleNum">0</div>
+<div class="bubble-lbl">Oxygen bubbles per minute</div>
+</div>
+<div class="ctrl-group">
+<div class="ctrl-label"><span>Light Intensity</span><span class="ctrl-val" id="valL">50%</span></div>
+<input type="range" id="sldL" min="0" max="100" value="50">
+</div>
+<div class="ctrl-group">
+<div class="ctrl-label"><span>Temperature</span><span class="ctrl-val" id="valT">25°C</span></div>
+<input type="range" id="sldT" min="5" max="50" value="25">
+</div>
+<div class="ctrl-group">
+<div class="ctrl-label"><span>CO₂ Concentration</span><span class="ctrl-val" id="valC">0.04%</span></div>
+<input type="range" id="sldC" min="0.01" max="0.10" step="0.005" value="0.04">
+</div>
+<div class="eq-box">6CO₂ + 6H₂O &nbsp;→&nbsp; C₆H₁₂O₆ + 6O₂</div>
+<div class="data-grid">
+<div class="data-item"><div class="data-label">Light</div><div class="data-val" id="dL">50%</div></div>
+<div class="data-item"><div class="data-label">Temperature</div><div class="data-val" id="dT">25°C</div></div>
+<div class="data-item"><div class="data-label">CO₂</div><div class="data-val" id="dC">0.04%</div></div>
+</div>
+<div class="lf-box" id="lfBox">
+<strong>Limiting Factor:</strong> <span id="lfText">All factors adequate</span>
+</div>
+<div class="btn-row">
+<button class="btn" id="btnReset">Reset All</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="footer">IGCSE Science Simulations</div>
+
+<script>
+// ==================== SETUP ====================
+const simCvs = document.getElementById('simCvs');
+const simCtx = simCvs.getContext('2d');
+const grCvs = document.getElementById('graphCvs');
+const grCtx = grCvs.getContext('2d');
+const SW = simCvs.width, SH = simCvs.height;
+const GW = grCvs.width, GH = grCvs.height;
+
+let light = 50, temp = 25, co2 = 0.04;
+let mode = 'light';
+let bubbles = [];
+let time = 0;
+
+// ==================== RATE CALCULATION ====================
+function calcRate(l, t, c) {
+  // Light factor: saturates around 80%
+  const lf = l <= 0 ? 0 : Math.min(l / 75, 1);
+
+  // Temperature factor: enzyme optimum ~35°C, denatures above 45°C
+  let tf;
+  if (t < 10) tf = 0;
+  else if (t <= 35) tf = (t - 10) / 25;
+  else if (t <= 45) tf = Math.max(0, 1 - ((t - 35) / 10) ** 1.5);
+  else tf = 0;
+  tf = Math.max(0, Math.min(1, tf));
+
+  // CO₂ factor: saturates around 0.08%
+  const cf = c <= 0 ? 0 : Math.min(c / 0.07, 1);
+
+  // Rate = base × minimum of factors (limiting factor principle)
+  // Actually multiply all - the lowest limits overall rate
+  const maxRate = 48;
+  return maxRate * lf * tf * cf;
+}
+
+function getLimitingFactor() {
+  const lf = light <= 0 ? 0 : Math.min(light / 75, 1);
+  let tf;
+  if (temp < 10) tf = 0;
+  else if (temp <= 35) tf = (temp - 10) / 25;
+  else tf = Math.max(0, 1 - ((temp - 35) / 10) ** 1.5);
+  tf = Math.max(0, Math.min(1, tf));
+  const cf = co2 <= 0 ? 0 : Math.min(co2 / 0.07, 1);
+
+  const factors = [
+    { name: 'Light intensity', val: lf },
+    { name: 'Temperature', val: tf },
+    { name: 'CO₂ concentration', val: cf }
+  ];
+  factors.sort((a, b) => a.val - b.val);
+  if (factors[0].val < 0.85) return factors[0].name;
+  return null;
+}
+
+// ==================== DRAW EXPERIMENT ====================
+function drawSim() {
+  const ctx = simCtx;
+  ctx.clearRect(0, 0, SW, SH);
+
+  // Background - darkens with less light
+  const bgBright = 0.02 + (light / 100) * 0.06;
+  ctx.fillStyle = `rgba(10,15,31,1)`;
+  ctx.fillRect(0, 0, SW, SH);
+
+  // Light glow from lamp
+  if (light > 0) {
+    const lampX = 60 + (100 - light) * 1.5;
+    const glowR = 80 + light * 1.5;
+    const grd = ctx.createRadialGradient(lampX, 220, 10, lampX, 220, glowR);
+    grd.addColorStop(0, `rgba(255,220,80,${light / 300})`);
+    grd.addColorStop(1, 'rgba(255,220,80,0)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, SW, SH);
+  }
+
+  // === LAMP ===
+  const lampX = 60 + (100 - light) * 1.5;
+  // Stand base
+  ctx.fillStyle = '#444';
+  ctx.fillRect(lampX - 20, 310, 40, 8);
+  // Stand pole
+  ctx.fillStyle = '#555';
+  ctx.fillRect(lampX - 3, 180, 6, 130);
+  // Lamp housing
+  ctx.fillStyle = '#666';
+  ctx.beginPath();
+  ctx.moveTo(lampX - 18, 200);
+  ctx.lineTo(lampX + 18, 200);
+  ctx.lineTo(lampX + 12, 180);
+  ctx.lineTo(lampX - 12, 180);
+  ctx.closePath();
+  ctx.fill();
+  // Bulb
+  const bulbGlow = light / 100;
+  ctx.fillStyle = `rgba(255,230,100,${0.3 + bulbGlow * 0.7})`;
+  ctx.beginPath();
+  ctx.arc(lampX, 210, 10, 0, Math.PI * 2);
+  ctx.fill();
+  // Light rays
+  if (light > 5) {
+    ctx.strokeStyle = `rgba(255,230,100,${bulbGlow * 0.3})`;
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 5; i++) {
+      const a = -0.4 + (i / 4) * 0.8;
+      ctx.beginPath();
+      ctx.moveTo(lampX + Math.cos(a) * 15, 210 + Math.sin(a) * 15);
+      ctx.lineTo(lampX + Math.cos(a) * (40 + light * 0.5), 210 + Math.sin(a) * (40 + light * 0.5));
+      ctx.stroke();
+    }
+  }
+  // Distance label
+  ctx.fillStyle = '#8899bb';
+  ctx.font = '10px Segoe UI';
+  ctx.textAlign = 'center';
+  ctx.fillText('Lamp', lampX, 330);
+
+  // === BEAKER ===
+  const bx = 300, by = 130, bw = 160, bh = 230;
+  // Water
+  ctx.fillStyle = 'rgba(60,120,200,0.15)';
+  ctx.fillRect(bx, by + 20, bw, bh - 20);
+  // Beaker outline
+  ctx.strokeStyle = '#5588aa';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(bx, by);
+  ctx.lineTo(bx, by + bh);
+  ctx.lineTo(bx + bw, by + bh);
+  ctx.lineTo(bx + bw, by);
+  ctx.stroke();
+  // Beaker rim
+  ctx.strokeStyle = '#6699bb';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(bx - 6, by);
+  ctx.lineTo(bx + bw + 6, by);
+  ctx.stroke();
+  // Water level line
+  ctx.strokeStyle = 'rgba(80,150,240,0.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(bx + 2, by + 20);
+  ctx.lineTo(bx + bw - 2, by + 20);
+  ctx.stroke();
+
+  // NaHCO₃ label on beaker
+  ctx.fillStyle = 'rgba(125,180,255,0.5)';
+  ctx.font = '10px Segoe UI';
+  ctx.textAlign = 'center';
+  ctx.fillText('NaHCO₃ solution', bx + bw / 2, by + bh + 16);
+  ctx.fillText('(provides CO₂)', bx + bw / 2, by + bh + 28);
+
+  // === PONDWEED (Elodea) ===
+  const plantX = bx + bw / 2 - 10;
+  const plantBase = by + bh - 20;
+  // Main stem
+  ctx.strokeStyle = '#3a8a4a';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(plantX, plantBase);
+  ctx.quadraticCurveTo(plantX + 3, plantBase - 60, plantX - 2, plantBase - 120);
+  ctx.stroke();
+  // Leaves (pairs along stem)
+  for (let i = 0; i < 6; i++) {
+    const ly = plantBase - 15 - i * 18;
+    const lx = plantX + (i % 2 === 0 ? -1 : 1) * 2;
+    // Left leaf
+    ctx.fillStyle = `rgba(70,170,70,${0.5 + i * 0.05})`;
+    ctx.beginPath();
+    ctx.ellipse(lx - 14, ly, 12, 5, -0.3 - i * 0.05, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#2a6a2a';
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+    // Right leaf
+    ctx.fillStyle = `rgba(60,160,60,${0.5 + i * 0.05})`;
+    ctx.beginPath();
+    ctx.ellipse(lx + 14, ly - 6, 12, 5, 0.3 + i * 0.05, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+  // Plant tip (where bubbles come from)
+  const tipX = plantX - 2;
+  const tipY = plantBase - 125;
+
+  // === INVERTED FUNNEL ===
+  const funnelCX = tipX + 15;
+  const funnelTop = by + 50;
+  const funnelBot = plantBase - 60;
+  // Funnel body (trapezoid)
+  ctx.strokeStyle = 'rgba(150,180,220,0.5)';
+  ctx.fillStyle = 'rgba(150,180,220,0.07)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(funnelCX - 35, funnelBot);
+  ctx.lineTo(funnelCX + 35, funnelBot);
+  ctx.lineTo(funnelCX + 8, funnelTop + 20);
+  ctx.lineTo(funnelCX - 8, funnelTop + 20);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  // Funnel neck (tube going up)
+  ctx.fillStyle = 'rgba(150,180,220,0.07)';
+  ctx.strokeStyle = 'rgba(150,180,220,0.5)';
+  ctx.fillRect(funnelCX - 6, funnelTop - 10, 12, 30);
+  ctx.strokeRect(funnelCX - 6, funnelTop - 10, 12, 30);
+
+  // === COLLECTING TUBE (inverted test tube over funnel) ===
+  const tubeX = funnelCX;
+  const tubeTop = by + 15;
+  const tubeBot = funnelTop - 8;
+  // Tube
+  ctx.strokeStyle = 'rgba(150,200,240,0.6)';
+  ctx.fillStyle = 'rgba(60,120,200,0.1)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(tubeX - 10, tubeBot);
+  ctx.lineTo(tubeX - 10, tubeTop + 8);
+  ctx.arc(tubeX, tubeTop + 8, 10, Math.PI, 0);
+  ctx.lineTo(tubeX + 10, tubeBot);
+  ctx.stroke();
+  // Gas collected (fills from top down)
+  const rate = calcRate(light, temp, co2);
+  const gasLevel = Math.min(rate / 48, 1) * (tubeBot - tubeTop - 10);
+  if (gasLevel > 2) {
+    ctx.fillStyle = 'rgba(200,230,255,0.15)';
+    ctx.fillRect(tubeX - 8, tubeTop + 10, 16, gasLevel);
+    ctx.fillStyle = '#8899bb';
+    ctx.font = '9px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.fillText('O₂', tubeX, tubeTop + 10 + gasLevel / 2 + 3);
+  }
+
+  // === THERMOMETER ===
+  const thX = bx + bw - 20;
+  const thTop = by + 30;
+  const thBot = by + bh - 30;
+  const thH = thBot - thTop;
+  const tFrac = (temp - 5) / 45;
+  // Tube
+  ctx.fillStyle = 'rgba(200,200,200,0.15)';
+  ctx.fillRect(thX - 2, thTop, 4, thH);
+  ctx.strokeStyle = 'rgba(200,200,200,0.3)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(thX - 2, thTop, 4, thH);
+  // Mercury
+  const mercH = thH * tFrac;
+  ctx.fillStyle = '#ee4444';
+  ctx.fillRect(thX - 1, thBot - mercH, 2, mercH);
+  // Bulb
+  ctx.beginPath();
+  ctx.arc(thX, thBot + 5, 4, 0, Math.PI * 2);
+  ctx.fill();
+  // Label
+  ctx.fillStyle = '#ee6666';
+  ctx.font = '10px Segoe UI';
+  ctx.textAlign = 'left';
+  ctx.fillText(temp + '°C', thX + 8, thBot - mercH + 4);
+
+  // === BUBBLES ===
+  drawBubbles(ctx, tipX, tipY, tubeX, tubeTop, tubeBot);
+
+  // === LABELS ===
+  ctx.fillStyle = '#7db4ff';
+  ctx.font = 'bold 12px Segoe UI';
+  ctx.textAlign = 'left';
+  ctx.fillText('Pondweed (Elodea)', bx + 5, by + bh - 5);
+  ctx.fillStyle = 'rgba(150,200,240,0.7)';
+  ctx.font = '10px Segoe UI';
+  ctx.textAlign = 'center';
+  ctx.fillText('Collecting tube', tubeX, tubeTop - 2);
+  ctx.fillText('Funnel', funnelCX, funnelBot + 14);
+
+  // Title
+  ctx.fillStyle = '#e0e7ff';
+  ctx.font = 'bold 13px Segoe UI';
+  ctx.textAlign = 'left';
+  ctx.fillText('Pondweed Experiment', 15, 22);
+
+  // Rate readout on canvas
+  ctx.fillStyle = '#7db4ff';
+  ctx.font = 'bold 14px Segoe UI';
+  ctx.textAlign = 'right';
+  ctx.fillText(Math.round(rate) + ' bubbles/min', SW - 15, 22);
+}
+
+// ==================== BUBBLES ====================
+function drawBubbles(ctx, tipX, tipY, tubeX, tubeTop, tubeBot) {
+  const rate = calcRate(light, temp, co2);
+
+  // Spawn new bubbles
+  const spawnChance = rate / 60 / 8; // per frame at ~60fps
+  if (Math.random() < spawnChance && rate > 0.5) {
+    bubbles.push({
+      x: tipX + (Math.random() - 0.5) * 6,
+      y: tipY,
+      r: 2 + Math.random() * 2.5,
+      vy: -0.8 - Math.random() * 1.2,
+      vx: (Math.random() - 0.5) * 0.3,
+      alpha: 0.8,
+      phase: Math.random() * Math.PI * 2
+    });
+  }
+
+  // Update and draw
+  for (let i = bubbles.length - 1; i >= 0; i--) {
+    const b = bubbles[i];
+    b.y += b.vy;
+    b.x += Math.sin(time * 2 + b.phase) * 0.3 + b.vx;
+
+    // Guide toward tube center as they rise
+    if (b.y < tubeBot && b.y > tubeTop) {
+      b.x += (tubeX - b.x) * 0.05;
+      b.vy *= 0.98; // slow down in tube
+    }
+
+    // Fade out near top
+    if (b.y < tubeTop + 30) b.alpha -= 0.02;
+
+    // Remove if off screen or faded
+    if (b.y < tubeTop || b.alpha <= 0) {
+      bubbles.splice(i, 1);
+      continue;
+    }
+
+    // Draw
+    ctx.fillStyle = `rgba(220,240,255,${b.alpha * 0.6})`;
+    ctx.strokeStyle = `rgba(150,200,255,${b.alpha * 0.4})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+    // Highlight
+    ctx.fillStyle = `rgba(255,255,255,${b.alpha * 0.4})`;
+    ctx.beginPath();
+    ctx.arc(b.x - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// ==================== DRAW GRAPH ====================
+function drawGraph() {
+  grCtx.fillStyle = '#0a0f1f';
+  grCtx.fillRect(0, 0, GW, GH);
+
+  // Generate theoretical curve for current mode
+  const steps = 50;
+  let data = [];
+  let xLabel, xUnit, title;
+
+  if (mode === 'light') {
+    xLabel = 'Light Intensity'; xUnit = '%';
+    title = 'Rate vs Light Intensity (temp=' + temp + '°C, CO₂=' + co2.toFixed(3) + '%)';
+    for (let i = 0; i <= steps; i++) {
+      const v = (100 / steps) * i;
+      data.push({ x: v, y: calcRate(v, temp, co2) });
+    }
+  } else if (mode === 'temperature') {
+    xLabel = 'Temperature'; xUnit = '°C';
+    title = 'Rate vs Temperature (light=' + light + '%, CO₂=' + co2.toFixed(3) + '%)';
+    for (let i = 0; i <= steps; i++) {
+      const v = 5 + (45 / steps) * i;
+      data.push({ x: v, y: calcRate(light, v, co2) });
+    }
+  } else {
+    xLabel = 'CO₂ Concentration'; xUnit = '%';
+    title = 'Rate vs CO₂ (light=' + light + '%, temp=' + temp + '°C)';
+    for (let i = 0; i <= steps; i++) {
+      const v = 0.01 + (0.09 / steps) * i;
+      data.push({ x: v, y: calcRate(light, temp, v) });
+    }
+  }
+
+  // Graph area
+  const pad = { l: 60, r: 20, t: 30, b: 45 };
+  const gx = pad.l, gy = pad.t;
+  const gw = GW - pad.l - pad.r, gh = GH - pad.t - pad.b;
+
+  const xMin = data[0].x, xMax = data[data.length - 1].x;
+  const yMax = Math.max(...data.map(d => d.y), 1) * 1.1;
+
+  function mapX(v) { return gx + ((v - xMin) / (xMax - xMin)) * gw; }
+  function mapY(v) { return gy + gh - (v / yMax) * gh; }
+
+  // Grid
+  grCtx.strokeStyle = '#1a2744';
+  grCtx.lineWidth = 1;
+  for (let i = 0; i <= 5; i++) {
+    const x = gx + gw * i / 5;
+    const y = gy + gh * i / 5;
+    grCtx.beginPath(); grCtx.moveTo(x, gy); grCtx.lineTo(x, gy + gh); grCtx.stroke();
+    grCtx.beginPath(); grCtx.moveTo(gx, y); grCtx.lineTo(gx + gw, y); grCtx.stroke();
+
+    // X tick labels
+    const xVal = xMin + (xMax - xMin) * i / 5;
+    grCtx.fillStyle = '#8899bb';
+    grCtx.font = '10px Segoe UI';
+    grCtx.textAlign = 'center';
+    grCtx.fillText(mode === 'co2' ? xVal.toFixed(3) : xVal.toFixed(0), x, gy + gh + 14);
+
+    // Y tick labels
+    const yVal = yMax * (5 - i) / 5;
+    grCtx.textAlign = 'right';
+    grCtx.fillText(yVal.toFixed(0), gx - 6, y + 4);
+  }
+
+  // Axes
+  grCtx.strokeStyle = '#2d4a7a';
+  grCtx.lineWidth = 2;
+  grCtx.beginPath();
+  grCtx.moveTo(gx, gy);
+  grCtx.lineTo(gx, gy + gh);
+  grCtx.lineTo(gx + gw, gy + gh);
+  grCtx.stroke();
+
+  // Theoretical curve
+  grCtx.strokeStyle = '#7db4ff';
+  grCtx.lineWidth = 2.5;
+  grCtx.beginPath();
+  for (let i = 0; i < data.length; i++) {
+    const px = mapX(data[i].x), py = mapY(data[i].y);
+    if (i === 0) grCtx.moveTo(px, py);
+    else grCtx.lineTo(px, py);
+  }
+  grCtx.stroke();
+
+  // Fill under curve
+  grCtx.globalAlpha = 0.1;
+  grCtx.fillStyle = '#7db4ff';
+  grCtx.beginPath();
+  grCtx.moveTo(mapX(data[0].x), gy + gh);
+  for (const d of data) grCtx.lineTo(mapX(d.x), mapY(d.y));
+  grCtx.lineTo(mapX(data[data.length - 1].x), gy + gh);
+  grCtx.closePath();
+  grCtx.fill();
+  grCtx.globalAlpha = 1;
+
+  // Plateau line (dashed)
+  if (mode !== 'temperature') {
+    grCtx.strokeStyle = 'rgba(125,180,255,0.3)';
+    grCtx.lineWidth = 1;
+    grCtx.setLineDash([5, 5]);
+    const plateauY = mapY(data[data.length - 1].y);
+    grCtx.beginPath();
+    grCtx.moveTo(gx, plateauY);
+    grCtx.lineTo(gx + gw, plateauY);
+    grCtx.stroke();
+    grCtx.setLineDash([]);
+    grCtx.fillStyle = 'rgba(125,180,255,0.4)';
+    grCtx.font = '10px Segoe UI';
+    grCtx.textAlign = 'right';
+    grCtx.fillText('plateau (another factor limiting)', gx + gw, plateauY - 5);
+  }
+
+  // Current value marker
+  let curX;
+  if (mode === 'light') curX = light;
+  else if (mode === 'temperature') curX = temp;
+  else curX = co2;
+  const curRate = calcRate(light, temp, co2);
+  const mx = mapX(curX), my = mapY(curRate);
+
+  // Vertical dashed line
+  grCtx.strokeStyle = 'rgba(255,100,100,0.4)';
+  grCtx.lineWidth = 1;
+  grCtx.setLineDash([4, 4]);
+  grCtx.beginPath();
+  grCtx.moveTo(mx, gy + gh);
+  grCtx.lineTo(mx, my);
+  grCtx.stroke();
+  // Horizontal dashed line
+  grCtx.beginPath();
+  grCtx.moveTo(gx, my);
+  grCtx.lineTo(mx, my);
+  grCtx.stroke();
+  grCtx.setLineDash([]);
+
+  // Dot
+  grCtx.fillStyle = '#ff5555';
+  grCtx.beginPath();
+  grCtx.arc(mx, my, 6, 0, Math.PI * 2);
+  grCtx.fill();
+  grCtx.fillStyle = '#fff';
+  grCtx.beginPath();
+  grCtx.arc(mx, my, 2, 0, Math.PI * 2);
+  grCtx.fill();
+
+  // Rate label near dot
+  grCtx.fillStyle = '#ff8888';
+  grCtx.font = 'bold 11px Segoe UI';
+  grCtx.textAlign = 'left';
+  grCtx.fillText(curRate.toFixed(1) + ' bub/min', mx + 10, my - 4);
+
+  // Axis labels
+  grCtx.fillStyle = '#7db4ff';
+  grCtx.font = 'bold 11px Segoe UI';
+  grCtx.textAlign = 'center';
+  grCtx.fillText(xLabel + ' (' + xUnit + ')', gx + gw / 2, GH - 4);
+  grCtx.save();
+  grCtx.translate(14, gy + gh / 2);
+  grCtx.rotate(-Math.PI / 2);
+  grCtx.fillText('Rate (bubbles/min)', 0, 0);
+  grCtx.restore();
+
+  // Title
+  grCtx.fillStyle = '#e0e7ff';
+  grCtx.font = 'bold 12px Segoe UI';
+  grCtx.textAlign = 'center';
+  grCtx.fillText(title, GW / 2, 16);
+}
+
+// ==================== UPDATE UI ====================
+function updateUI() {
+  const rate = calcRate(light, temp, co2);
+  document.getElementById('valL').textContent = light + '%';
+  document.getElementById('valT').textContent = temp + '°C';
+  document.getElementById('valC').textContent = co2.toFixed(3) + '%';
+  document.getElementById('dL').textContent = light + '%';
+  document.getElementById('dT').textContent = temp + '°C';
+  document.getElementById('dC').textContent = co2.toFixed(3) + '%';
+  document.getElementById('bubbleNum').textContent = Math.round(rate);
+
+  const lf = getLimitingFactor();
+  const lfBox = document.getElementById('lfBox');
+  const lfText = document.getElementById('lfText');
+  if (lf) {
+    lfText.textContent = lf + ' is the limiting factor';
+    lfBox.classList.add('warn');
+  } else {
+    lfText.textContent = 'All factors adequate';
+    lfBox.classList.remove('warn');
+  }
+}
+
+// ==================== EVENTS ====================
+document.getElementById('sldL').addEventListener('input', e => { light = parseInt(e.target.value); updateUI(); });
+document.getElementById('sldT').addEventListener('input', e => { temp = parseInt(e.target.value); updateUI(); });
+document.getElementById('sldC').addEventListener('input', e => { co2 = parseFloat(e.target.value); updateUI(); });
+
+document.querySelectorAll('.mbtn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mbtn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    mode = btn.dataset.mode;
+  });
+});
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  light = 50; temp = 25; co2 = 0.04;
+  document.getElementById('sldL').value = 50;
+  document.getElementById('sldT').value = 25;
+  document.getElementById('sldC').value = 0.04;
+  bubbles = [];
+  updateUI();
+});
+
+// Export CSV
+document.getElementById('btnCSV').addEventListener('click', () => {
+  const steps = 20;
+  let rows = [];
+  if (mode === 'light') {
+    rows.push('Light Intensity (%),Rate (bubbles/min)');
+    for (let i = 0; i <= steps; i++) {
+      const v = (100 / steps) * i;
+      rows.push(v.toFixed(0) + ',' + calcRate(v, temp, co2).toFixed(2));
+    }
+  } else if (mode === 'temperature') {
+    rows.push('Temperature (°C),Rate (bubbles/min)');
+    for (let i = 0; i <= steps; i++) {
+      const v = 5 + (45 / steps) * i;
+      rows.push(v.toFixed(1) + ',' + calcRate(light, v, co2).toFixed(2));
+    }
+  } else {
+    rows.push('CO2 Concentration (%),Rate (bubbles/min)');
+    for (let i = 0; i <= steps; i++) {
+      const v = 0.01 + (0.09 / steps) * i;
+      rows.push(v.toFixed(4) + ',' + calcRate(light, temp, v).toFixed(2));
+    }
+  }
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'photosynthesis-data.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+// Export PNG
+document.getElementById('btnPNG').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = grCvs.toDataURL('image/png');
+  a.download = 'photosynthesis-graph.png';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+});
+
+// ==================== MAIN LOOP ====================
+updateUI();
+
+function tick() {
+  time += 0.016;
+  drawSim();
+  drawGraph();
+  requestAnimationFrame(tick);
+}
+tick();
+</script>
+</body>
+</html>

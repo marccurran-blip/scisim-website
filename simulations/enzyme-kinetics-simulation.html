@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IGCSE Biology - Enzyme Kinetics Simulation</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0f1729; color: #e0e7ff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; }
+        .wrap { max-width: 1400px; margin: 0 auto; }
+        h1 { text-align: center; color: #7db4ff; font-size: 24px; margin-bottom: 4px; }
+        .sub { text-align: center; color: #6a8cbf; font-size: 12px; margin-bottom: 16px; }
+        .top { display: grid; grid-template-columns: 1fr 340px; gap: 16px; margin-bottom: 16px; }
+        .anim-panel { background: #1a2744; border: 2px solid #2d4a7a; border-radius: 8px; padding: 12px; }
+        canvas { background: #080d18; border: 1px solid #2d4a7a; border-radius: 6px; display: block; }
+        .ctrl-panel { background: #1a2744; border: 2px solid #2d4a7a; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; max-height: 520px; }
+        .sec-title { color: #7db4ff; font-size: 13px; font-weight: 700; border-bottom: 1px solid #2d4a7a; padding-bottom: 6px; margin-bottom: 4px; }
+        .cg { display: flex; flex-direction: column; gap: 4px; }
+        .cg label { color: #7db4ff; font-size: 12px; font-weight: 600; }
+        select { background: #0f1729; color: #e0e7ff; border: 1px solid #2d4a7a; padding: 7px 10px; border-radius: 4px; font-size: 12px; }
+        input[type="range"] { -webkit-appearance: none; width: 100%; height: 5px; background: #2d4a7a; border-radius: 3px; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 15px; height: 15px; border-radius: 50%; background: #7db4ff; cursor: pointer; }
+        .sv { display: flex; justify-content: space-between; font-size: 12px; color: #e0e7ff; }
+        .sv .v { color: #7db4ff; font-weight: 700; }
+        button { background: #2d4a7a; color: #7db4ff; border: 1px solid #2d4a7a; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px; }
+        button:hover { background: #3a5f8a; color: #fff; }
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .btn-go { background: #2e7d32 !important; border-color: #4caf50 !important; color: #fff !important; }
+        .data-box { background: #0f1729; border: 1px solid #2d4a7a; border-radius: 4px; padding: 8px 10px; }
+        .dr { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #1a2744; font-size: 12px; }
+        .dr:last-child { border-bottom: none; }
+        .dr .l { color: #7db4ff; }
+        .dr .v { color: #e0e7ff; font-weight: 600; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+        .badge-ok { background: rgba(34,197,94,0.2); color: #22c55e; border: 1px solid #22c55e; }
+        .badge-warn { background: rgba(251,146,60,0.2); color: #fb923c; border: 1px solid #fb923c; }
+        .badge-bad { background: rgba(239,68,68,0.2); color: #ef4444; border: 1px solid #ef4444; }
+        .bot { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        .graph-panel { background: #1a2744; border: 2px solid #2d4a7a; border-radius: 8px; padding: 14px; }
+        .graph-panel .sec-title { margin-bottom: 8px; }
+        .concept-panel { background: #1a2744; border: 2px solid #2d4a7a; border-radius: 8px; padding: 14px; }
+        .concept { background: #0f1729; border-left: 3px solid #7db4ff; padding: 8px 10px; border-radius: 4px; font-size: 12px; line-height: 1.5; margin-bottom: 8px; }
+        .concept strong { color: #7db4ff; }
+        .concept span { color: #a0b8d8; }
+        .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 6px; font-size: 11px; color: #8fa8cc; }
+        .legend-item { display: flex; align-items: center; gap: 4px; }
+        .ldot { width: 12px; height: 12px; border-radius: 50%; }
+        .footer { text-align: center; padding: 12px; color: #7db4ff; font-size: 12px; border-top: 1px solid #2d4a7a; }
+        .export-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+        @media (max-width: 1024px) { .top, .bot { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <h1>🧬 Enzyme Kinetics Simulation</h1>
+    <p class="sub">Lock-and-Key Model — Effect of Temperature & pH on Enzyme Activity</p>
+
+    <div class="top">
+        <div class="anim-panel">
+            <canvas id="simCanvas" width="820" height="460"></canvas>
+            <div class="legend">
+                <div class="legend-item"><div class="ldot" style="background:#7db4ff"></div>Enzyme</div>
+                <div class="legend-item"><div class="ldot" style="background:#4ade80"></div>Substrate</div>
+                <div class="legend-item"><div class="ldot" style="background:#fbbf24"></div>ES Complex</div>
+                <div class="legend-item"><div class="ldot" style="background:#60a5fa;width:8px;height:8px"></div><div class="ldot" style="background:#93c5fd;width:8px;height:8px;margin-left:-4px"></div>Products</div>
+                <div class="legend-item"><div class="ldot" style="background:#ef4444;border-radius:3px"></div>Denatured</div>
+            </div>
+        </div>
+        <div class="ctrl-panel">
+            <div class="sec-title">Enzyme Selection</div>
+            <div class="cg">
+                <select id="enzymeSelect" onchange="changeEnzyme()">
+                    <option value="amylase">Amylase (mouth, pH 7, 37°C)</option>
+                    <option value="pepsin">Pepsin (stomach, pH 2, 37°C)</option>
+                    <option value="catalase">Catalase (liver, pH 7, 37°C)</option>
+                    <option value="lipase">Lipase (small intestine, pH 8, 37°C)</option>
+                </select>
+            </div>
+            <div class="sec-title">Conditions</div>
+            <div class="cg">
+                <label>Temperature</label>
+                <input type="range" id="tempSlider" min="0" max="80" value="37" oninput="onInput()">
+                <div class="sv"><span>0°C</span><span class="v" id="tvTemp">37°C</span><span>80°C</span></div>
+            </div>
+            <div class="cg">
+                <label>pH</label>
+                <input type="range" id="phSlider" min="1" max="14" value="7" step="0.5" oninput="onInput()">
+                <div class="sv"><span>1</span><span class="v" id="tvPH">pH 7.0</span><span>14</span></div>
+            </div>
+            <div class="cg">
+                <label>Substrate Concentration</label>
+                <input type="range" id="subSlider" min="2" max="20" value="8" oninput="onInput()">
+                <div class="sv"><span>Low</span><span class="v" id="tvSub">8 molecules</span><span>High</span></div>
+            </div>
+            <div class="btn-row">
+                <button class="btn-go" onclick="toggleRun()">▶ Start</button>
+                <button onclick="resetSim()">↻ Reset</button>
+            </div>
+            <div class="sec-title">Live Data</div>
+            <div class="data-box">
+                <div class="dr"><span class="l">Temperature</span><span class="v" id="dTemp">37°C</span></div>
+                <div class="dr"><span class="l">pH</span><span class="v" id="dPH">7.0</span></div>
+                <div class="dr"><span class="l">Activity</span><span class="v" id="dAct">100%</span></div>
+                <div class="dr"><span class="l">Rate</span><span class="v" id="dRate">0 products/s</span></div>
+                <div class="dr"><span class="l">Status</span><span class="v" id="dStatus"><span class="badge badge-ok">Optimal</span></span></div>
+                <div class="dr"><span class="l">Active / Denatured</span><span class="v" id="dEnz">6 / 0</span></div>
+                <div class="dr"><span class="l">Products formed</span><span class="v" id="dProd">0</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bot">
+        <div class="graph-panel">
+            <div class="sec-title">Rate vs Temperature (theoretical curve + your data)</div>
+            <canvas id="graphCanvas" width="540" height="280"></canvas>
+            <div class="export-row">
+                <button onclick="exportCSV()">📥 Export CSV</button>
+                <button onclick="exportPNG()">🖼️ Export PNG</button>
+            </div>
+        </div>
+        <div class="concept-panel">
+            <div class="sec-title">Key IGCSE Concepts</div>
+            <div class="concept"><strong>Lock and Key Model:</strong> <span>The enzyme's active site has a specific shape that only fits one type of substrate — like a lock and key. When the substrate fits into the active site, an enzyme-substrate (ES) complex forms.</span></div>
+            <div class="concept"><strong>Optimum Temperature:</strong> <span>At low temperatures, molecules move slowly — few collisions, low rate. As temperature rises, more collisions occur and rate increases. Above the optimum (~37°C for human enzymes), the enzyme denatures — its shape changes permanently and substrates can no longer fit.</span></div>
+            <div class="concept"><strong>Optimum pH:</strong> <span>Each enzyme works best at a specific pH. E.g. pepsin works at pH 2 (stomach acid), amylase at pH 7 (saliva). Extreme pH changes the enzyme's shape and denatures it.</span></div>
+            <div class="concept"><strong>Substrate Concentration:</strong> <span>More substrate = more chance of collision with enzyme = higher rate. But once all active sites are occupied, adding more substrate has no effect (saturation).</span></div>
+            <div class="concept"><strong>Denaturation:</strong> <span>The permanent loss of an enzyme's 3D shape. The active site no longer fits the substrate. Caused by high temperature or extreme pH. It is irreversible.</span></div>
+            <div class="concept" id="enzymeNote"><strong>Amylase:</strong> <span>Breaks down starch into maltose. Found in saliva and pancreatic juice. Optimum pH 7, optimum temperature 37°C.</span></div>
+        </div>
+    </div>
+</div>
+<div class="footer">IGCSE Science Simulations</div>
+
+<script>
+const simCvs = document.getElementById('simCanvas');
+const simCtx = simCvs.getContext('2d');
+const SW = simCvs.width, SH = simCvs.height;
+
+const gCvs = document.getElementById('graphCanvas');
+const gCtx = gCvs.getContext('2d');
+const GW = gCvs.width, GH = gCvs.height;
+
+// ─── Enzyme profiles ───
+const ENZYMES = {
+    amylase:  { name: 'Amylase',  optT: 37, optPH: 7,   substrate: 'Starch', product: 'Maltose', note: 'Breaks down starch into maltose. Found in saliva and pancreatic juice. Optimum pH 7, optimum temperature 37°C.' },
+    pepsin:   { name: 'Pepsin',   optT: 37, optPH: 2,   substrate: 'Protein', product: 'Peptides', note: 'Breaks down proteins in the stomach. Works in very acidic conditions (pH 2). Secreted by gastric glands.' },
+    catalase: { name: 'Catalase', optT: 37, optPH: 7,   substrate: 'H₂O₂', product: 'H₂O + O₂', note: 'Breaks down toxic hydrogen peroxide into water and oxygen. Found in liver cells. One of the fastest known enzymes.' },
+    lipase:   { name: 'Lipase',   optT: 37, optPH: 8,   substrate: 'Fat', product: 'Fatty acids + Glycerol', note: 'Breaks down fats (lipids) into fatty acids and glycerol. Works in the small intestine, aided by bile salts.' }
+};
+
+// ─── State ───
+const S = {
+    enzyme: 'amylase',
+    temp: 37,
+    ph: 7,
+    subCount: 8,
+    running: false,
+    totalProducts: 0,
+    rateCounter: 0,
+    rateTimer: 0,
+    displayRate: 0,
+    entities: [], // enzymes, substrates, complexes, products
+    dataLog: []   // for CSV
+};
+
+const ENZ_COUNT = 6;
+
+// ─── Activity calculation ───
+function activity(temp, ph, enzyme) {
+    const p = ENZYMES[enzyme];
+    // Temperature: Gaussian with asymmetric denaturation above optimum
+    const tDiff = temp - p.optT;
+    let tFact;
+    if (temp <= p.optT) {
+        // Below optimum: gradual rise (Q10 style but simplified)
+        tFact = Math.exp(-(tDiff * tDiff) / 300);
+    } else {
+        // Above optimum: sharp drop (denaturation)
+        tFact = Math.exp(-(tDiff * tDiff) / 80);
+    }
+    // Extra denaturation cutoff above 65°C
+    if (temp > 65) tFact *= Math.max(0, 1 - (temp - 65) / 10);
+
+    // pH: Gaussian around optimum
+    const phDiff = ph - p.optPH;
+    const phFact = Math.exp(-(phDiff * phDiff) / 4);
+    // Extreme pH denaturation
+    if (Math.abs(phDiff) > 4) {
+        const extra = (Math.abs(phDiff) - 4) / 3;
+        return Math.max(0, tFact * phFact * Math.max(0, 1 - extra));
+    }
+
+    return Math.max(0, Math.min(1, tFact * phFact));
+}
+
+// ─── Entity types ───
+function makeEnzyme(x, y) {
+    return { type: 'enzyme', x, y, vx: (Math.random()-0.5)*0.8, vy: (Math.random()-0.5)*0.8, denatured: false, bindTimer: 0 };
+}
+function makeSubstrate(x, y) {
+    const sp = 0.5 + S.temp / 50;
+    const a = Math.random() * Math.PI * 2;
+    return { type: 'substrate', x, y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp };
+}
+function makeComplex(x, y, enzymeRef) {
+    return { type: 'complex', x, y, vx: 0, vy: 0, timer: 0, enzymeRef };
+}
+function makeProduct(x, y, angle) {
+    return { type: 'product', x, y, vx: Math.cos(angle)*1.5, vy: Math.sin(angle)*1.5, age: 0 };
+}
+
+// ─── Init entities ───
+function initEntities() {
+    S.entities = [];
+    S.totalProducts = 0;
+    S.displayRate = 0;
+    S.rateCounter = 0;
+    S.rateTimer = 0;
+
+    // Enzymes distributed
+    for (let i = 0; i < ENZ_COUNT; i++) {
+        const x = 80 + Math.random() * (SW - 160);
+        const y = 60 + Math.random() * (SH - 120);
+        S.entities.push(makeEnzyme(x, y));
+    }
+    // Substrates
+    for (let i = 0; i < S.subCount; i++) {
+        S.entities.push(makeSubstrate(
+            40 + Math.random() * (SW - 80),
+            40 + Math.random() * (SH - 80)
+        ));
+    }
+}
+
+// ─── Simulation step ───
+function step() {
+    const act = activity(S.temp, S.ph, S.enzyme);
+    const enzymes = S.entities.filter(e => e.type === 'enzyme');
+    const substrates = S.entities.filter(e => e.type === 'substrate');
+    const complexes = S.entities.filter(e => e.type === 'complex');
+
+    // Update denaturation
+    enzymes.forEach(e => {
+        e.denatured = act < 0.05;
+    });
+
+    // Count active enzymes
+    const activeCount = enzymes.filter(e => !e.denatured).length;
+    const denaturedCount = enzymes.filter(e => e.denatured).length;
+
+    // Move speed scales with temperature (kinetic energy)
+    const speedMult = 0.3 + (S.temp / 80) * 1.5;
+
+    // Move all entities
+    S.entities.forEach(e => {
+        if (e.type === 'complex') return; // complexes stay still
+        e.x += e.vx * speedMult;
+        e.y += e.vy * speedMult;
+        // Bounce off walls
+        if (e.x < 20) { e.x = 20; e.vx = Math.abs(e.vx); }
+        if (e.x > SW - 20) { e.x = SW - 20; e.vx = -Math.abs(e.vx); }
+        if (e.y < 20) { e.y = 20; e.vy = Math.abs(e.vy); }
+        if (e.y > SH - 30) { e.y = SH - 30; e.vy = -Math.abs(e.vy); }
+        // Small random drift
+        e.vx += (Math.random() - 0.5) * 0.1;
+        e.vy += (Math.random() - 0.5) * 0.1;
+        // Clamp speed
+        const maxSpd = 2 + S.temp / 30;
+        const spd = Math.hypot(e.vx, e.vy);
+        if (spd > maxSpd) { e.vx *= maxSpd/spd; e.vy *= maxSpd/spd; }
+    });
+
+    // Enzyme-substrate binding
+    enzymes.forEach(enz => {
+        if (enz.denatured) return;
+        if (enz.bindTimer > 0) { enz.bindTimer--; return; }
+        // Check if already part of a complex
+        if (complexes.some(c => c.enzymeRef === enz)) return;
+
+        substrates.forEach((sub, si) => {
+            const dx = enz.x - sub.x, dy = enz.y - sub.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist < 30 && Math.random() < act * 0.15) {
+                // Form complex
+                S.entities.push(makeComplex(enz.x, enz.y, enz));
+                // Remove substrate
+                const idx = S.entities.indexOf(sub);
+                if (idx >= 0) S.entities.splice(idx, 1);
+                enz.bindTimer = 60;
+            }
+        });
+    });
+
+    // Process complexes
+    complexes.forEach(c => {
+        c.timer++;
+        const breakTime = Math.max(20, 60 - act * 40); // faster at higher activity
+        if (c.timer > breakTime) {
+            // Release products
+            const a1 = Math.random() * Math.PI * 2;
+            S.entities.push(makeProduct(c.x - 6, c.y, a1));
+            S.entities.push(makeProduct(c.x + 6, c.y, a1 + Math.PI));
+            S.totalProducts += 2;
+            S.rateCounter += 2;
+            // Remove complex
+            const idx = S.entities.indexOf(c);
+            if (idx >= 0) S.entities.splice(idx, 1);
+            // Free the enzyme
+            if (c.enzymeRef) c.enzymeRef.bindTimer = 15;
+        }
+    });
+
+    // Age products, remove old ones
+    S.entities.forEach(e => {
+        if (e.type === 'product') e.age++;
+    });
+    S.entities = S.entities.filter(e => e.type !== 'product' || e.age < 250);
+
+    // Replenish substrates
+    const currentSubs = S.entities.filter(e => e.type === 'substrate').length;
+    const currentComplexes = S.entities.filter(e => e.type === 'complex').length;
+    const target = S.subCount;
+    if (currentSubs + currentComplexes < target && Math.random() < 0.1) {
+        // Spawn from random edge
+        const edge = Math.floor(Math.random() * 4);
+        let x, y;
+        if (edge === 0) { x = 10; y = Math.random() * SH; }
+        else if (edge === 1) { x = SW - 10; y = Math.random() * SH; }
+        else if (edge === 2) { x = Math.random() * SW; y = 10; }
+        else { x = Math.random() * SW; y = SH - 10; }
+        S.entities.push(makeSubstrate(x, y));
+    }
+
+    // Rate calculation (products per second, updated every 60 frames ~= 1 second)
+    S.rateTimer++;
+    if (S.rateTimer >= 60) {
+        S.displayRate = S.rateCounter;
+        S.rateCounter = 0;
+        S.rateTimer = 0;
+    }
+
+    // Update data display
+    document.getElementById('dTemp').textContent = S.temp + '°C';
+    document.getElementById('dPH').textContent = S.ph.toFixed(1);
+    document.getElementById('dAct').textContent = Math.round(act * 100) + '%';
+    document.getElementById('dRate').textContent = S.displayRate + ' products/s';
+    document.getElementById('dEnz').textContent = activeCount + ' / ' + denaturedCount;
+    document.getElementById('dProd').textContent = S.totalProducts;
+
+    let badge;
+    if (act > 0.7) badge = '<span class="badge badge-ok">Optimal</span>';
+    else if (act > 0.15) badge = '<span class="badge badge-warn">Reduced</span>';
+    else badge = '<span class="badge badge-bad">Denatured</span>';
+    document.getElementById('dStatus').innerHTML = badge;
+}
+
+// ─── Drawing: simulation canvas ───
+function drawSim() {
+    simCtx.clearRect(0, 0, SW, SH);
+    simCtx.fillStyle = '#080d18';
+    simCtx.fillRect(0, 0, SW, SH);
+
+    // Draw all entities
+    S.entities.forEach(e => {
+        if (e.type === 'enzyme') drawEnzyme(e);
+        else if (e.type === 'substrate') drawSubstrate(e);
+        else if (e.type === 'complex') drawComplex(e);
+        else if (e.type === 'product') drawProduct(e);
+    });
+
+    // Activity bar at bottom
+    const act = activity(S.temp, S.ph, S.enzyme);
+    const barW = SW - 40;
+    simCtx.fillStyle = '#111827';
+    simCtx.fillRect(20, SH - 22, barW, 14);
+    const bc = act > 0.7 ? '#22c55e' : act > 0.3 ? '#fb923c' : '#ef4444';
+    simCtx.fillStyle = bc;
+    simCtx.fillRect(20, SH - 22, barW * act, 14);
+    simCtx.strokeStyle = '#2d4a7a';
+    simCtx.lineWidth = 1;
+    simCtx.strokeRect(20, SH - 22, barW, 14);
+    simCtx.fillStyle = '#e0e7ff';
+    simCtx.font = 'bold 10px Segoe UI';
+    simCtx.textAlign = 'center';
+    simCtx.fillText(`Enzyme Activity: ${Math.round(act * 100)}%`, SW / 2, SH - 12);
+}
+
+function drawEnzyme(e) {
+    simCtx.save();
+    simCtx.translate(e.x, e.y);
+    const r = 22;
+
+    if (!e.denatured) {
+        // Active enzyme: pac-man / C-shape with active site notch on the right
+        // Glow when near optimum
+        const act = activity(S.temp, S.ph, S.enzyme);
+        if (act > 0.5) {
+            simCtx.fillStyle = `rgba(125, 180, 255, ${act * 0.15})`;
+            simCtx.beginPath(); simCtx.arc(0, 0, r + 8, 0, Math.PI * 2); simCtx.fill();
+        }
+
+        simCtx.fillStyle = '#5b9bd5';
+        simCtx.beginPath();
+        // Draw circle with a V-notch (active site) on the right side
+        simCtx.arc(0, 0, r, 0.4, Math.PI * 2 - 0.4);
+        simCtx.lineTo(r * 0.35, 0); // notch tip goes inward
+        simCtx.closePath();
+        simCtx.fill();
+
+        // Outline
+        simCtx.strokeStyle = '#7db4ff';
+        simCtx.lineWidth = 1.5;
+        simCtx.stroke();
+
+        // Active site label
+        simCtx.fillStyle = '#c8deff';
+        simCtx.font = '7px Segoe UI';
+        simCtx.textAlign = 'center';
+        simCtx.fillText('active', -2, -2);
+        simCtx.fillText('site →', -2, 6);
+    } else {
+        // Denatured: wobbly blob, faded
+        simCtx.globalAlpha = 0.5;
+        simCtx.fillStyle = '#b04040';
+        simCtx.beginPath();
+        for (let a = 0; a < Math.PI * 2; a += 0.25) {
+            const wobble = r * (0.5 + 0.5 * Math.sin(a * 4.3 + e.x * 0.1));
+            const px = Math.cos(a) * wobble;
+            const py = Math.sin(a) * wobble;
+            if (a === 0) simCtx.moveTo(px, py);
+            else simCtx.lineTo(px, py);
+        }
+        simCtx.closePath();
+        simCtx.fill();
+        simCtx.globalAlpha = 1;
+
+        // Red X
+        simCtx.strokeStyle = '#ff4444';
+        simCtx.lineWidth = 2.5;
+        simCtx.beginPath();
+        simCtx.moveTo(-8, -8); simCtx.lineTo(8, 8);
+        simCtx.moveTo(8, -8); simCtx.lineTo(-8, 8);
+        simCtx.stroke();
+
+        simCtx.fillStyle = '#ff6666';
+        simCtx.font = 'bold 8px Segoe UI';
+        simCtx.textAlign = 'center';
+        simCtx.fillText('denatured', 0, r + 12);
+    }
+    simCtx.restore();
+}
+
+function drawSubstrate(e) {
+    simCtx.save();
+    simCtx.translate(e.x, e.y);
+    const s = 10;
+
+    // Diamond/rhombus that fits the active site notch
+    simCtx.fillStyle = '#4ade80';
+    simCtx.beginPath();
+    simCtx.moveTo(s, 0);   // right point
+    simCtx.lineTo(0, -s * 0.7);
+    simCtx.lineTo(-s, 0);
+    simCtx.lineTo(0, s * 0.7);
+    simCtx.closePath();
+    simCtx.fill();
+    simCtx.strokeStyle = '#22c55e';
+    simCtx.lineWidth = 1;
+    simCtx.stroke();
+
+    // Substrate label
+    const p = ENZYMES[S.enzyme];
+    simCtx.fillStyle = '#166534';
+    simCtx.font = 'bold 6px Segoe UI';
+    simCtx.textAlign = 'center';
+    simCtx.textBaseline = 'middle';
+    simCtx.fillText('S', 0, 0);
+
+    simCtx.restore();
+}
+
+function drawComplex(e) {
+    simCtx.save();
+    simCtx.translate(e.x, e.y);
+    const r = 22;
+
+    // Pulsing glow
+    const pulse = 0.3 + 0.4 * Math.sin(e.timer * 0.15);
+    simCtx.fillStyle = `rgba(251, 191, 36, ${pulse * 0.3})`;
+    simCtx.beginPath(); simCtx.arc(0, 0, r + 10, 0, Math.PI * 2); simCtx.fill();
+
+    // Full enzyme circle (active site now occupied)
+    simCtx.fillStyle = '#d4a030';
+    simCtx.beginPath();
+    simCtx.arc(0, 0, r, 0, Math.PI * 2);
+    simCtx.fill();
+    simCtx.strokeStyle = '#fbbf24';
+    simCtx.lineWidth = 2;
+    simCtx.stroke();
+
+    // Substrate fitted inside on right side (in the active site)
+    simCtx.fillStyle = '#4ade80';
+    const s = 8;
+    simCtx.beginPath();
+    simCtx.moveTo(r - 6 + s, 0);
+    simCtx.lineTo(r - 6, -s * 0.7);
+    simCtx.lineTo(r - 6 - s, 0);
+    simCtx.lineTo(r - 6, s * 0.7);
+    simCtx.closePath();
+    simCtx.fill();
+
+    // Label
+    simCtx.fillStyle = '#1a1200';
+    simCtx.font = 'bold 8px Segoe UI';
+    simCtx.textAlign = 'center';
+    simCtx.textBaseline = 'middle';
+    simCtx.fillText('E-S', -4, 0);
+    simCtx.fillText('complex', -4, 10);
+
+    simCtx.restore();
+}
+
+function drawProduct(e) {
+    simCtx.save();
+    simCtx.translate(e.x, e.y);
+    const alpha = Math.max(0.2, 1 - e.age / 250);
+    simCtx.globalAlpha = alpha;
+
+    // Two small half-circles separating
+    simCtx.fillStyle = '#60a5fa';
+    simCtx.beginPath();
+    simCtx.arc(-3, 0, 5, Math.PI * 0.5, Math.PI * 1.5);
+    simCtx.closePath();
+    simCtx.fill();
+
+    simCtx.fillStyle = '#93c5fd';
+    simCtx.beginPath();
+    simCtx.arc(3, 0, 5, -Math.PI * 0.5, Math.PI * 0.5);
+    simCtx.closePath();
+    simCtx.fill();
+
+    simCtx.globalAlpha = 1;
+    simCtx.restore();
+}
+
+// ─── Graph: Rate vs Temperature with theoretical curve ───
+function drawGraph() {
+    const ctx = gCtx;
+    const w = GW, h = GH;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = '#0a0f1e';
+    ctx.fillRect(0, 0, w, h);
+
+    const pad = { l: 50, r: 20, t: 25, b: 40 };
+    const gw = w - pad.l - pad.r;
+    const gh = h - pad.t - pad.b;
+
+    // Axes
+    ctx.strokeStyle = '#2d4a7a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(pad.l, pad.t);
+    ctx.lineTo(pad.l, h - pad.b);
+    ctx.lineTo(w - pad.r, h - pad.b);
+    ctx.stroke();
+
+    // Labels
+    ctx.fillStyle = '#5a8abf';
+    ctx.font = '11px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.fillText('Temperature (°C)', w / 2, h - 5);
+    ctx.save();
+    ctx.translate(14, h / 2 - 10);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Rate of Reaction', 0, 0);
+    ctx.restore();
+
+    // X ticks (0–80)
+    ctx.font = '9px Segoe UI';
+    ctx.fillStyle = '#3a5a80';
+    for (let t = 0; t <= 80; t += 10) {
+        const x = pad.l + (t / 80) * gw;
+        ctx.beginPath(); ctx.moveTo(x, h - pad.b); ctx.lineTo(x, h - pad.b + 4); ctx.stroke();
+        ctx.textAlign = 'center';
+        ctx.fillText(t, x, h - pad.b + 15);
+    }
+
+    // Theoretical curve (using current enzyme and pH)
+    ctx.strokeStyle = 'rgba(125, 180, 255, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    let maxAct = 0;
+    for (let t = 0; t <= 80; t++) {
+        const a = activity(t, S.ph, S.enzyme);
+        if (a > maxAct) maxAct = a;
+    }
+    if (maxAct === 0) maxAct = 1;
+    for (let t = 0; t <= 80; t++) {
+        const a = activity(t, S.ph, S.enzyme);
+        const x = pad.l + (t / 80) * gw;
+        const y = h - pad.b - (a / maxAct) * gh;
+        if (t === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Theoretical curve label
+    ctx.fillStyle = 'rgba(125, 180, 255, 0.5)';
+    ctx.font = '9px Segoe UI';
+    ctx.textAlign = 'left';
+    ctx.fillText('Theoretical curve (dashed)', pad.l + 5, pad.t + 12);
+
+    // Optimum marker
+    const optT = ENZYMES[S.enzyme].optT;
+    const optX = pad.l + (optT / 80) * gw;
+    ctx.strokeStyle = '#22c55e40';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(optX, pad.t); ctx.lineTo(optX, h - pad.b); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#22c55e';
+    ctx.font = '9px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.fillText('Optimum', optX, pad.t + 12);
+
+    // Current temperature marker
+    const curX = pad.l + (S.temp / 80) * gw;
+    const curAct = activity(S.temp, S.ph, S.enzyme);
+    const curY = h - pad.b - (curAct / maxAct) * gh;
+    ctx.strokeStyle = '#ff6b6b60';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 2]);
+    ctx.beginPath(); ctx.moveTo(curX, pad.t); ctx.lineTo(curX, h - pad.b); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Current point
+    ctx.fillStyle = '#ff6b6b';
+    ctx.beginPath(); ctx.arc(curX, curY, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.fillStyle = '#ff6b6b';
+    ctx.font = 'bold 10px Segoe UI';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${S.temp}°C → ${Math.round(curAct * 100)}%`, curX + 10, curY - 4);
+
+    // Y-axis percentage labels
+    ctx.fillStyle = '#3a5a80';
+    ctx.font = '9px Segoe UI';
+    ctx.textAlign = 'right';
+    for (let p = 0; p <= 100; p += 25) {
+        const y = h - pad.b - (p / 100) * gh;
+        ctx.fillText(p + '%', pad.l - 6, y + 3);
+        ctx.strokeStyle = '#151d30';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+    }
+}
+
+// ─── Controls ───
+function onInput() {
+    S.temp = parseInt(document.getElementById('tempSlider').value);
+    S.ph = parseFloat(document.getElementById('phSlider').value);
+    S.subCount = parseInt(document.getElementById('subSlider').value);
+    document.getElementById('tvTemp').textContent = S.temp + '°C';
+    document.getElementById('tvPH').textContent = 'pH ' + S.ph.toFixed(1);
+    document.getElementById('tvSub').textContent = S.subCount + ' molecules';
+    if (!S.running) { drawSim(); drawGraph(); }
+}
+
+function changeEnzyme() {
+    S.enzyme = document.getElementById('enzymeSelect').value;
+    const p = ENZYMES[S.enzyme];
+    S.ph = p.optPH;
+    document.getElementById('phSlider').value = p.optPH;
+    document.getElementById('tvPH').textContent = 'pH ' + p.optPH.toFixed(1);
+    document.getElementById('enzymeNote').innerHTML = `<strong>${p.name}:</strong> <span>${p.note}</span>`;
+    if (!S.running) { drawSim(); drawGraph(); }
+}
+
+function toggleRun() {
+    S.running = !S.running;
+    const btn = document.querySelector('.btn-go');
+    btn.textContent = S.running ? '■ Stop' : '▶ Start';
+    if (S.running) loop();
+}
+
+function resetSim() {
+    S.running = false;
+    document.querySelector('.btn-go').textContent = '▶ Start';
+    S.temp = 37; S.ph = ENZYMES[S.enzyme].optPH; S.subCount = 8;
+    document.getElementById('tempSlider').value = 37;
+    document.getElementById('phSlider').value = S.ph;
+    document.getElementById('subSlider').value = 8;
+    document.getElementById('tvTemp').textContent = '37°C';
+    document.getElementById('tvPH').textContent = 'pH ' + S.ph.toFixed(1);
+    document.getElementById('tvSub').textContent = '8 molecules';
+    initEntities();
+    drawSim();
+    drawGraph();
+}
+
+// ─── Animation loop ───
+function loop() {
+    if (!S.running) return;
+    step();
+    drawSim();
+    drawGraph();
+    requestAnimationFrame(loop);
+}
+
+// ─── Export ───
+function exportCSV() {
+    let csv = 'Temperature (°C),Activity (%),Rate Estimate\n';
+    for (let t = 0; t <= 80; t++) {
+        const a = activity(t, S.ph, S.enzyme);
+        csv += `${t},${(a * 100).toFixed(1)},${(a * 50).toFixed(1)}\n`;
+    }
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'enzyme-data.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function exportPNG() {
+    const a = document.createElement('a');
+    a.href = gCvs.toDataURL('image/png'); a.download = 'enzyme-graph.png';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+// ─── Init ───
+initEntities();
+drawSim();
+drawGraph();
+</script>
+</body>
+</html>

@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IGCSE Radioactive Decay Simulation</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0f1729;color:#e0e7ff;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;padding:20px;min-height:100vh}
+.container{max-width:1300px;margin:0 auto}
+h1{text-align:center;margin-bottom:4px;font-size:1.7em;color:#7db4ff}
+.subtitle{text-align:center;color:#8899bb;font-size:.9em;margin-bottom:20px}
+.main{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.panel{background:#1a2744;border:2px solid #2d4a7a;border-radius:8px;padding:20px}
+canvas{display:block;border-radius:4px}
+.ctrl-group{margin-bottom:14px}
+.ctrl-group label{display:block;font-size:.88em;color:#7db4ff;font-weight:600;margin-bottom:6px}
+select{width:100%;padding:9px;background:#0a0f1f;color:#e0e7ff;border:1px solid #2d4a7a;border-radius:4px;font-family:inherit;font-size:.9em}
+input[type=range]{width:100%;height:6px;border-radius:3px;background:#2d4a7a;outline:none;-webkit-appearance:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#7db4ff;cursor:pointer}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#7db4ff;cursor:pointer;border:none}
+.range-row{display:flex;justify-content:space-between;font-size:.82em;color:#8899bb;margin-top:4px}
+.btn-row{display:flex;gap:8px;margin-bottom:14px}
+.btn{padding:10px 14px;border-radius:5px;cursor:pointer;font-weight:600;font-family:inherit;font-size:.9em;border:2px solid #7db4ff;background:#1a2744;color:#7db4ff;transition:all .2s;flex:1;text-align:center}
+.btn:hover{background:#7db4ff;color:#0f1729}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.stat{background:#0a0f1f;border:1px solid #2d4a7a;border-radius:4px;padding:10px;text-align:center}
+.stat-label{font-size:.75em;text-transform:uppercase;letter-spacing:.5px;color:#8899bb}
+.stat-val{font-size:1.4em;font-weight:700;color:#7db4ff;margin-top:2px}
+.chk-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.chk-row input{width:16px;height:16px;accent-color:#7db4ff;cursor:pointer}
+.chk-row label{font-size:.88em;color:#aabbdd;margin:0}
+.iso-info{font-size:.82em;color:#8899bb;margin-top:4px}
+.legend-row{display:flex;align-items:center;gap:6px;font-size:.82em;color:#8899bb;margin-bottom:4px}
+.leg-swatch{width:14px;height:4px;border-radius:2px}
+.concepts{background:#1a2744;border:2px solid #2d4a7a;border-radius:8px;padding:20px;margin-bottom:20px}
+.concepts h2{color:#7db4ff;font-size:1.1em;margin-bottom:12px}
+.concepts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.concept{background:#0a0f1f;border-left:3px solid #7db4ff;padding:10px 12px;border-radius:4px}
+.concept-term{color:#7db4ff;font-weight:700;font-size:.92em;margin-bottom:3px}
+.concept-def{color:#8899bb;font-size:.82em;line-height:1.4}
+.footer{text-align:center;padding:20px;color:#7db4ff;border-top:1px solid #2d4a7a;margin-top:30px;font-size:.9em}
+@media(max-width:900px){.main{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Radioactive Decay & Half-Life</h1>
+<p class="subtitle">IGCSE Physics — Random decay, half-life, and exponential decay curves</p>
+
+<div class="main">
+<div>
+<div class="panel">
+<div class="ctrl-group">
+<label>Isotope</label>
+<select id="selIso">
+<option value="c14">Carbon-14 (t½ = 5,730 years) — β decay</option>
+<option value="i131">Iodine-131 (t½ = 8 days) — β + γ</option>
+<option value="co60">Cobalt-60 (t½ = 5.27 years) — β + γ</option>
+<option value="u238">Uranium-238 (t½ = 4.5 billion years) — α decay</option>
+<option value="ra226">Radium-226 (t½ = 1,600 years) — α decay</option>
+</select>
+<div class="iso-info" id="isoInfo"></div>
+</div>
+<div class="ctrl-group">
+<label>Simulation Speed: <span id="valSpd">5</span> steps/frame</label>
+<input type="range" id="sldSpd" min="1" max="20" value="5">
+<div class="range-row"><span>Slow</span><span>Fast</span></div>
+</div>
+<div class="ctrl-group">
+<label>Starting Atoms: <span id="valAtoms">400</span></label>
+<input type="range" id="sldAtoms" min="100" max="900" value="400" step="100">
+</div>
+<div class="btn-row">
+<button class="btn" id="btnStart">▶ Start</button>
+<button class="btn" id="btnPause">⏸ Pause</button>
+<button class="btn" id="btnReset">↻ Reset</button>
+</div>
+<div class="stats">
+<div class="stat"><div class="stat-label">Undecayed</div><div class="stat-val" id="sUndecayed">400</div></div>
+<div class="stat"><div class="stat-label">Decayed</div><div class="stat-val" id="sDecayed">0</div></div>
+<div class="stat"><div class="stat-label">Half-Lives</div><div class="stat-val" id="sHL">0.00</div></div>
+<div class="stat"><div class="stat-label">Time</div><div class="stat-val" id="sTime">0</div></div>
+</div>
+<div class="chk-row"><input type="checkbox" id="chkTheo" checked><label for="chkTheo">Show theoretical curve</label></div>
+<div class="chk-row"><input type="checkbox" id="chkHL" checked><label for="chkHL">Show half-life markers</label></div>
+<div class="chk-row"><input type="checkbox" id="chkFlash" checked><label for="chkFlash">Flash on decay</label></div>
+</div>
+</div>
+<div>
+<div class="panel" style="padding:12px">
+<canvas id="atomCvs" width="440" height="440"></canvas>
+<div style="text-align:center;margin-top:8px">
+<div class="legend-row" style="justify-content:center"><div class="leg-swatch" style="background:#7db4ff;width:12px;height:12px;border-radius:50%"></div> Undecayed &nbsp;&nbsp;<div class="leg-swatch" style="background:#334466;width:12px;height:12px;border-radius:50%"></div> Decayed &nbsp;&nbsp;<div class="leg-swatch" style="background:#ffaa44;width:12px;height:12px;border-radius:50%"></div> Just decayed</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="panel" style="padding:12px">
+<canvas id="graphCvs" width="900" height="320"></canvas>
+<div style="display:flex;gap:20px;margin-top:8px;flex-wrap:wrap;align-items:center">
+<div class="legend-row"><div class="leg-swatch" style="background:#4ade80"></div> Actual (random)</div>
+<div class="legend-row"><div class="leg-swatch" style="background:#7db4ff"></div> Theoretical N₀×(½)^(t/t½)</div>
+<div class="legend-row"><div class="leg-swatch" style="background:rgba(255,100,100,0.4)"></div> Half-life markers</div>
+<div style="flex:1"></div>
+<div class="btn-row" style="margin:0;flex:0 0 auto">
+<button class="btn" id="btnCSV" style="flex:none;padding:8px 16px">Export CSV</button>
+<button class="btn" id="btnPNG" style="flex:none;padding:8px 16px">Export PNG</button>
+</div>
+</div>
+</div>
+
+<div class="concepts">
+<h2>Key IGCSE Concepts</h2>
+<div class="concepts-grid">
+<div class="concept"><div class="concept-term">Half-Life (t½)</div><div class="concept-def">The time for half the undecayed nuclei in a sample to decay. After 1 half-life: 50% remain. After 2: 25%. After 3: 12.5%. Half-life is constant for each isotope.</div></div>
+<div class="concept"><div class="concept-term">Random Decay</div><div class="concept-def">Radioactive decay is random and unpredictable for individual atoms. We cannot say when a particular nucleus will decay, only the probability. This is why each simulation run gives slightly different results.</div></div>
+<div class="concept"><div class="concept-term">Exponential Decay</div><div class="concept-def">N(t) = N₀ × (½)^(t/t½). The number of undecayed atoms decreases exponentially. The rate of decay is proportional to the number of atoms remaining.</div></div>
+<div class="concept"><div class="concept-term">Types of Radiation</div><div class="concept-def">Alpha (α): 2 protons + 2 neutrons, stopped by paper. Beta (β): fast electron, stopped by aluminium. Gamma (γ): electromagnetic wave, reduced by thick lead.</div></div>
+<div class="concept"><div class="concept-term">Activity</div><div class="concept-def">The rate of decay measured in Becquerels (Bq). 1 Bq = 1 decay per second. Activity halves with each half-life since fewer atoms remain to decay.</div></div>
+</div>
+</div>
+</div>
+<div class="footer">IGCSE Science Simulations</div>
+
+<script>
+// ==================== CONFIG ====================
+const ISOTOPES = {
+  c14:   { name: 'Carbon-14',   halfLife: '5,730 years',   unit: 'years',  hlSteps: 40, radiation: 'Beta (β⁻) decay', symbol: '¹⁴C → ¹⁴N' },
+  i131:  { name: 'Iodine-131',  halfLife: '8 days',        unit: 'days',   hlSteps: 30, radiation: 'Beta (β⁻) + Gamma (γ)', symbol: '¹³¹I → ¹³¹Xe' },
+  co60:  { name: 'Cobalt-60',   halfLife: '5.27 years',    unit: 'years',  hlSteps: 35, radiation: 'Beta (β⁻) + Gamma (γ)', symbol: '⁶⁰Co → ⁶⁰Ni' },
+  u238:  { name: 'Uranium-238', halfLife: '4.5 billion yr', unit: 'billion years', hlSteps: 50, radiation: 'Alpha (α) decay', symbol: '²³⁸U → ²³⁴Th' },
+  ra226: { name: 'Radium-226',  halfLife: '1,600 years',   unit: 'years',  hlSteps: 45, radiation: 'Alpha (α) decay', symbol: '²²⁶Ra → ²²²Rn' }
+};
+
+// ==================== STATE ====================
+let isoKey = 'c14';
+let N0 = 400;
+let atoms = []; // true = undecayed
+let decayFlash = []; // timer for flash effect per atom
+let step = 0;
+let speed = 5;
+let running = false;
+let history = []; // {step, undecayed}
+
+const atomCvs = document.getElementById('atomCvs');
+const atomCtx = atomCvs.getContext('2d');
+const graphCvs = document.getElementById('graphCvs');
+const graphCtx = graphCvs.getContext('2d');
+const AW = atomCvs.width, AH = atomCvs.height;
+const GW = graphCvs.width, GHt = graphCvs.height;
+
+// ==================== DECAY PROBABILITY ====================
+// For half-life of H steps: after H steps, N should be N0/2
+// Each step: N(1) = N0 * (1-p), so after H steps: N0*(1-p)^H = N0/2
+// => (1-p)^H = 0.5 => p = 1 - 0.5^(1/H)
+function decayProb() {
+  const H = ISOTOPES[isoKey].hlSteps;
+  return 1 - Math.pow(0.5, 1 / H);
+}
+
+// ==================== INIT ====================
+function initSim() {
+  running = false;
+  step = 0;
+  atoms = new Array(N0).fill(true);
+  decayFlash = new Array(N0).fill(0);
+  history = [{ step: 0, undecayed: N0 }];
+  updateStats();
+  drawAtoms();
+  drawGraph();
+  updateIsoInfo();
+}
+
+function updateIsoInfo() {
+  const iso = ISOTOPES[isoKey];
+  document.getElementById('isoInfo').textContent =
+    iso.radiation + ' | ' + iso.symbol + ' | Real t½ = ' + iso.halfLife;
+}
+
+// ==================== SIMULATION STEP ====================
+function simStep() {
+  const p = decayProb();
+  const showFlash = document.getElementById('chkFlash').checked;
+
+  for (let i = 0; i < atoms.length; i++) {
+    if (atoms[i] && Math.random() < p) {
+      atoms[i] = false;
+      if (showFlash) decayFlash[i] = 1.0; // flash brightness
+    }
+    // Fade flash
+    if (decayFlash[i] > 0) decayFlash[i] -= 0.05;
+  }
+
+  step++;
+  const undecayed = atoms.filter(a => a).length;
+  history.push({ step, undecayed });
+}
+
+// ==================== DRAW ATOMS ====================
+function drawAtoms() {
+  atomCtx.fillStyle = '#0a0f1f';
+  atomCtx.fillRect(0, 0, AW, AH);
+
+  const cols = Math.ceil(Math.sqrt(N0));
+  const rows = Math.ceil(N0 / cols);
+  const cellW = AW / cols;
+  const cellH = AH / rows;
+  const r = Math.min(cellW, cellH) * 0.35;
+
+  for (let i = 0; i < N0; i++) {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const cx = col * cellW + cellW / 2;
+    const cy = row * cellH + cellH / 2;
+
+    if (decayFlash[i] > 0.01) {
+      // Decay flash glow
+      const alpha = decayFlash[i];
+      atomCtx.fillStyle = `rgba(255,170,60,${alpha * 0.4})`;
+      atomCtx.beginPath();
+      atomCtx.arc(cx, cy, r * 2, 0, Math.PI * 2);
+      atomCtx.fill();
+      // Bright core
+      atomCtx.fillStyle = `rgba(255,200,80,${alpha})`;
+      atomCtx.beginPath();
+      atomCtx.arc(cx, cy, r, 0, Math.PI * 2);
+      atomCtx.fill();
+    } else if (atoms[i]) {
+      // Undecayed - blue
+      atomCtx.fillStyle = '#5599dd';
+      atomCtx.beginPath();
+      atomCtx.arc(cx, cy, r, 0, Math.PI * 2);
+      atomCtx.fill();
+      // Highlight
+      atomCtx.fillStyle = 'rgba(125,180,255,0.4)';
+      atomCtx.beginPath();
+      atomCtx.arc(cx - r * 0.2, cy - r * 0.2, r * 0.4, 0, Math.PI * 2);
+      atomCtx.fill();
+    } else {
+      // Decayed - dark grey
+      atomCtx.fillStyle = '#2a3348';
+      atomCtx.beginPath();
+      atomCtx.arc(cx, cy, r * 0.7, 0, Math.PI * 2);
+      atomCtx.fill();
+    }
+  }
+
+  // Grid border
+  atomCtx.strokeStyle = '#2d4a7a';
+  atomCtx.lineWidth = 1;
+  atomCtx.strokeRect(0, 0, AW, AH);
+}
+
+// ==================== DRAW GRAPH ====================
+function drawGraph() {
+  graphCtx.fillStyle = '#0a0f1f';
+  graphCtx.fillRect(0, 0, GW, GHt);
+
+  const iso = ISOTOPES[isoKey];
+  const H = iso.hlSteps;
+
+  // Graph area
+  const pad = { l: 55, r: 20, t: 25, b: 40 };
+  const gx = pad.l, gy = pad.t;
+  const gw = GW - pad.l - pad.r;
+  const gh = GHt - pad.t - pad.b;
+
+  // X range: show enough for ~4 half-lives or current time, whichever is bigger
+  const maxStep = Math.max(H * 4, step + 10);
+
+  function mapX(s) { return gx + (s / maxStep) * gw; }
+  function mapY(n) { return gy + gh - (n / N0) * gh; }
+
+  // Grid
+  graphCtx.strokeStyle = '#1a2744';
+  graphCtx.lineWidth = 1;
+  for (let i = 0; i <= 5; i++) {
+    const y = gy + gh * i / 5;
+    graphCtx.beginPath(); graphCtx.moveTo(gx, y); graphCtx.lineTo(gx + gw, y); graphCtx.stroke();
+    // Y labels
+    const val = N0 * (5 - i) / 5;
+    graphCtx.fillStyle = '#8899bb';
+    graphCtx.font = '10px Segoe UI';
+    graphCtx.textAlign = 'right';
+    graphCtx.fillText(Math.round(val), gx - 6, y + 4);
+  }
+  for (let i = 0; i <= 5; i++) {
+    const x = gx + gw * i / 5;
+    graphCtx.beginPath(); graphCtx.moveTo(x, gy); graphCtx.lineTo(x, gy + gh); graphCtx.stroke();
+    // X labels
+    const val = maxStep * i / 5;
+    graphCtx.fillStyle = '#8899bb';
+    graphCtx.font = '10px Segoe UI';
+    graphCtx.textAlign = 'center';
+    graphCtx.fillText(Math.round(val), x, gy + gh + 14);
+  }
+
+  // Axes
+  graphCtx.strokeStyle = '#2d4a7a';
+  graphCtx.lineWidth = 2;
+  graphCtx.beginPath();
+  graphCtx.moveTo(gx, gy);
+  graphCtx.lineTo(gx, gy + gh);
+  graphCtx.lineTo(gx + gw, gy + gh);
+  graphCtx.stroke();
+
+  // Half-life markers (L-shaped reading lines)
+  if (document.getElementById('chkHL').checked) {
+    graphCtx.setLineDash([5, 4]);
+    graphCtx.lineWidth = 1.5;
+    const hlMarks = [
+      { hl: 1, n: N0 / 2, label: '½' },
+      { hl: 2, n: N0 / 4, label: '¼' },
+      { hl: 3, n: N0 / 8, label: '⅛' }
+    ];
+    for (const m of hlMarks) {
+      const px = mapX(m.hl * H);
+      const py = mapY(m.n);
+      if (px > gx + gw) continue;
+
+      graphCtx.strokeStyle = 'rgba(255,100,100,0.4)';
+      // Horizontal from y-axis to curve point
+      graphCtx.beginPath();
+      graphCtx.moveTo(gx, py);
+      graphCtx.lineTo(px, py);
+      graphCtx.stroke();
+      // Vertical from curve point down to x-axis
+      graphCtx.beginPath();
+      graphCtx.moveTo(px, py);
+      graphCtx.lineTo(px, gy + gh);
+      graphCtx.stroke();
+
+      // Labels
+      graphCtx.fillStyle = 'rgba(255,130,130,0.7)';
+      graphCtx.font = 'bold 10px Segoe UI';
+      graphCtx.textAlign = 'center';
+      graphCtx.fillText(m.hl + ' t½', px, gy + gh + 28);
+      // Y label
+      graphCtx.textAlign = 'left';
+      graphCtx.fillText(m.label + ' N₀ = ' + Math.round(m.n), gx + 4, py - 4);
+
+      // Dot at intersection
+      graphCtx.fillStyle = 'rgba(255,100,100,0.6)';
+      graphCtx.beginPath();
+      graphCtx.arc(px, py, 4, 0, Math.PI * 2);
+      graphCtx.fill();
+    }
+    graphCtx.setLineDash([]);
+  }
+
+  // Theoretical curve (smooth, calculated for full range)
+  if (document.getElementById('chkTheo').checked) {
+    graphCtx.strokeStyle = '#7db4ff';
+    graphCtx.lineWidth = 2;
+    graphCtx.setLineDash([6, 4]);
+    graphCtx.beginPath();
+    for (let s = 0; s <= maxStep; s += maxStep / 200) {
+      const n = N0 * Math.pow(0.5, s / H);
+      const px = mapX(s), py = mapY(n);
+      if (s === 0) graphCtx.moveTo(px, py);
+      else graphCtx.lineTo(px, py);
+    }
+    graphCtx.stroke();
+    graphCtx.setLineDash([]);
+  }
+
+  // Actual data (green)
+  if (history.length > 1) {
+    graphCtx.strokeStyle = '#4ade80';
+    graphCtx.lineWidth = 2.5;
+    graphCtx.beginPath();
+    for (let i = 0; i < history.length; i++) {
+      const d = history[i];
+      const px = mapX(d.step), py = mapY(d.undecayed);
+      if (i === 0) graphCtx.moveTo(px, py);
+      else graphCtx.lineTo(px, py);
+    }
+    graphCtx.stroke();
+
+    // Current point
+    const last = history[history.length - 1];
+    const lx = mapX(last.step), ly = mapY(last.undecayed);
+    graphCtx.fillStyle = '#4ade80';
+    graphCtx.beginPath();
+    graphCtx.arc(lx, ly, 5, 0, Math.PI * 2);
+    graphCtx.fill();
+  }
+
+  // Axis labels
+  graphCtx.fillStyle = '#7db4ff';
+  graphCtx.font = 'bold 11px Segoe UI';
+  graphCtx.textAlign = 'center';
+  graphCtx.fillText('Time (simulation steps — each half-life = ' + H + ' steps)', gx + gw / 2, GHt - 2);
+  graphCtx.save();
+  graphCtx.translate(14, gy + gh / 2);
+  graphCtx.rotate(-Math.PI / 2);
+  graphCtx.fillText('Undecayed Atoms (N)', 0, 0);
+  graphCtx.restore();
+
+  // Title
+  graphCtx.fillStyle = '#e0e7ff';
+  graphCtx.font = 'bold 12px Segoe UI';
+  graphCtx.textAlign = 'left';
+  graphCtx.fillText(iso.name + ' — Decay Curve (t½ = ' + iso.halfLife + ')', gx, 14);
+}
+
+// ==================== STATS ====================
+function updateStats() {
+  const undecayed = atoms.filter(a => a).length;
+  const H = ISOTOPES[isoKey].hlSteps;
+  document.getElementById('sUndecayed').textContent = undecayed;
+  document.getElementById('sDecayed').textContent = N0 - undecayed;
+  document.getElementById('sHL').textContent = (step / H).toFixed(2);
+
+  // Show time in real units
+  const iso = ISOTOPES[isoKey];
+  const realTimePerStep = parseFloat(iso.halfLife.replace(/[^0-9.]/g, '')) / iso.hlSteps;
+  const realTime = step * realTimePerStep;
+  if (realTime < 0.01) document.getElementById('sTime').textContent = '0 ' + iso.unit;
+  else if (realTime >= 1000) document.getElementById('sTime').textContent = (realTime / 1000).toFixed(1) + 'k ' + iso.unit;
+  else document.getElementById('sTime').textContent = realTime.toFixed(1) + ' ' + iso.unit;
+
+  document.getElementById('valSpd').textContent = speed;
+  document.getElementById('valAtoms').textContent = N0;
+}
+
+// ==================== EVENTS ====================
+document.getElementById('selIso').addEventListener('change', e => {
+  isoKey = e.target.value;
+  initSim();
+});
+
+document.getElementById('sldSpd').addEventListener('input', e => {
+  speed = parseInt(e.target.value);
+  document.getElementById('valSpd').textContent = speed;
+});
+
+document.getElementById('sldAtoms').addEventListener('input', e => {
+  N0 = parseInt(e.target.value);
+  document.getElementById('valAtoms').textContent = N0;
+  initSim();
+});
+
+document.getElementById('btnStart').addEventListener('click', () => {
+  running = true;
+});
+
+document.getElementById('btnPause').addEventListener('click', () => {
+  running = false;
+});
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  initSim();
+});
+
+// Export CSV
+document.getElementById('btnCSV').addEventListener('click', () => {
+  const iso = ISOTOPES[isoKey];
+  const H = iso.hlSteps;
+  const rows = ['Step,Undecayed (actual),Theoretical,Half-Lives'];
+  for (const d of history) {
+    const theo = N0 * Math.pow(0.5, d.step / H);
+    rows.push(`${d.step},${d.undecayed},${theo.toFixed(1)},${(d.step / H).toFixed(3)}`);
+  }
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'radioactive-decay-data.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+// Export PNG
+document.getElementById('btnPNG').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = graphCvs.toDataURL('image/png');
+  a.download = 'decay-curve.png';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+});
+
+// ==================== MAIN LOOP ====================
+function tick() {
+  if (running) {
+    // Run 'speed' steps per frame
+    for (let i = 0; i < speed; i++) {
+      const undecayed = atoms.filter(a => a).length;
+      if (undecayed === 0) { running = false; break; }
+      simStep();
+    }
+    updateStats();
+  }
+
+  // Always draw (for flash fading)
+  drawAtoms();
+  drawGraph();
+  requestAnimationFrame(tick);
+}
+
+// ==================== INIT ====================
+initSim();
+tick();
+</script>
+</body>
+</html>
