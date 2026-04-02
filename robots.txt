@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://scisim.co.uk/sitemap.xml
