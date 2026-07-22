@@ -77,8 +77,71 @@
         .footer { text-align: center; padding: 15px; color: #7db4ff; font-size: 12px; border-top: 1px solid #2d4a7a; }
         @media (max-width: 1000px) { .content { grid-template-columns: 1fr; } }
     </style>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "LearningResource",
+   "name": "Energy Profiles Simulation",
+   "description": "Compare exothermic and endothermic reaction profiles. Visualise activation energy and the effect of catalysts.",
+   "url": "https://scisim.co.uk/simulations/energy-profiles-simulation.html",
+   "learningResourceType": "Interactive simulation",
+   "educationalLevel": "IGCSE / GCSE",
+   "educationalUse": "Revision",
+   "about": {
+    "@type": "Thing",
+    "name": "IGCSE Chemistry"
+   },
+   "isAccessibleForFree": true,
+   "inLanguage": "en-GB",
+   "provider": {
+    "@type": "EducationalOrganization",
+    "name": "SciSim",
+    "url": "https://scisim.co.uk/"
+   }
+  },
+  {
+   "@type": "BreadcrumbList",
+   "itemListElement": [
+    {
+     "@type": "ListItem",
+     "position": 1,
+     "name": "SciSim",
+     "item": "https://scisim.co.uk/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 2,
+     "name": "IGCSE Chemistry",
+     "item": "https://scisim.co.uk/#chemistry"
+    },
+    {
+     "@type": "ListItem",
+     "position": 3,
+     "name": "Energy Profiles Simulation",
+     "item": "https://scisim.co.uk/simulations/energy-profiles-simulation.html"
+    }
+   ]
+  }
+ ]
+}
+</script>
+<style id="scisim-nav-css">
+.scisim-nav{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#0f1729;border-bottom:1px solid #24334d;padding:10px 16px;font-size:.9rem}
+.scisim-nav a{color:#7db4ff;text-decoration:none;font-weight:600}
+.scisim-nav a:hover{text-decoration:underline}
+.scisim-nav span{color:#8fa3c0;margin:0 6px}
+.scisim-related{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#0f1729;border-top:1px solid #24334d;padding:20px 16px;margin-top:30px;color:#e0e7ff}
+.scisim-related h2{font-size:1.05rem;margin:0 0 12px;color:#e0e7ff}
+.scisim-related ul{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:10px}
+.scisim-related a{display:inline-block;padding:8px 14px;border:1px solid #24334d;border-radius:10px;color:#7db4ff;text-decoration:none;font-size:.88rem}
+.scisim-related a:hover{border-color:#7db4ff;background:#16203a}
+</style>
 </head>
 <body>
+<nav class="scisim-nav"><a href="/">SciSim</a><span>&rsaquo;</span><a href="/#chemistry">IGCSE Chemistry</a><span>&rsaquo;</span>Energy Profiles Simulation</nav>
+
 <div class="container">
     <h1>⚗️ Energy Profile Diagrams</h1>
     <p class="subtitle">IGCSE Chemistry — Exothermic & Endothermic Reactions</p>
@@ -615,5 +678,6 @@ function exportPNG() {
 // ─── Init ───
 redraw();
 </script>
+<section class="scisim-related"><h2>More IGCSE Chemistry simulations</h2><ul><li><a href="/simulations/atomic-structure-simulation.html">Atomic Structure</a></li><li><a href="/simulations/chromatography-simulation.html">Chromatography</a></li><li><a href="/simulations/electrolysis-simulation.html">Electrolysis</a></li><li><a href="/simulations/reaction-rates-simulation.html">Reaction Rates</a></li><li><a href="/simulations/titration-simulation.html">Titration</a></li></ul><p style="margin:14px 0 0"><a href="/">&larr; All 18 simulations</a></p></section>
 </body>
 </html>

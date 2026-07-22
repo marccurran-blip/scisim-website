@@ -156,7 +156,7 @@ a:hover{text-decoration:underline}
 /* ===== CARD GRID ===== */
 .grid-container{max-width:1200px;margin:0 auto;padding:0 20px 40px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
-.card{background:var(--bg2);border:2px solid var(--border);border-radius:12px;padding:20px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+.card{display:block;text-decoration:none;color:inherit;background:var(--bg2);border:2px solid var(--border);border-radius:12px;padding:20px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
 .card:hover{border-color:var(--accent);transform:translateY(-4px);box-shadow:0 8px 30px var(--shadow);background:var(--card-hover)}
 .card-icon{font-size:2.2em;margin-bottom:10px;display:block}
 .card-subject{display:inline-block;font-size:.7em;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:3px 10px;border-radius:20px;margin-bottom:10px}
@@ -349,24 +349,29 @@ function renderGrid() {
     }
 
     grid.innerHTML = filtered.map(s => `
-        <div class="card" onclick="openSim('${s.file}','${s.title.replace(/'/g,"\\'")}')">
+        <a class="card" href="${s.file}" onclick="return openSim(event,'${s.file}','${s.title.replace(/'/g,"\\'")}')">
             <span class="card-icon">${s.icon}</span>
             <span class="card-subject ${s.subject}">${s.subject.charAt(0).toUpperCase() + s.subject.slice(1)}</span>
             <div class="card-title">${s.title}</div>
             <div class="card-desc">${s.desc}</div>
             <div class="card-tags">${s.tags.map(t => '<span class="card-tag">'+t+'</span>').join('')}</div>
             <span class="card-arrow">→</span>
-        </div>
+        </a>
     `).join('');
 }
 
 // ===== SIM VIEWER =====
-function openSim(file, title) {
+function openSim(ev, file, title) {
+    // Let the browser handle new-tab / new-window / download clicks so the
+    // card behaves like the real link it now is.
+    if (ev && (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey || ev.button > 0)) return true;
+    if (ev && ev.preventDefault) ev.preventDefault();
     document.getElementById('simFrame').src = file;
     document.getElementById('simTitle').textContent = title;
     document.getElementById('simViewer').classList.add('open');
     document.body.style.overflow = 'hidden';
     history.pushState({ sim: file }, '', '#' + file.replace('simulations/','').replace('-simulation.html',''));
+    return false;
 }
 
 function closeSim() {
