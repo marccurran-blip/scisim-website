@@ -109,6 +109,67 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 .scisim-related a{display:inline-block;padding:8px 14px;border:1px solid #24334d;border-radius:10px;color:#7db4ff;text-decoration:none;font-size:.88rem}
 .scisim-related a:hover{border-color:#7db4ff;background:#16203a}
 </style>
+<style id="scisim-learn-css">
+#learn{max-width:900px;margin:0 auto;text-align:left;line-height:1.65}
+#learn h2{color:#7db4ff;font-size:1.25rem;margin:28px 0 10px;border-bottom:1px solid #24334d;padding-bottom:6px}
+#learn h3{color:#a9c8ff;font-size:1.05rem;margin:18px 0 6px}
+#learn p,#learn li{color:#d7e2f5;font-size:.95rem}
+#learn ul,#learn ol{padding-left:22px;margin:8px 0}
+#learn li{margin:5px 0}
+#learn code{background:#16203a;padding:2px 6px;border-radius:5px;font-size:.9em}
+#learn details{background:#0f1729;border:1px solid #24334d;border-radius:10px;padding:10px 14px;margin:8px 0}
+#learn summary{cursor:pointer;color:#e0e7ff;font-weight:600}
+#learn details p{margin:10px 0 2px;color:#b9c9e4}
+#learn strong{color:#eaf1ff}
+</style>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "FAQPage",
+ "mainEntity": [
+  {
+   "@type": "Question",
+   "name": "1. Define osmosis. [3 marks]",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "The net movement of water molecules (1) from a region of higher water potential / more dilute solution to a region of lower water potential / more concentrated solution (1) through a partially permeable membrane (1)."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "2. A red blood cell is placed in distilled water. Explain what happens to it. [4 marks]",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Distilled water has a higher water potential than the cell contents (1), so water moves into the cell by osmosis (1). The cell swells (1). Having no cell wall to resist the pressure, the membrane bursts — lysis / haemolysis (1)."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "3. Explain why a plant cell placed in the same distilled water does not burst. [2 marks]",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "The cell has a rigid cellulose cell wall (1) which resists the outward pressure as the cell takes in water, so the cell becomes turgid rather than bursting (1)."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "4. In a potato experiment, a cylinder of initial mass 4.20 g had a final mass of 3.78 g. Calculate the percentage change in mass. [2 marks]",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "(3.78 − 4.20) ÷ 4.20 × 100 (1) = −10.0% (1). The negative sign matters — it shows the cylinder lost water, so the solution was hypertonic to the potato cells."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "5. A student did not blot the potato cylinders dry before the final weighing. Explain the effect on the results. [2 marks]",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Surface solution adds extra mass (1), so the final masses are too high, making the percentage changes appear more positive (less negative) than they truly are (1)."
+   }
+  }
+ ]
+}
+</script>
 </head>
 <body>
 <nav class="scisim-nav"><a href="/">SciSim</a><span>&rsaquo;</span><a href="/#biology">IGCSE Biology</a><span>&rsaquo;</span>Osmosis Simulation</nav>
@@ -783,6 +844,91 @@ function tick() {
 }
 tick();
 </script>
+<section class="concepts" id="learn">
+<h2>What is osmosis?</h2>
+<p><strong>Osmosis is the net movement of water molecules from a region of higher water potential (a dilute solution) to a region of lower water potential (a concentrated solution), through a partially permeable membrane.</strong></p>
+<p>Three words in that definition earn marks, and most dropped marks come from leaving one out:</p>
+<ul>
+<li><strong>Net</strong> — water molecules cross the membrane in <em>both</em> directions the whole time. Osmosis is the imbalance between the two flows, not a one-way trip.</li>
+<li><strong>Water</strong> — only water moves. The solute stays put, because its molecules are too large to pass through the membrane.</li>
+<li><strong>Partially permeable</strong> — the membrane lets small water molecules through but blocks larger solute molecules. Some specifications say <em>semi-permeable</em>; the two mean the same thing, and either is accepted.</li>
+</ul>
+<p>Osmosis is a <strong>passive</strong> process. It needs no energy from respiration and no ATP — the molecules are already moving because of their own kinetic energy. If a question mentions energy or carrier proteins, it is asking about active transport, not osmosis.</p>
+
+<h2>How to use this simulation</h2>
+<ol>
+<li>The cell inside starts at roughly <strong>5% solute</strong>. Use the slider to change the concentration of the solution <em>outside</em> the cell.</li>
+<li>Set the outside to <strong>0%</strong> (hypotonic). Watch what happens to the plant cell and the animal cell — and notice that they do not behave the same way.</li>
+<li>Set it to <strong>5%</strong> (isotonic). The cells stop changing. Water is still crossing the membrane, but equally in both directions.</li>
+<li>Set it to <strong>15%</strong> (hypertonic). Both cells lose water, but again the outcomes differ.</li>
+<li>Use <strong>Export Data (CSV)</strong> to pull the numbers into a spreadsheet and plot them, or <strong>Export Diagram (PNG)</strong> for your notes.</li>
+</ol>
+<p>The single most useful habit: before you move the slider, say out loud which way water will move and why. Then check. Getting the prediction wrong is more informative than getting it right.</p>
+
+<h2>What happens in each solution</h2>
+
+<h3>Hypotonic — outside more dilute than the cell</h3>
+<p>The solution outside has the higher water potential, so water moves <strong>into</strong> the cell.</p>
+<p>A <strong>plant cell</strong> swells. The vacuole fills, the cytoplasm and membrane press outward against the cellulose cell wall, and the cell becomes <strong>turgid</strong> — firm, but not damaged. The wall is strong enough to resist the pressure, so the cell cannot burst. This turgor pressure is what holds up non-woody plants; lose it and the plant wilts.</p>
+<p>An <strong>animal cell</strong> has no cell wall, so nothing resists the swelling. It keeps taking in water until the membrane fails and the cell bursts — <strong>lysis</strong>. In red blood cells this is called haemolysis. This is precisely why fluids given to patients in hospital are made isotonic with blood.</p>
+
+<h3>Isotonic — outside the same as the cell</h3>
+<p>Water potentials are equal, so water enters and leaves at the same rate. There is <strong>no net movement</strong> and neither cell changes size. Note the wording carefully: movement has not stopped, it has balanced.</p>
+
+<h3>Hypertonic — outside more concentrated than the cell</h3>
+<p>The solution outside has the lower water potential, so water moves <strong>out of</strong> the cell.</p>
+<p>A <strong>plant cell</strong> loses water from its vacuole and becomes <strong>flaccid</strong>. If it keeps losing water, the membrane peels away from the cell wall — <strong>plasmolysis</strong>. The wall itself keeps its shape, which is why a plasmolysed cell still looks rectangular under the microscope while the contents have shrunk inward. The point at which the membrane <em>just</em> begins to pull away is called incipient plasmolysis.</p>
+<p>An <strong>animal cell</strong> shrinks and its surface becomes wrinkled and spiky — <strong>crenation</strong>.</p>
+
+<h2>The potato practical</h2>
+<p>Almost every specification includes an osmosis practical using potato cylinders, and it is a reliable exam topic. The method:</p>
+<ol>
+<li>Cut cylinders of potato of equal length and diameter using a cork borer.</li>
+<li>Blot each one dry and record its <strong>initial mass</strong>.</li>
+<li>Place one cylinder in each of a range of sucrose concentrations (typically 0.0 to 1.0 mol/dm³).</li>
+<li>Leave for a fixed time — 20–30 minutes at minimum, longer is better.</li>
+<li>Remove, <strong>blot dry again</strong>, and record the <strong>final mass</strong>.</li>
+<li>Calculate the <strong>percentage change in mass</strong> for each: <code>(final − initial) ÷ initial × 100</code>.</li>
+</ol>
+<p><strong>Why percentage change rather than the actual change in grams?</strong> Because the cylinders never start at exactly the same mass. Converting to a percentage makes the comparison fair — this is a very common two-mark question.</p>
+<p><strong>Why blot dry?</strong> Surface solution clinging to the cylinder adds mass that has nothing to do with osmosis.</p>
+<p><strong>Reading the graph.</strong> Plot percentage change in mass (y) against sucrose concentration (x). The line crosses the x-axis at the point of zero change — where the external solution has the same water potential as the potato cell sap. That intercept <em>is</em> the answer when a question asks you to estimate the concentration inside the cells.</p>
+<p><strong>Control variables:</strong> temperature, time in solution, volume of solution, size and surface area of the cylinders, and using the same potato throughout — different potatoes, and even different parts of one potato, vary in solute concentration.</p>
+
+<h2>Common exam mistakes</h2>
+<ul>
+<li><strong>Saying the solute moves.</strong> In osmosis, only water moves. If sugar crossed the membrane it would be diffusion, not osmosis.</li>
+<li><strong>Describing one-way movement.</strong> Always write <em>net</em> movement.</li>
+<li><strong>Saying a plant cell bursts.</strong> It cannot — the cell wall prevents it. Only animal cells burst.</li>
+<li><strong>Confusing flaccid with plasmolysed.</strong> Flaccid means limp from water loss; plasmolysed means the membrane has actually pulled away from the wall. Plasmolysis is the more extreme state.</li>
+<li><strong>Writing "water moves to where there is more solute".</strong> True, but it scores poorly. Use water potential, or "from a dilute solution to a concentrated solution".</li>
+<li><strong>Calling osmosis active.</strong> It requires no energy. Never mention ATP.</li>
+<li><strong>Forgetting the membrane.</strong> The definition is incomplete without "through a partially permeable membrane".</li>
+</ul>
+
+<h2>Exam-style questions</h2>
+<details>
+<summary>1. Define osmosis. <strong>[3 marks]</strong></summary>
+<p>The net movement of water molecules (1) from a region of higher water potential / more dilute solution to a region of lower water potential / more concentrated solution (1) through a partially permeable membrane (1).</p>
+</details>
+<details>
+<summary>2. A red blood cell is placed in distilled water. Explain what happens to it. <strong>[4 marks]</strong></summary>
+<p>Distilled water has a higher water potential than the cell contents (1), so water moves into the cell by osmosis (1). The cell swells (1). Having no cell wall to resist the pressure, the membrane bursts — lysis / haemolysis (1).</p>
+</details>
+<details>
+<summary>3. Explain why a plant cell placed in the same distilled water does <em>not</em> burst. <strong>[2 marks]</strong></summary>
+<p>The cell has a rigid cellulose cell wall (1) which resists the outward pressure as the cell takes in water, so the cell becomes turgid rather than bursting (1).</p>
+</details>
+<details>
+<summary>4. In a potato experiment, a cylinder of initial mass 4.20 g had a final mass of 3.78 g. Calculate the percentage change in mass. <strong>[2 marks]</strong></summary>
+<p>(3.78 − 4.20) ÷ 4.20 × 100 (1) = <strong>−10.0%</strong> (1). The negative sign matters — it shows the cylinder lost water, so the solution was hypertonic to the potato cells.</p>
+</details>
+<details>
+<summary>5. A student did not blot the potato cylinders dry before the final weighing. Explain the effect on the results. <strong>[2 marks]</strong></summary>
+<p>Surface solution adds extra mass (1), so the final masses are too high, making the percentage changes appear more positive (less negative) than they truly are (1).</p>
+</details>
+</section>
+
 <section class="scisim-related"><h2>More IGCSE Biology simulations</h2><ul><li><a href="/simulations/diffusion-simulation.html">Diffusion</a></li><li><a href="/simulations/enzyme-kinetics-simulation.html">Enzyme Kinetics</a></li><li><a href="/simulations/heart-circulation-simulation.html">Heart & Circulation</a></li><li><a href="/simulations/mendel-genetics-simulation.html"></a></li><li><a href="/simulations/photosynthesis-simulation.html">Photosynthesis</a></li></ul><p style="margin:14px 0 0"><a href="/">&larr; All 18 simulations</a></p></section>
 </body>
 </html>
