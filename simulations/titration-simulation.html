@@ -319,6 +319,69 @@
 .scisim-related a{display:inline-block;padding:8px 14px;border:1px solid #24334d;border-radius:10px;color:#7db4ff;text-decoration:none;font-size:.88rem}
 .scisim-related a:hover{border-color:#7db4ff;background:#16203a}
 </style>
+<style id="scisim-learn-css">
+#learn{max-width:900px;margin:0 auto;text-align:left;line-height:1.65}
+#learn h2{color:#7db4ff;font-size:1.25rem;margin:28px 0 10px;border-bottom:1px solid #24334d;padding-bottom:6px}
+#learn h3{color:#a9c8ff;font-size:1.05rem;margin:18px 0 6px}
+#learn p,#learn li,#learn td,#learn th{color:#d7e2f5;font-size:.95rem}
+#learn ul,#learn ol{padding-left:22px;margin:8px 0}
+#learn li{margin:5px 0}
+#learn code{background:#16203a;padding:2px 6px;border-radius:5px;font-size:.9em}
+#learn table{display:block;overflow-x:auto;white-space:nowrap}
+#learn th{color:#a9c8ff}
+#learn details{background:#0f1729;border:1px solid #24334d;border-radius:10px;padding:10px 14px;margin:8px 0}
+#learn summary{cursor:pointer;color:#e0e7ff;font-weight:600}
+#learn details p{margin:10px 0 2px;color:#b9c9e4}
+#learn strong{color:#eaf1ff}
+</style>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "FAQPage",
+ "mainEntity": [
+  {
+   "@type": "Question",
+   "name": "1. State the difference between the endpoint and the equivalence point. [2 marks]",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "The equivalence point is where the moles of acid and alkali are exactly in the ratio of the balanced equation (1). The endpoint is where the indicator changes colour, which is the observed approximation to it (1)."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "2. A student rinsed the conical flask with sodium hydroxide solution before starting. Explain the effect on the titre. [3 marks]",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Extra moles of alkali are present in the flask (1), so more acid is needed to neutralise it (1), giving a titre that is too high and a calculated concentration that is too high (1)."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "3. 25.0 cm³ of KOH required 22.40 cm³ of 0.150 mol/dm³ HCl. Calculate the concentration of the KOH. [3 marks]",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Moles HCl = 0.150 × 22.40 ÷ 1000 = 3.36 × 10⁻³ mol (1). Ratio HCl : KOH is 1 : 1, so moles KOH = 3.36 × 10⁻³ mol (1). c = 3.36 × 10⁻³ ÷ 0.0250 = 0.134 mol/dm³ (1)."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "4. Explain why universal indicator is unsuitable for a titration. [2 marks]",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "It changes colour gradually over a wide pH range (1), so there is no sharp colour change at the endpoint and the exact volume cannot be identified (1)."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "5. A student obtained titres of 24.10, 23.65, 23.70 and 23.60 cm³. Calculate the mean titre they should use. [2 marks]",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "The concordant results — those within 0.10 cm³ of each other — are 23.65, 23.70 and 23.60 (1). 24.10 is the rough/anomalous result and is excluded. Mean = (23.65 + 23.70 + 23.60) ÷ 3 = 23.65 cm³ (1)."
+   }
+  }
+ ]
+}
+</script>
 </head>
 <body>
 <nav class="scisim-nav"><a href="/">SciSim</a><span>&rsaquo;</span><a href="/#chemistry">IGCSE Chemistry</a><span>&rsaquo;</span>Titration Simulation</nav>
@@ -451,6 +514,9 @@
 
             draw();
             drawGraph();
+            // Refresh the readouts too, otherwise the equivalence point, pH and
+            // indicator colour stay stale after changing the acid or alkali.
+            updateDisplay();
         }
 
         // Dropdown change handlers
@@ -940,6 +1006,111 @@
         // Initialize on page load
         window.addEventListener('load', initSimulation);
     </script>
+<section class="concepts" id="learn">
+<h2>What is a titration?</h2>
+<p><strong>A titration is a method for finding the unknown concentration of a solution by reacting it with a solution of known concentration, added a little at a time until the reaction is exactly complete.</strong></p>
+<p>In an acid–base titration the reaction is neutralisation:</p>
+<p><code>acid + alkali &rarr; salt + water</code></p>
+<p>Two terms are constantly confused, and examiners test the difference:</p>
+<ul>
+<li><strong>Equivalence point</strong> — the moment when exactly enough acid has been added to react with all the alkali. Moles of acid and alkali are in the ratio given by the balanced equation. This is a fact about the chemistry.</li>
+<li><strong>Endpoint</strong> — the moment the indicator changes colour, which is what you actually observe. A well-chosen indicator makes the endpoint fall as close to the equivalence point as possible, but they are not the same thing.</li>
+</ul>
+
+<h2>How to use this simulation</h2>
+<ol>
+<li>Choose your acid — <strong>HCl</strong> or <strong>H₂SO₄</strong>, both 0.1 mol/dm³ — and your alkali, <strong>NaOH</strong> or <strong>KOH</strong>, 25 cm³ of 0.1 mol/dm³.</li>
+<li>Pick an indicator. Try all three; the difference between them is the point of this exercise.</li>
+<li>Add acid with the slider, or use <strong>Add Drop (0.5 cm³)</strong> when you get close to the colour change — exactly as you would slow down near the endpoint at the bench.</li>
+<li>Watch <strong>Current pH</strong> and the <strong>titration curve</strong> as you go. Notice how little happens for a long time, then how violently pH swings over one or two drops.</li>
+<li><strong>Export Data (CSV)</strong> gives you the pH-volume pairs to plot yourself.</li>
+</ol>
+<p><strong>Try this first.</strong> Run HCl against NaOH and note the volume at equivalence. Now switch to H₂SO₄ and predict the new volume <em>before</em> you add anything. If your prediction was 25 cm³, look at the balanced equation again — the answer is in the mole ratio, and it is one of the most common places marks are lost.</p>
+
+<h2>Choosing the right indicator</h2>
+<p>An indicator is only suitable if it changes colour within the steep, near-vertical part of the pH curve. Outside that range, the colour changes gradually and you cannot identify a sharp endpoint.</p>
+<table style="width:100%;border-collapse:collapse;margin:10px 0">
+<tr><th style="text-align:left;padding:6px;border-bottom:1px solid #24334d">Indicator</th><th style="text-align:left;padding:6px;border-bottom:1px solid #24334d">In acid</th><th style="text-align:left;padding:6px;border-bottom:1px solid #24334d">In alkali</th><th style="text-align:left;padding:6px;border-bottom:1px solid #24334d">Best used for</th></tr>
+<tr><td style="padding:6px">Phenolphthalein</td><td style="padding:6px">Colourless</td><td style="padding:6px">Pink</td><td style="padding:6px">Strong acid–strong alkali; weak acid–strong alkali</td></tr>
+<tr><td style="padding:6px">Methyl orange</td><td style="padding:6px">Red</td><td style="padding:6px">Yellow</td><td style="padding:6px">Strong acid–strong alkali; strong acid–weak alkali</td></tr>
+<tr><td style="padding:6px">Universal indicator</td><td style="padding:6px" colspan="2">Full colour range, changing gradually</td><td style="padding:6px"><strong>Not suitable</strong></td></tr>
+</table>
+<p><strong>Why universal indicator is wrong for titrations</strong> — and this is worth a mark on its own — is that it changes colour <em>gradually</em> across a wide pH range. There is no single drop at which it flips, so you cannot judge an endpoint. Select it in the simulation and watch: the colour drifts rather than snapping. Universal indicator is for estimating pH, not for titrating.</p>
+<p>Since this simulation uses strong acids with strong alkalis, the equivalence point sits at <strong>pH 7</strong> and both phenolphthalein and methyl orange work.</p>
+
+<h2>The real apparatus, and why each detail matters</h2>
+<ul>
+<li><strong>Pipette</strong> — delivers one fixed, accurate volume (usually 25.0 cm³) of alkali into the conical flask. Use a pipette filler, never your mouth.</li>
+<li><strong>Burette</strong> — delivers a variable volume of acid, read to <strong>two decimal places</strong>, always ending in .00 or .05. Read from the <strong>bottom of the meniscus</strong>, at eye level, to avoid parallax error.</li>
+<li><strong>White tile</strong> — placed under the flask so the colour change is easy to see against a plain background.</li>
+<li><strong>Swirl constantly</strong> so the acid mixes thoroughly; an unmixed pocket gives a false early endpoint.</li>
+<li><strong>Add dropwise near the end.</strong> The final drop is what triggers the colour change — overshoot it and the titre is too high.</li>
+</ul>
+<p><strong>The rinsing rules</strong>, which come up repeatedly:</p>
+<ul>
+<li>Rinse the <strong>burette with the acid</strong> it will hold — residual water would dilute it.</li>
+<li>Rinse the <strong>pipette with the alkali</strong> it will hold, for the same reason.</li>
+<li>Rinse the <strong>conical flask with distilled water only</strong>. Rinsing it with alkali would add extra moles and inflate the titre.</li>
+</ul>
+
+<h2>Concordant results</h2>
+<p>One titration is never enough. The standard procedure:</p>
+<ol>
+<li>Do a quick <strong>rough (trial) titration</strong> to find the approximate endpoint.</li>
+<li>Repeat carefully, adding dropwise as you approach that volume.</li>
+<li>Continue until you have results that are <strong>concordant</strong> — agreeing within <strong>0.10 cm³</strong>.</li>
+<li>Calculate the <strong>mean titre from the concordant results only</strong>. The rough titration is excluded, and so is any anomalous result.</li>
+</ol>
+<p>Being asked why the rough titration is left out is common: it is less accurate, because the acid was added quickly rather than dropwise near the endpoint.</p>
+
+<h2>The calculation</h2>
+<p>Every acid–base titration calculation is the same three steps.</p>
+<p><strong>Worked example</strong> — 25.0 cm³ of NaOH needed 25.0 cm³ of 0.100 mol/dm³ HCl. Find the concentration of the NaOH.</p>
+<p><code>HCl + NaOH &rarr; NaCl + H₂O</code></p>
+<ol>
+<li><strong>Moles of the known substance:</strong> n = c × V ÷ 1000 = 0.100 × 25.0 ÷ 1000 = <strong>2.50 × 10⁻³ mol HCl</strong></li>
+<li><strong>Use the mole ratio.</strong> It is 1 : 1, so moles of NaOH = <strong>2.50 × 10⁻³ mol</strong></li>
+<li><strong>Concentration of the unknown:</strong> c = n ÷ (V ÷ 1000) = 2.50 × 10⁻³ ÷ 0.0250 = <strong>0.100 mol/dm³</strong></li>
+</ol>
+<p>To convert to grams per dm³, multiply by the relative formula mass: 0.100 × 40 = 4.0 g/dm³ for NaOH.</p>
+<p><strong>The sulfuric acid case.</strong> H₂SO₄ is diprotic — each molecule provides two H⁺ ions:</p>
+<p><code>H₂SO₄ + 2NaOH &rarr; Na₂SO₄ + 2H₂O</code></p>
+<p>The ratio is now 1 : 2, so neutralising the same 2.50 × 10⁻³ mol of NaOH needs only <strong>1.25 × 10⁻³ mol</strong> of H₂SO₄ — half the volume, 12.5 cm³. Step 2 is where this is either caught or lost.</p>
+
+<h2>Common exam mistakes</h2>
+<ul>
+<li><strong>Ignoring the mole ratio.</strong> Assuming 1 : 1 works for HCl and fails for H₂SO₄. Always balance the equation first.</li>
+<li><strong>Dividing by 1000 in the wrong place.</strong> Concentration is per dm³; burette volumes are in cm³. One is a thousand times the other.</li>
+<li><strong>Including the rough titration in the mean.</strong></li>
+<li><strong>Recording burette readings to one decimal place.</strong> Two, ending .00 or .05.</li>
+<li><strong>Suggesting universal indicator.</strong> No sharp endpoint.</li>
+<li><strong>Rinsing the conical flask with alkali.</strong> Distilled water only.</li>
+<li><strong>Confusing endpoint with equivalence point.</strong> The endpoint is what you see; the equivalence point is the chemistry.</li>
+</ul>
+
+<h2>Exam-style questions</h2>
+<details>
+<summary>1. State the difference between the endpoint and the equivalence point. <strong>[2 marks]</strong></summary>
+<p>The equivalence point is where the moles of acid and alkali are exactly in the ratio of the balanced equation (1). The endpoint is where the indicator changes colour, which is the observed approximation to it (1).</p>
+</details>
+<details>
+<summary>2. A student rinsed the conical flask with sodium hydroxide solution before starting. Explain the effect on the titre. <strong>[3 marks]</strong></summary>
+<p>Extra moles of alkali are present in the flask (1), so more acid is needed to neutralise it (1), giving a titre that is too high and a calculated concentration that is too high (1).</p>
+</details>
+<details>
+<summary>3. 25.0 cm³ of KOH required 22.40 cm³ of 0.150 mol/dm³ HCl. Calculate the concentration of the KOH. <strong>[3 marks]</strong></summary>
+<p>Moles HCl = 0.150 × 22.40 ÷ 1000 = 3.36 × 10⁻³ mol (1). Ratio HCl : KOH is 1 : 1, so moles KOH = 3.36 × 10⁻³ mol (1). c = 3.36 × 10⁻³ ÷ 0.0250 = <strong>0.134 mol/dm³</strong> (1).</p>
+</details>
+<details>
+<summary>4. Explain why universal indicator is unsuitable for a titration. <strong>[2 marks]</strong></summary>
+<p>It changes colour gradually over a wide pH range (1), so there is no sharp colour change at the endpoint and the exact volume cannot be identified (1).</p>
+</details>
+<details>
+<summary>5. A student obtained titres of 24.10, 23.65, 23.70 and 23.60 cm³. Calculate the mean titre they should use. <strong>[2 marks]</strong></summary>
+<p>The concordant results — those within 0.10 cm³ of each other — are 23.65, 23.70 and 23.60 (1). 24.10 is the rough/anomalous result and is excluded. Mean = (23.65 + 23.70 + 23.60) ÷ 3 = <strong>23.65 cm³</strong> (1).</p>
+</details>
+</section>
+
 <section class="scisim-related"><h2>More IGCSE Chemistry simulations</h2><ul><li><a href="/simulations/atomic-structure-simulation.html">Atomic Structure</a></li><li><a href="/simulations/chromatography-simulation.html">Chromatography</a></li><li><a href="/simulations/electrolysis-simulation.html">Electrolysis</a></li><li><a href="/simulations/energy-profiles-simulation.html">Energy Profiles</a></li><li><a href="/simulations/reaction-rates-simulation.html">Reaction Rates</a></li></ul><p style="margin:14px 0 0"><a href="/">&larr; All 18 simulations</a></p></section>
 </body>
 </html>
